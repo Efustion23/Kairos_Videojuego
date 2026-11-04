@@ -27,7 +27,6 @@ namespace Kairos.EditorTools
             ("Use", new[] { "Button Pushing" }, true),
             ("Type", new[] { "Typing" }, true),
             ("Talk", new[] { "Talking" }, true),
-            ("Stun", new[] { "Standing Melee Punch" }, false),
             ("Kneel", new[] { "Kneeling Down" }, false),
             ("Crouch", new[] { "Crouch Idle 02 Looking Around" }, true),
         };
@@ -167,7 +166,7 @@ namespace Kairos.EditorTools
 
             var torso = ctrl.layers[1].stateMachine;
             torso.defaultState = torso.AddState("Empty");
-            foreach (var n in new[] { "Use", "Type", "Talk", "Stun" }) torso.AddState(n).motion = Clip(n);
+            foreach (var n in new[] { "Use", "Type", "Talk" }) torso.AddState(n).motion = Clip(n);
 
             EditorUtility.SetDirty(ctrl);
             AssetDatabase.SaveAssets();

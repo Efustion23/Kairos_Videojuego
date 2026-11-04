@@ -1,0 +1,132 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1398752963925941026
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5898582954490079808}
+  m_Layer: 0
+  m_Name: metal_office_desk
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5898582954490079808
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1398752963925941026}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2631533738966612543}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &2526427595746188756
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 5898582954490079808}
+    m_Modifications:
+    - target: {fileID: -9065206474880794899, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: a40172d7319769041ba8eadfa29b12ab, type: 2}
+    - target: {fileID: -8679921383154817045, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.0000012516975
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.000000059604645
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.004496485
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8123558039692792740, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: a40172d7319769041ba8eadfa29b12ab, type: 2}
+    - target: {fileID: -7277660046854494698, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: a40172d7319769041ba8eadfa29b12ab, type: 2}
+    - target: {fileID: -4083988183327217556, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: a40172d7319769041ba8eadfa29b12ab, type: 2}
+    - target: {fileID: 919132149155446097, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: m_Name
+      value: metal_office_desk_1k
+      objectReference: {fileID: 0}
+    - target: {fileID: 1299075196602937010, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: a40172d7319769041ba8eadfa29b12ab, type: 2}
+    - target: {fileID: 1881327198489814769, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: a40172d7319769041ba8eadfa29b12ab, type: 2}
+    - target: {fileID: 2297557732942198449, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: a40172d7319769041ba8eadfa29b12ab, type: 2}
+    - target: {fileID: 3482299897781839079, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: a40172d7319769041ba8eadfa29b12ab, type: 2}
+    - target: {fileID: 6515455513608677762, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: a40172d7319769041ba8eadfa29b12ab, type: 2}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+--- !u!4 &2631533738966612543 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: a040a0dd1d9dc9d4cacfa095a6e7678f, type: 3}
+  m_PrefabInstance: {fileID: 2526427595746188756}
+  m_PrefabAsset: {fileID: 0}

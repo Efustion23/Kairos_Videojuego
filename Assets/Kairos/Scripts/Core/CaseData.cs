@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Kairos
 {
-    public class LayerDef { public string name, shows, limit; public int cost; }
+    public class LayerDef { public string name, shows; public int cost; }
     public class Anomaly { public string name; public float weight, conf; public int layer; public float minHours; public string detail; }
     public class ShipDef { public string id, name, type, flag, optical; public float lat, lon, mRoute; public bool ais, target; public float lastLat, lastLon; public Anomaly[] anomalies; }
     public class Compartment
@@ -11,13 +11,13 @@ namespace Kairos
         public string name; public Vector3 center, size; public int kind; // 0 bodega, 1 personas, 2 máquinas
         public string temp, density, cycle, water, sound; public float densityValue;
     }
-    public class PersonDef { public string id, name, origin, voice, intro, plan, testimony, testimonySafe, help, epilogueDignified, epilogueBasic; public int startTrust; public bool startsFree, willTestify; public string testimonyEvidence; }
+    public class PersonDef { public string id, name, origin, voice, intro, plan, testimony, testimonySafe, help; public int startTrust; public bool startsFree, willTestify; public string testimonyEvidence; }
     public class EvidenceDef { public string id, title, desc, descSafe; public char cat; public int[] indicators; public string[] edges; }
     public class NodeDef { public string name, role; public Vector2 pos; }
-    public class SectorDef { public string name, unlock, ship, novelty, scenario; public int cases, needSentences, needReputation; public string nodes; public float lat, lon; }
+    public class SectorDef { public string name, ship, novelty, scenario, nodes; public int cases; public float lat, lon; }
     public class CodexEntry { public string title, body, source, action; }
 
-    /// Datos del caso de apertura. Todos los buques y empresas son ficticios (ver GDD).
+    /// Datos del caso de apertura. Todos los buques y empresas son ficticios.
     public static class CaseData
     {
         public const int MaxEvidence = 13; // caben todas: nadie debe descartar pruebas
@@ -27,17 +27,17 @@ namespace Kairos
         public const int LayerAIS = 0, LayerVMS = 1, LayerVIIRS = 2, LayerSAR = 3, LayerOptical = 4;
         public static readonly LayerDef[] Layers =
         {
-            new LayerDef { name = "AIS", shows = "Posición e identidad declarada", cost = 0, limit = "El buque puede apagarlo o falsearlo" },
-            new LayerDef { name = "VMS", shows = "Seguimiento oficial del Estado del pabellón", cost = 5, limit = "Solo países con convenio" },
-            new LayerDef { name = "Luces VIIRS", shows = "Buques con focos potentes", cost = 8, limit = "Solo de noche y sin nubes" },
-            new LayerDef { name = "Radar SAR", shows = "Cascos reales, con o sin AIS", cost = 15, limit = "Pasadas cada 6 a 12 h; pierde precisión con mar gruesa" },
-            new LayerDef { name = "Óptica", shows = "Foto detallada de cubierta", cost = 25, limit = "Bloqueada por nubes y tormentas" },
+            new LayerDef { name = "AIS", shows = "Posición e identidad declarada", cost = 0 },
+            new LayerDef { name = "VMS", shows = "Seguimiento oficial del Estado del pabellón", cost = 5 },
+            new LayerDef { name = "Luces VIIRS", shows = "Buques con focos potentes", cost = 8 },
+            new LayerDef { name = "Radar SAR", shows = "Cascos reales, con o sin AIS", cost = 15 },
+            new LayerDef { name = "Óptica", shows = "Foto detallada de cubierta", cost = 25 },
         };
 
         static Anomaly A(string n, float w, float c, int layer, string detail, float minHours = 0) =>
             new Anomaly { name = n, weight = w, conf = c, layer = layer, detail = detail, minHours = minHours };
 
-        // Los pesos son los del GDD; las confianzas c están elegidas para que Hai Feng 77 dé exactamente IR 72.
+        // Las confianzas c están ajustadas para que Hai Feng 77 dé IR 72 con todas las capas.
         public static readonly ShipDef[] Ships =
         {
             new ShipDef { id = "hf77", name = "Hai Feng 77", type = "Potero, unos 90 m", flag = "Bandera de conveniencia", target = true, ais = false,
@@ -109,7 +109,7 @@ namespace Kairos
         public static int DouglasAt(float h) => h < 36 ? 3 : h < 60 ? 6 : 4;
 
         // ---------- Fase 2 ----------
-        // Coordenadas en el espacio del buque (ver KairosBuilder). Lecturas del GDD.
+        // Coordenadas en el espacio del buque.
         public static readonly Compartment[] Compartments =
         {
             new Compartment { name = "K1 Popa estribor", center = new Vector3(3.9f, 1.5f, -21f), size = new Vector3(5.2f, 8f, 14f), kind = 2,
@@ -142,34 +142,62 @@ namespace Kairos
                 plan = "—Si de verdad hay una salida, te doy la clave de la escotilla de babor. Es 4-7-1-9.",
                 testimony = "«Firmé en una agencia por seis meses. Llevo veintidós. Nunca vi un puerto.»",
                 testimonySafe = "Describe el engaño en el contrato y el aislamiento a bordo.",
-                help = "Rodel conoce las rondas: te marca cuándo va a pasar el siguiente guardia.",
-                epilogueDignified = "Rodel volvió a Iloilo con sus documentos y el salario adeudado. Hoy forma a otros marineros sobre sus derechos.",
-                epilogueBasic = "Rodel volvió a casa, pero sigue reclamando sus salarios por su cuenta." },
+                help = "Rodel deja caer una bandeja en el comedor: la tripulación se distrae unos segundos." },
             new PersonDef { id = "ari", name = "Ari Wibowo", origin = "Indonesia", voice = "Te mira a los ojos antes de contestar.", startTrust = 20, willTestify = true, testimonyEvidence = "t_ari",
                 intro = "—No vengas a salvarme. Dime qué piensas hacer y yo decido.",
                 plan = "—Si hay plan, quiero saberlo entero. Los demás me escuchan a mí.",
                 testimony = "«Cuando alguien pedía parar, lo encerraban aquí. Nos decían que nadie nos buscaba.»",
                 testimonySafe = "Describe amenazas y violencia física a bordo. Descripción omitida por tus ajustes.",
-                help = "Ari golpea el mamparo a propósito: atrae al guardia más cercano lejos de ti.",
-                epilogueDignified = "Ari declaró ante el tribunal por decisión propia y hoy dirige una asociación de pescadores en Bitung.",
-                epilogueBasic = "Ari volvió a Bitung. Prefiere no hablar todavía de lo ocurrido, y esa decisión también es suya." },
+                help = "Ari golpea el mamparo a propósito: atrae al guardia más cercano lejos de ti." },
             new PersonDef { id = "moussa", name = "Moussa Diallo", origin = "Senegal", voice = "Se sostiene la mano herida, sin quejarse.", startTrust = 15, willTestify = true, testimonyEvidence = "t_moussa",
                 intro = "—Me dijeron que descontarían el viaje de mi sueldo. Sigo debiendo. ¿Tú también vienes a cobrarme?",
                 plan = "—Hay una puerta de servicio detrás de ese mamparo, va al pañol. Te la abro desde aquí.",
                 testimony = "«Cada mes la deuda crecía. Comida, guantes, hasta el agua. Nunca vi un papel.»",
                 testimonySafe = "Describe la deuda impuesta y el abuso de su situación.",
-                help = "Moussa abre la puerta de servicio: tienes un atajo hasta el pañol.",
-                epilogueDignified = "Moussa recibió atención médica en la mano y volvió a Mbour con su familia. La deuda quedó anulada por sentencia.",
-                epilogueBasic = "Moussa volvió a Mbour. Su mano necesita un tratamiento que aún está intentando costear." },
+                help = "Moussa abre la puerta de servicio: tienes un atajo hasta el pañol." },
             new PersonDef { id = "thant", name = "Thant Zin", origin = "Myanmar", voice = "Habla despacio, eligiendo cada palabra.", startTrust = 25, willTestify = false,
                 intro = "—Quiero irme a casa. Solo eso.",
                 plan = "—Iré contigo. Pero no voy a contar nada a ningún juez. Tengo familia allí.",
                 testimony = "", testimonySafe = "",
-                help = "Thant vigila la puerta mientras los demás salen.",
-                epilogueDignified = "Thant está con su familia. Eligió no testificar, y el proceso respetó esa decisión.",
-                epilogueBasic = "Thant está con su familia. Eligió no testificar, y volvió sin apoyo psicosocial." },
+                help = "Thant golpea la escotilla con su ritmo de siempre: tus pasos no se oyen durante unos segundos." },
         };
         public static PersonDef PersonDefOf(string id) => System.Array.Find(People, p => p.id == id);
+
+        /// Lo que fue de cada persona: se cuenta desde lo que ocurrió de verdad en esta partida.
+        public static string Epilogue(PersonDef d, PersonState st, int verdict)
+        {
+            int dignified = 0;
+            foreach (var x in st.dignified) if (x) dignified++;
+            bool testified = st.testimony == 1;
+            var t = new List<string>();
+            switch (d.id)
+            {
+                case "rodel":
+                    t.Add(st.dignified[1] ? "Rodel volvió a Iloilo con todos sus documentos." : "Rodel volvió a Iloilo con papeles provisionales.");
+                    t.Add(st.dignified[3] ? "Cobró el salario adeudado." : "Sigue reclamando sus salarios por su cuenta.");
+                    if (testified) t.Add("Su testimonio quedó en el expediente.");
+                    if (dignified >= 3) t.Add("Hoy forma a otros marineros sobre sus derechos.");
+                    break;
+                case "ari":
+                    t.Add("Ari volvió a Bitung.");
+                    t.Add(!testified ? "Prefiere no hablar todavía de lo ocurrido, y esa decisión también es suya."
+                        : verdict > 0 ? "Declaró ante el tribunal por decisión propia."
+                        : "Dio su testimonio por decisión propia, aunque el caso no llegó a sentencia.");
+                    if (dignified >= 3) t.Add("Hoy dirige una asociación de pescadores.");
+                    break;
+                case "moussa":
+                    t.Add("Moussa volvió a Mbour con su familia.");
+                    t.Add(st.dignified[0] ? "Recibió atención médica en la mano." : "Su mano necesita un tratamiento que aún intenta costear.");
+                    t.Add(verdict > 0 ? "La deuda quedó anulada por sentencia." : "Sin sentencia, su deuda sigue sin anularse en los papeles.");
+                    break;
+                case "thant":
+                    t.Add("Thant está con su familia.");
+                    t.Add(st.testimony == 2 ? "Eligió no testificar, y el proceso respetó esa decisión." : "No llegaron a pedirle que testificara.");
+                    t.Add(st.dignified[4] ? "Cuenta con apoyo psicosocial." : "Volvió sin apoyo psicosocial.");
+                    break;
+            }
+            return string.Join(" ", t);
+        }
 
         public static readonly string[] Needs = { "Atención médica", "Documentos", "Traslado", "Salarios adeudados", "Apoyo psicosocial" };
         public static readonly int[] NeedCostBasic = { 2000, 1000, 2000, 0, 0 };
@@ -220,8 +248,6 @@ namespace Kairos
             new NodeDef { name = "Tidewater Austral", role = "Beneficiario final", pos = new Vector2(.875f, .5f) },
         };
 
-        public static string EdgeKey(int a, int b) => a < b ? a + "-" + b : b + "-" + a;
-
         /// ¿Hay camino de pruebas del buque (0) al beneficiario final (5)?
         public static bool ChainComplete(List<string> links)
         {
@@ -243,6 +269,15 @@ namespace Kairos
         {
             var set = new HashSet<int>();
             foreach (var id in presented) foreach (var i in Evidence(id).indicators) set.Add(i);
+            return set.Count;
+        }
+
+        /// Cuántos indicadores se pueden probar todavía con las pruebas que no se han perdido.
+        public static int MaxIndicators(List<string> lost)
+        {
+            var set = new HashSet<int>();
+            foreach (var e in EvidenceDefs)
+                if (!lost.Contains(e.id)) foreach (var i in e.indicators) set.Add(i);
             return set.Count;
         }
 
@@ -273,9 +308,9 @@ namespace Kairos
 
         public static readonly SectorDef[] Sectors =
         {
-            new SectorDef { name = "1. Atlántico Sur (milla 201)", scenario = "Flota de poteros al borde de la zona económica exclusiva argentina", unlock = "Inicio de campaña", ship = "Potero", novelty = "Tutorial, luces VIIRS y caso Hai Feng 77", cases = 2, nodes = "6", lat = -46, lon = -59.5f },
-            new SectorDef { name = "2. Golfo de Guinea", scenario = "Zona crítica de apagones de AIS (Welch et al., 2022)", unlock = "2 sentencias y reputación 30", ship = "Arrastrero", novelty = "Apagones y transbordos frecuentes", cases = 3, needSentences = 2, needReputation = 30, nodes = "Unos 15", lat = 2, lon = 2 },
-            new SectorDef { name = "3. Océano Índico Occidental", scenario = "Palangreros que pasan años sin tocar puerto", unlock = "4 sentencias y reputación 45", ship = "Palangrero y frigorífico", novelty = "Aislamiento extremo, perros guardianes y caso final contra Tidewater", cases = 3, needSentences = 4, needReputation = 45, nodes = "25 a 30", lat = -10, lon = 58 },
+            new SectorDef { name = "1. Atlántico Sur (milla 201)", scenario = "Flota de poteros al borde de la zona económica exclusiva argentina", ship = "Potero", novelty = "Tutorial, luces VIIRS y caso Hai Feng 77", cases = 1, nodes = "6", lat = -46, lon = -59.5f },
+            new SectorDef { name = "2. Golfo de Guinea", scenario = "Zona crítica de apagones de AIS (Welch et al., 2022)", ship = "Arrastrero", novelty = "Apagones y transbordos frecuentes", cases = 3, nodes = "Unos 15", lat = 2, lon = 2 },
+            new SectorDef { name = "3. Océano Índico Occidental", scenario = "Palangreros que pasan años sin tocar puerto", ship = "Palangrero y frigorífico", novelty = "Aislamiento extremo, perros guardianes y caso final contra Tidewater", cases = 3, nodes = "25 a 30", lat = -10, lon = 58 },
         };
 
         public static readonly CodexEntry[] Codex =

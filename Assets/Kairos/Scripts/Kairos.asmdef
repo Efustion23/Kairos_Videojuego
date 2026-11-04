@@ -1,0 +1,6 @@
+{
+    "name": "Kairos",
+    "rootNamespace": "Kairos",
+    "references": ["Unity.InputSystem", "Unity.TextMeshPro", "UnityEngine.UI", "Unity.AI.Navigation"],
+    "autoReferenced": true
+}

@@ -98,7 +98,8 @@ namespace Kairos
         void UpdateTorso(float dt)
         {
             stunT = Mathf.Max(0, stunT - dt);
-            string want = kneeling ? null : stunT > 0 ? "Stun" : talking ? "Talk" : busy ? (typing ? "Type" : "Use") : null;
+            // El aturdidor es un dispositivo: se acciona con la mano, sin golpear a nadie.
+            string want = kneeling ? null : stunT > 0 ? "Use" : talking ? "Talk" : busy ? (typing ? "Type" : "Use") : null;
             if (want != torsoState)
             {
                 torsoState = want;

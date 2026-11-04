@@ -1,0 +1,24 @@
+Recursos de terceros en KAIROS: Sombras en Altamar
+Comprobados el 2026-11-04. CC0 = dominio público, sin atribución obligatoria.
+
+MÚSICA (Assets/Kairos/Resources/Music), CC0, OpenGameArt
+- title, sector, airy, pulse, urgent, transmission, victory: "Dark Sci-Fi Audio Pack", SRG774
+  https://opengameart.org/content/dark-sci-fi-audio-pack
+- passages: "Abandoned passages (horror ambience loop)", congusbongus
+  https://opengameart.org/content/abandoned-passages-horror-ambience-loop
+- underwater: "GameOver or Underwater", Graciano Choc - Bz.gamedev (publicado como GPL 3.0 y CC0; se usa bajo CC0)
+  https://opengameart.org/node/161645
+
+OBJETOS 3D (Assets/Kairos/Models/Props), CC0, Poly Haven: https://polyhaven.com/a/<nombre>
+- barrel_03: Serhii Khromov
+- plastic_crate_02: Fabi_G
+- medical_box, metal_stool_02, metal_office_desk, plastic_jerrycan, metal_jerrycan_green: Ulan Cabanilla
+- dining_table: Aron Łyczek
+- utility_box_01: James Ray Cock
+- industrial_wall_lamp: Kuutti Siitonen
+- lifebuoy: Hank Kaamura
+- propane_tank: Slinc
+- binder_notebook: DaDrood
+
+ANIMACIONES (Assets/Kairos/Models/Protagonista/Clips): Adobe Mixamo, según sus condiciones de uso.
+TIPOGRAFÍA: Liberation Sans, SIL Open Font License (incluida con TextMesh Pro).

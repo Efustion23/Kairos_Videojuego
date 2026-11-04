@@ -18,9 +18,8 @@ namespace Kairos
             Cursor.lockState = CursorLockMode.None; Cursor.visible = true;
             canvas = UI.NewCanvas();
             root = UI.Rect(canvas.transform, "Root", Vector2.zero, Vector2.one);
-            gameObject.AddComponent<AudioSource>();
             Sfx.Loop(gameObject, Sfx.Wind, .25f);
-            Sfx.Loop(gameObject, Sfx.Drone, .22f);
+            Music.Play("title");
             if (Game.HasSave && Game.S.warningAccepted && Game.C.phase > 1) ShowBase(); else ShowTitle();
             UI.SceneIntro(canvas.transform, "", "");
         }
@@ -57,6 +56,7 @@ namespace Kairos
             Screen();
             var p = UI.Panel(root, new Vector2(.24f, .18f), new Vector2(.76f, .82f));
             var s = UI.VStack(p.transform, 34, 14);
+            s.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
             UI.Line(s, "Aviso de contenido", 38, Pal.DeckLight, true);
             UI.Line(s, "Este juego trata sobre trata de personas y trabajo forzado en la pesca. El abuso se entiende por huellas y testimonios: nunca se juega ni se muestra en primer plano. No hay violencia gráfica.", 24);
             UI.Line(s, "Puedes omitir las descripciones sensibles ahora o más adelante en Ajustes. Allí también encontrarás enlaces de ayuda.", 24, Pal.Dim);
@@ -76,6 +76,7 @@ namespace Kairos
             Screen();
             var p = UI.Panel(root, new Vector2(.3f, .2f), new Vector2(.7f, .8f));
             var s = UI.VStack(p.transform, 34, 12);
+            s.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
             UI.Line(s, "Tu inspector o inspectora", 34, Pal.Sonar, true);
             UI.Line(s, "Nombre", 20, Pal.Dim);
             UI.Input(s, Game.S.playerName, "Nombre", v => Game.S.playerName = string.IsNullOrWhiteSpace(v) ? "Inspector" : v);
@@ -113,12 +114,13 @@ namespace Kairos
             var tabs = UI.Panel(root, new Vector2(0, 0), new Vector2(.18f, .93f));
             var ts = UI.VStack(tabs.transform, 14, 10);
             UI.Line(ts, "BASE KAIROS", 28, Pal.Sonar, true);
-            UI.Line(ts, Game.S.playerName, 20, Pal.Dim);
+            UI.Line(ts, Game.Inspector, 20, Pal.Dim);
             UI.Btn(ts, "Caso activo", TabCase, Pal.Sealed, 22, 54);
             UI.Btn(ts, "Mejoras", TabUpgrades, null, 22, 54);
             UI.Btn(ts, "Taller y suministros", TabWorkshop, null, 22, 54);
             UI.Btn(ts, "Códice", TabCodex, null, 22, 54);
             UI.Btn(ts, "Ajustes y ayuda", TabSettings, null, 22, 54);
+            UI.Btn(ts, "Créditos", TabCredits, null, 22, 54);
             UI.Btn(ts, "Volver al título", ShowTitle, Pal.Dim, 20, 46);
 
             var body = UI.Panel(root, new Vector2(.18f, 0), new Vector2(1, .93f), default, default, new Color(.03f, .08f, .11f, .78f));
@@ -143,14 +145,15 @@ namespace Kairos
             UI.Line(s, "2031, de noche y más allá de la milla 200, donde terminan las patrullas costeras. Un potero de unos 90 m desaparece del AIS frente a Argentina. Detrás de él hay una red que rota nombres y banderas cada 9 a 14 meses.", 23);
             UI.Line(s, "Estado: <b>" + PhaseNames[Mathf.Clamp(c.phase, 1, 6)] + "</b>", 24, Pal.DeckLight);
 
-            string[] gates = { "1. Rastrear → IR ≥ 60", "2. Escanear → Confianza ≥ 70 %", "3. Infiltrarse → Al menos 1 prueba A", "4. Rescatar y juzgar → Sentencia ejecutada" };
+            string[] gates = { "1. Rastrear → IR ≥ 60", "2. Escanear → Confianza ≥ 70 %", "3. Infiltrarse → Al menos 1 prueba A", "4. Juzgar → Sentencia ejecutada" };
             for (int i = 0; i < 4; i++)
                 UI.Line(s, gates[i], 22, c.phase > i + 1 ? Pal.Sealed : c.phase == i + 1 ? Pal.Text : Pal.Dim);
 
             if (c.phase >= 6)
             {
                 UI.Line(s, $"Sentencia: {CaseData.VerdictNames[c.verdict]}. Embargo: {c.embargo:N0} ¢.", 24, Pal.Sealed);
-                UI.Btn(s, "Reabrir el caso (conservas mejoras y recursos)", () => { Game.StartCase(); Game.GoToPhase(1); }, Pal.Sonar, 24, 56);
+                UI.Btn(s, "Repetir el caso (conservas mejoras y recursos)", () => { Game.StartCase(); Game.GoToPhase(1); }, Pal.Sonar, 24, 56);
+                UI.Line(s, "Vuelve a jugar el caso desde el principio, fuera de la historia: no continúa lo que ya ocurrió.", 19, Pal.Dim);
             }
             else
                 UI.Btn(s, "Continuar: " + PhaseNames[c.phase], () => Game.GoToPhase(c.phase), Pal.Sealed, 24, 60);
@@ -161,9 +164,8 @@ namespace Kairos
             {
                 var d = CaseData.Sectors[i];
                 bool open = i == 0;
-                UI.Line(s, $"<b>{d.name}</b>{(open ? "" : "   [BLOQUEADO]")}\n{d.scenario}. Buque: {d.ship}. {d.novelty}. {d.cases} casos, nodos de la red: {d.nodes}. Desbloqueo: {d.unlock}.", 21, open ? Pal.Text : Pal.Dim);
+                UI.Line(s, $"<b>{d.name}</b>{(open ? "" : "   [BLOQUEADO]")}\n{d.scenario}. Buque: {d.ship}. {d.novelty}. {d.cases} {(d.cases == 1 ? "caso" : "casos")}, nodos de la red: {d.nodes}.{(open ? "" : " No disponible en esta versión.")}", 21, open ? Pal.Text : Pal.Dim);
             }
-            UI.Line(s, "Este build incluye el caso del Sector 1; los Sectores 2 y 3 se muestran bloqueados.", 19, Pal.Dim);
         }
 
         void TabUpgrades()
@@ -226,6 +228,22 @@ namespace Kairos
             }
         }
 
+        void TabCredits()
+        {
+            UI.Clear(tabBody);
+            var s = UI.Scroll(tabBody, Vector2.zero, Vector2.one);
+            UI.Line(s, "Créditos", 36, Pal.Sonar, true);
+            UI.Line(s, "KAIROS: Sombras en Altamar", 26, Pal.DeckLight, true);
+            UI.Line(s, "Alexander Benites · Diego Tornero · Christopher Veliz", 22);
+            foreach (var (group, license, lines) in Credits.Groups)
+            {
+                UI.Line(s, group, 26, Pal.DeckLight, true);
+                UI.Line(s, license, 19, Pal.Dim);
+                UI.Line(s, string.Join("\n", lines), 21);
+            }
+            UI.Line(s, "Buques, empresas y personajes son ficticios.", 19, Pal.Dim);
+        }
+
         void TabSettings()
         {
             UI.Clear(tabBody);
@@ -240,9 +258,22 @@ namespace Kairos
             sens.onClick.AddListener(() => { Game.S.mouseSens = Game.S.mouseSens >= 2f ? .5f : Game.S.mouseSens + .25f; Game.Write(); SensLabel(); });
             SensLabel();
             var vol = UI.Btn(s, "", null, null, 22, 52);
-            void VolLabel() => UI.SetLabel(vol, $"Volumen general: {Mathf.RoundToInt(AudioListener.volume * 100)} %");
-            vol.onClick.AddListener(() => { AudioListener.volume = AudioListener.volume <= .25f ? 1f : AudioListener.volume - .25f; VolLabel(); });
+            void VolLabel() => UI.SetLabel(vol, $"Volumen general: {Mathf.RoundToInt(Game.S.masterVolume * 100)} %");
+            vol.onClick.AddListener(() =>
+            {
+                Game.S.masterVolume = Game.S.masterVolume <= .25f ? 1f : Game.S.masterVolume - .25f;
+                AudioListener.volume = Game.S.masterVolume;
+                Game.Write(); VolLabel();
+            });
             VolLabel();
+            var music = UI.Btn(s, "", null, null, 22, 52);
+            void MusicLabel() => UI.SetLabel(music, $"Música: {Mathf.RoundToInt(Game.S.musicVolume * 100)} %");
+            music.onClick.AddListener(() =>
+            {
+                Game.S.musicVolume = Game.S.musicVolume <= .01f ? 1f : Mathf.Max(0, Game.S.musicVolume - .2f);
+                Game.Write(); MusicLabel();
+            });
+            MusicLabel();
             var full = UI.Btn(s, "", null, null, 22, 52);
             void FullLabel() => UI.SetLabel(full, "Pantalla completa: " + (UnityEngine.Screen.fullScreen ? "SÍ" : "NO"));
             full.onClick.AddListener(() => { UnityEngine.Screen.fullScreen = !UnityEngine.Screen.fullScreen; FullLabel(); });

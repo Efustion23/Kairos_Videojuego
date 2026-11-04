@@ -3,7 +3,7 @@ using UnityEngine.AI;
 
 namespace Kairos
 {
-    /// Balanceo de brazos y piernas según la velocidad real: basta hasta que haya animaciones.
+    /// Balanceo de brazos y piernas de guardias y personas, según su velocidad real.
     public class Walker : MonoBehaviour
     {
         public Transform legL, legR, armL, armR, body;

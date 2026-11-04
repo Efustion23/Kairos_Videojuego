@@ -15,7 +15,7 @@ namespace Kairos
         RectTransform root, board, cards, actions;
         TextMeshProUGUI clock, detail, indicatorText, verdictText, hint;
         UI.Toasts toast;
-        Button sentenceBtn, reboardBtn;
+        Button sentenceBtn, reboardBtn, closeBtn;
         string selected;
         readonly List<Image> lines = new List<Image>();
 
@@ -27,7 +27,7 @@ namespace Kairos
             canvas = UI.NewCanvas();
             root = UI.Rect(canvas.transform, "Root", Vector2.zero, Vector2.one);
             UI.Fullscreen(root, new Color(.02f, .05f, .07f, .9f));
-            Sfx.Loop(gameObject, Sfx.Drone, .3f);
+            Music.Play(C.phase >= 5 ? "airy" : "pulse");
             if (C.trialDays < 0) C.trialDays = StartDays;
             if (C.phase >= 5) ShowRepatriation(); else BuildBoard();
             if (C.phase >= 5) UI.SceneIntro(canvas.transform, "", "");
@@ -52,7 +52,7 @@ namespace Kairos
                 var n = CaseData.Nodes[i];
                 var col = i == 5 ? Pal.Danger : i == 0 ? Pal.DeckLight : Pal.Sonar;
                 var node = UI.Panel(board, n.pos, n.pos, new Vector2(-95, -44), new Vector2(95, 44), new Color(col.r * .18f, col.g * .18f, col.b * .18f, 1));
-                var t = UI.Text(node.transform, $"<b>{n.name}</b>\n<size=15>{n.role}</size>", 18, col, TextAlignmentOptions.Center);
+                var t = UI.Text(node.transform, $"<b>{n.name}</b>\n<size=16>{n.role}</size>", 18, col, TextAlignmentOptions.Center);
                 t.margin = new Vector4(6, 2, 6, 2);
             }
 
@@ -66,10 +66,11 @@ namespace Kairos
             var right = UI.Panel(root, new Vector2(.75f, 0), new Vector2(1, .93f));
             var rs = UI.VStack(right.transform, 14, 4);
             UI.Line(rs, "Indicadores OIT probados", 22, Pal.Sonar, true);
-            indicatorText = UI.Line(rs, "", 16);
+            indicatorText = UI.Line(rs, "", 18);
             verdictText = UI.Line(rs, "", 19, Pal.ThermHot);
             sentenceBtn = UI.Btn(rs, "Ejecutar sentencia", ExecuteSentence, Pal.Sealed, 22, 52);
             reboardBtn = UI.Btn(rs, "Volver a abordar en busca de más pruebas (-3 días)", () => { C.trialDays -= 3; Game.GoToPhase(3); }, Pal.DeckLight, 17, 44);
+            closeBtn = UI.Btn(rs, "Cerrar el caso sin sentencia", () => CaseLost("Caso cerrado sin sentencia"), Pal.Danger, 18, 44);
             UI.Btn(rs, "Volver a la base", Game.GoToMenu, Pal.Dim, 18, 40);
 
             toast = UI.Toasts.Create(canvas.transform, new Vector2(.25f, .02f), new Vector2(.75f, .1f));
@@ -142,6 +143,18 @@ namespace Kairos
             return CaseData.ChainComplete(all);
         }
 
+        /// Tras la patrullera o el puente, el buque ya está interceptado: no se vuelve a subir con garfio.
+        bool ShipReachable => C.exitUsed != 1 && C.exitUsed != 3;
+        bool CanReboard => ShipReachable && C.trialDays > 3;
+
+        /// ¿Basta lo que hay en el maletín para llegar a una sentencia?
+        bool SentencePossible()
+        {
+            var all = new List<string>();
+            foreach (var e in C.evidence) all.Add(e.id);
+            return ChainPossible() && CaseData.VerdictFor(CaseData.CountIndicators(all)) > 0;
+        }
+
         void Refresh()
         {
             UI.Clear(cards);
@@ -167,7 +180,7 @@ namespace Kairos
                 var seal = C.evidence.Find(x => x.id == selected);
                 var indNames = new List<string>();
                 foreach (var i in d.indicators) indNames.Add(CaseData.Indicators[i]);
-                detail.text = $"<b>{d.title}</b>  [{d.cat}]  {(Game.S.omitSensitive ? d.descSafe : d.desc)}\nPrueba: {(indNames.Count > 0 ? string.Join(", ", indNames) : "ningún indicador, pero conecta empresas")}\n<size=14><color=#55666E>{seal.stamp} · SHA-256 {seal.sha.Substring(0, 32)}…</color></size>";
+                detail.text = $"<b>{d.title}</b>  [{d.cat}]  {(Game.S.omitSensitive ? d.descSafe : d.desc)}\nPrueba: {(indNames.Count > 0 ? string.Join(", ", indNames) : "ningún indicador, pero conecta empresas")}\n<size=16><color=#6F828A>{seal.stamp} · SHA-256 {seal.sha.Substring(0, 32)}…</color></size>";
                 bool any = false;
                 foreach (var key in d.edges)
                 {
@@ -189,21 +202,28 @@ namespace Kairos
                 ? "Cadena completa. Cuantas más pruebas uses, mayor será la sentencia."
                 : ChainPossible()
                     ? "Elige una prueba a la izquierda y úsala. Las líneas ámbar muestran lo que puede conectar."
-                    : "<color=#F2A73B>Con estas pruebas no llegas al beneficiario final: vuelve a abordar y busca facturas y manifiesto.</color>";
+                    : CanReboard
+                        ? "<color=#F2A73B>Con estas pruebas no llegas al beneficiario final: vuelve a abordar y busca facturas y manifiesto.</color>"
+                        : "<color=#F2A73B>Con estas pruebas no llegas al beneficiario final, y ya no puedes volver al buque.</color>";
 
             var proved = new HashSet<int>();
             foreach (var id in C.presented) foreach (var i in CaseData.Evidence(id).indicators) proved.Add(i);
             var sb = new System.Text.StringBuilder();
             for (int i = 0; i < CaseData.Indicators.Length; i++)
-                sb.AppendLine((proved.Contains(i) ? "<color=#6CFF8A>■ " : "<color=#55666E>□ ") + CaseData.Indicators[i] + "</color>");
+                sb.AppendLine((proved.Contains(i) ? "<color=#6CFF8A>■ " : "<color=#7F9098>□ ") + CaseData.Indicators[i] + "</color>");
             indicatorText.text = sb.ToString();
 
             int verdict = CaseData.VerdictFor(inds);
             verdictText.text = $"<b>{inds} de 11</b>. {CaseData.VerdictNames[verdict]}.\n" +
                 (chain ? "<color=#6CFF8A>Cadena completa hasta el beneficiario final.</color>" : "<color=#F2A73B>Falta conectar el buque con el beneficiario final.</color>") +
                 "\n4 de 11: Retención · 7 de 11: Congelación · 11 de 11: Condena";
+            int reachable = CaseData.MaxIndicators(C.burned);
+            if (reachable < CaseData.Indicators.Length)
+                verdictText.text += $"\n<color=#F2A73B>Por las pruebas perdidas, el máximo es {reachable} de {CaseData.Indicators.Length}: la Condena queda fuera de alcance.</color>";
             sentenceBtn.interactable = chain && verdict > 0;
-            reboardBtn.interactable = C.trialDays > 3;
+            reboardBtn.gameObject.SetActive(ShipReachable);
+            reboardBtn.interactable = CanReboard;
+            closeBtn.gameObject.SetActive(!CanReboard && !SentencePossible()); // nunca queda un caso sin salida
             DrawLinks();
         }
 
@@ -216,11 +236,13 @@ namespace Kairos
             Game.AddReputation(5 + C.verdict * 3);
             Game.S.sentences++;
             Sfx.Play(Sfx.Seal, 1f);
+            Music.Stinger("victory");
 
             UI.Clear(root);
             UI.Summary(root, "Sentencia ejecutada", Pal.Sealed, new[]
             {
                 $"<b>{CaseData.VerdictNames[C.verdict]}</b>",
+                $"Expediente de {Game.Inspector}.",
                 $"{inds} de 11 indicadores de la OIT probados. Salida: {CaseData.ExitNames[C.exitUsed]}.",
                 $"<color=#FFD27A>Embargo: {C.embargo:N0} ¢. Al Fondo de Decomiso: {Mathf.RoundToInt(C.embargo * .15f):N0} ¢ (15 %).</color>",
                 C.verdict == 3
@@ -230,14 +252,15 @@ namespace Kairos
             Game.Write();
         }
 
-        void TrialFailed()
+        void TrialFailed() => CaseLost("Se acabó el reloj del juicio");
+
+        void CaseLost(string title)
         {
-            C.failed = true;
             C.trialDays = 0;
             Game.S.networkReorganized = true;
             Game.AddReputation(-5);
             UI.Clear(root);
-            UI.Summary(root, "Se acabó el reloj del juicio", Pal.Danger, new[]
+            UI.Summary(root, title, Pal.Danger, new[]
             {
                 "El buque cambia de nombre y bandera. La red se reorganiza con mejores defensas: en tu próxima incursión, los guardias verán más lejos.",
             }, "Quienes rescataste siguen siendo tu responsabilidad.", "Atender a las personas rescatadas", () => Game.GoToPhase(5));
@@ -309,9 +332,10 @@ namespace Kairos
         void ShowEpilogue()
         {
             bool success = C.verdict > 0;
-            if (success) { Game.AddBudget(50000); Game.S.casesClosed++; }
+            if (success) Game.AddBudget(50000);
             C.phase = 6;
             Game.Write();
+            Music.Play("transmission");
 
             UI.Clear(root);
             UI.Fullscreen(root, new Color(.02f, .05f, .07f, 1f));
@@ -320,17 +344,15 @@ namespace Kairos
             foreach (var st in C.persons)
             {
                 var d = CaseData.PersonDefOf(st.id);
-                int dignified = 0;
-                foreach (var x in st.dignified) if (x) dignified++;
                 UI.Line(s, d.name, 26, Pal.ThermHot, true);
                 string text = !st.rescued
                     ? "Sigue a bordo. KAIROS mantiene abierta su ficha: el caso no termina hasta que vuelva."
-                    : dignified >= 3 ? d.epilogueDignified : d.epilogueBasic;
+                    : CaseData.Epilogue(d, st, C.verdict);
                 UI.Line(s, text, 22);
             }
             UI.Line(s, " ", 10);
-            UI.Line(s, success ? $"Caso cerrado: +50.000 ¢. Reputación {Game.S.reputation}/100. Sentencias: {Game.S.sentences}." : "Caso sin sentencia. Puedes reabrirlo desde la base.", 22, Pal.Sealed);
-            UI.Line(s, "Golfo de Guinea e Índico siguen bloqueados en este build. Tidewater Holdings sigue ahí fuera.", 20, Pal.Dim);
+            UI.Line(s, success ? $"Caso cerrado: +50.000 ¢. Reputación {Game.S.reputation}/100. Sentencias: {Game.S.sentences}." : "Caso sin sentencia. Puedes repetirlo desde la base.", 22, Pal.Sealed);
+            UI.Line(s, "Expediente de " + Game.Inspector + ". Tidewater Holdings sigue ahí fuera.", 20, Pal.Dim);
             UI.Line(s, "Ningún océano es tan vasto ni ninguna noche tan oscura como para ocultar la dignidad humana.", 26, Pal.Sonar, false, TextAlignmentOptions.Center);
             UI.Btn(s, "Volver a la base", Game.GoToMenu, Pal.Sealed, 24, 56);
         }

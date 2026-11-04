@@ -13,6 +13,8 @@ namespace Kairos
 
         NavMeshAgent agent;
         VisionFan fan;
+        Walker walker;
+        float stepDistance;
         int wp; float wait, stunned, radio, lostFor;
         Vector3 lastKnown;
         InfiltrationController I => InfiltrationController.I;
@@ -23,7 +25,7 @@ namespace Kairos
             agent.enabled = true;
             agent.autoBraking = true;
             fan = VisionFan.Create(transform, .08f, viewRange, viewAngle);
-            GetComponent<Walker>();
+            walker = GetComponent<Walker>();
         }
 
         public float EffectiveRange => viewRange * .7f * (Game.S.networkReorganized ? 1.15f : 1f); // la lluvia reduce 30 % el alcance
@@ -60,7 +62,12 @@ namespace Kairos
         }
 
         public void Lure(Vector3 pos) { suspicion = Mathf.Max(suspicion, .65f); lastKnown = pos; }
-        public void Stun(float seconds) { stunned = seconds; suspicion = 0; radio = 0; if (agent.isOnNavMesh) agent.ResetPath(); }
+        public void Stun(float seconds)
+        {
+            stunned = seconds; suspicion = 0; radio = 0;
+            if (agent.isOnNavMesh) agent.ResetPath();
+            walker.crouched = true;
+        }
         public bool IsStunned => stunned > 0;
 
         void Update()
@@ -76,6 +83,8 @@ namespace Kairos
                 return;
             }
             agent.isStopped = false;
+            walker.crouched = false;
+            Footsteps();
 
             var p = I.player;
             bool seen = false; float dist = 99f;
@@ -135,6 +144,16 @@ namespace Kairos
             }
 
             fan.SetColor(state == GuardState.Tranquilo ? Pal.Sonar : state == GuardState.Sospecha ? Pal.DeckLight : Pal.Danger);
+        }
+
+        /// Sus pasos se oyen: ayudan a saber por dónde viene.
+        void Footsteps()
+        {
+            const float StepLength = 1.4f;
+            stepDistance += agent.velocity.magnitude * Time.deltaTime;
+            if (stepDistance < StepLength) return;
+            stepDistance = 0;
+            Sfx.PlayAt(Sfx.Step, transform.position, .22f, 14, Random.Range(.8f, 1f));
         }
 
         void Patrol()

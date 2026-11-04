@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace Kairos
 {
     /// Fase 2: lancha, pulsos de sonar en la cresta, dron térmico e hidrófono. Condición de paso: Confianza ≥ 70 %.
-    public class SonarController : MonoBehaviour
+    public partial class SonarController : MonoBehaviour
     {
         public Camera cam;
         public Transform ship, boat;
@@ -21,7 +21,7 @@ namespace Kairos
         static CaseState C => Game.C;
         Buoy buoy;
         float speed, yaw, camYaw, camPitch = 14f, camDist = 16f;
-        float pulseCooldown;
+        float pulseCooldown, seaBase = 4f;
         readonly float[] scan = new float[5], thermal = new float[5];
         float listen;
         int selected = 3;
@@ -43,6 +43,8 @@ namespace Kairos
         readonly UI.Bar[] scanBars = new UI.Bar[5];
         Button board;
         UI.Toasts toast;
+        Transform canvasRoot;
+        GameObject pausePanel;
 
         float WakeRange => Game.Has(1, 4) ? 100 : Game.Has(1, 1) ? 200 : 300;
         float PulseRange => Game.Has(0, 4) ? 600 : 350;
@@ -52,6 +54,7 @@ namespace Kairos
 
         void Start()
         {
+            SyncSea();
             buoy = boat.gameObject.AddComponent<Buoy>();
             buoy.draft = .1f; buoy.tilt = Game.Has(1, 3) ? .35f : .8f;
             ResetBoat();
@@ -67,9 +70,16 @@ namespace Kairos
             engineSrc = Sfx.Loop(boat.gameObject, Sfx.Engine, .3f);
             listenSrc = Sfx.Loop(gameObject, Sfx.Hum, 0);
             Sfx.Loop(gameObject, Sfx.Wind, .3f);
-            Sfx.Loop(gameObject, Sfx.Drone, .14f);
+            Music.Play("underwater");
             toast.Show("Quédate quieto o ve despacio: a toda marcha, tu estela te delata cerca del buque.", Pal.DeckLight, 7);
             RefreshPanel();
+        }
+
+        /// El mar de esta noche es el que marca el reloj del caso.
+        void SyncSea()
+        {
+            seaBase = CaseData.DouglasAt(C.hours);
+            Ocean.SetSea(seaBase);
         }
 
         void ResetBoat()
@@ -136,184 +146,27 @@ namespace Kairos
             return ship.TransformPoint(f + new Vector3(R() * .7f, R() * 1.6f, R() * .7f));
         }
 
-        // ---------- Vista térmica ----------
-        void BuildThermal()
-        {
-            thermalRoot = new GameObject("VistaTermica");
-            thermalRoot.SetActive(false);
-            var hull = ship.Find("Hull");
-            if (hull != null)
-            {
-                var ghost = new GameObject("CascoFantasma", typeof(MeshFilter), typeof(MeshRenderer));
-                ghost.transform.SetParent(thermalRoot.transform, false);
-                ghost.transform.SetPositionAndRotation(hull.position, hull.rotation);
-                ghost.GetComponent<MeshFilter>().sharedMesh = hull.GetComponent<MeshFilter>().sharedMesh;
-                ghost.GetComponent<MeshRenderer>().material = Mats.Glow(new Color(.1f, .2f, .35f, .16f));
-                ghost.layer = ThermalLayer;
-            }
-            foreach (var k in CaseData.Compartments)
-            {
-                var b = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                Destroy(b.GetComponent<Collider>());
-                b.layer = ThermalLayer;
-                b.transform.SetParent(thermalRoot.transform, false);
-                b.transform.position = ship.TransformPoint(k.center);
-                b.transform.localScale = k.size;
-                Color c = k.kind == 0 ? Pal.ThermCold : k.kind == 2 ? new Color(1f, .55f, .2f) : new Color(Pal.ThermHot.r, Pal.ThermHot.g * .8f, Pal.ThermHot.b * .5f);
-                c.a = k.kind == 1 ? .28f : .42f;
-                b.GetComponent<MeshRenderer>().material = Mats.Glow(c);
-            }
-            // Focos de 36-37 °C dentro del compartimento con personas: nunca un contador, solo huella térmica.
-            var k4 = CaseData.Compartments[3];
-            var rnd = new System.Random(4);
-            for (int i = 0; i < 4; i++)
-            {
-                var f = k4.center + new Vector3(((float)rnd.NextDouble() - .5f) * 3.5f, 1.8f, ((float)rnd.NextDouble() - .5f) * 12f);
-                personFoci.Add(f);
-                var s = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                Destroy(s.GetComponent<Collider>());
-                s.layer = ThermalLayer;
-                s.transform.SetParent(thermalRoot.transform, false);
-                s.transform.position = ship.TransformPoint(f);
-                s.transform.localScale = new Vector3(.9f, 1.7f, .9f);
-                s.GetComponent<MeshRenderer>().material = Mats.Glow(Pal.ThermHot, true, true);
-            }
-            // Tubería de agua dulce hasta K4, solo visible en térmica.
-            var pipe = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            Destroy(pipe.GetComponent<Collider>());
-            pipe.layer = ThermalLayer;
-            pipe.transform.SetParent(thermalRoot.transform, false);
-            pipe.transform.position = ship.TransformPoint(new Vector3(-1.2f, 5f, -10f));
-            pipe.transform.localScale = new Vector3(.25f, .25f, 26f);
-            pipe.GetComponent<MeshRenderer>().material = Mats.Glow(Pal.ThermHot, true, true);
-
-            drone = new GameObject("Dron").transform;
-        }
-
-        void ToggleDrone()
-        {
-            if (droneActive) { EndDrone(false); return; }
-            if (Ocean.Douglas >= 6) { toast.Show("El dron no vuela con Douglas 6 o más.", Pal.DeckLight); return; }
-            if (Game.S.droneParts <= 0) { toast.Show("Sin repuestos de dron: solo sonar e hidrófono desde la lancha.", Pal.DeckLight); return; }
-            droneActive = true;
-            droneBattery = 45f;
-            drone.position = boat.position + Vector3.up * 30;
-            drone.rotation = Quaternion.Euler(0, yaw, 0);
-            thermalRoot.SetActive(true);
-            savedBg = cam.backgroundColor; savedClear = cam.clearFlags; savedMask = cam.cullingMask;
-            cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = new Color(.01f, .02f, .05f);
-            cam.cullingMask = 1 << ThermalLayer;
-        }
-
-        void EndDrone(bool lost)
-        {
-            droneActive = false;
-            thermalRoot.SetActive(false);
-            cam.clearFlags = savedClear; cam.backgroundColor = savedBg; cam.cullingMask = savedMask;
-            float away = Vector3.Distance(drone.position, boat.position);
-            if (lost || away > 220f)
-            {
-                bool recovered = Random.value < .5f;
-                if (!recovered) Game.S.droneParts--;
-                toast.Show(recovered ? "Batería agotada lejos de la lancha, pero recuperas el dron en el mar." : "Dron perdido en el mar: -1 repuesto.", Pal.DeckLight);
-            }
-        }
-
-        // ---------- UI ----------
-        void BuildUI()
-        {
-            var canvas = UI.NewCanvas();
-            var left = UI.Panel(canvas.transform, new Vector2(0, .66f), new Vector2(.24f, 1));
-            var ls = UI.VStack(left.transform, 14, 7);
-            UI.Line(ls, "FASE 2 · ESCANEO", 26, Pal.Sonar, true);
-            status = UI.Line(ls, "", 20);
-            UI.Line(ls, "Sospecha del buque", 18, Pal.Dim);
-            suspBar = UI.NewBar(ls, Pal.Danger, 12);
-            crestText = UI.Line(ls, "Ola", 18, Pal.Dim);
-            crestBar = UI.NewBar(ls, Pal.Sonar, 18);
-            UI.Line(ls, "W/S marcha · A/D timón · Espacio pulso · H hidrófono · T dron · Clic der. cámara", 16, Pal.Dim);
-
-            var right = UI.Panel(canvas.transform, new Vector2(.68f, .38f), new Vector2(1, 1));
-            var rs = UI.VStack(right.transform, 12, 5);
-            UI.Line(rs, "Lectura del casco", 24, Pal.Sonar, true);
-            UI.Line(rs, "Encuentra dónde hay personas. La carga da una masa densa y homogénea; un espacio habitado suena hueco y con objetos sueltos.", 16, Pal.Dim);
-            for (int i = 0; i < 5; i++)
-            {
-                int k = i;
-                var row = UI.HStack(rs, 36);
-                selectBtn[i] = UI.Btn(row, CaseData.Compartments[i].name, () => { selected = k; RefreshPanel(); }, null, 18, 36);
-                classBtn[i] = UI.Btn(row, "Aquí hay personas", () => MarkPersons(k), Pal.DeckLight, 18, 36);
-                scanBars[i] = UI.NewBar(rs, Pal.Sonar, 5);
-                cardText[i] = UI.Line(rs, "", 15);
-            }
-            UI.Line(rs, "Opcional: H escucha el compartimento elegido y T lanza el dron térmico. Suben la confianza.", 15, Pal.Dim);
-            listenBar = UI.NewBar(rs, Pal.ThermHot, 6);
-            confidenceText = UI.Line(rs, "", 22, Pal.Text, true);
-            confBar = UI.NewBar(rs, Pal.Sealed, 12);
-            var bottom = UI.HStack(rs, 46);
-            board = UI.Btn(bottom, "Abordar: Fase 3", () => UI.Summary(canvas.transform, "Compartimento localizado", Pal.Sealed, new[]
-            {
-                $"Confianza: <b>{C.confidence:0} %</b>. {CaseData.Compartments[CaseData.PersonsCompartment].name}: {CaseData.Compartments[CaseData.PersonsCompartment].density}.",
-                C.dumped ? "<color=#F2A73B>Te detectaron y tiraron algunas pruebas al mar, pero el caso sigue.</color>" : "El buque no se ha enterado de que estás aquí.",
-            }, "Qué sigue: subes a bordo, reúnes pruebas y hablas con las personas retenidas.", "Lanzar el garfio", () => Game.GoToPhase(3)), Pal.Sealed, 21, 46);
-            UI.Btn(bottom, "Volver a base", Game.GoToMenu, Pal.Dim, 19, 46);
-            toast = UI.Toasts.Create(canvas.transform, new Vector2(.05f, .03f), new Vector2(.62f, .13f));
-
-            var hintP = UI.Panel(canvas.transform, new Vector2(.08f, .15f), new Vector2(.62f, .24f), default, default, new Color(.02f, .16f, .17f, .92f));
-            hintText = UI.Text(hintP.transform, "", 23, Pal.Sonar, TextAlignmentOptions.Center);
-            hintText.margin = new Vector4(12, 4, 12, 4);
-            UI.SceneIntro(canvas.transform, "FASE 2", "Escaneo con sonar");
-        }
-
-        void MarkPersons(int i)
-        {
-            var k = CaseData.Compartments[i];
-            if (scan[i] < 1) { toast.Show($"{k.name}: aún sin lectura. Sigue disparando pulsos.", Pal.DeckLight); return; }
-            if (k.kind == 1)
-            {
-                C.marked = i;
-                Sfx.Play(Sfx.Seal, .8f);
-                toast.Show($"{k.name}: {k.density}. Aquí hay alguien.", Pal.Sealed, 5);
-            }
-            else toast.Show($"{k.name}: {k.density}. {(k.kind == 0 ? "Es carga congelada" : "Es maquinaria")}, no personas. Prueba con otro.", Pal.DeckLight, 5);
-            RefreshPanel();
-        }
-
-        /// Un solo paso a la vez, según lo que falte.
-        string CurrentHint(float d)
-        {
-            if (droneActive) return "Dron térmico: W/S avanzar, A/D girar. Vuela sobre el barco y pulsa T para volver.";
-            if (d > PulseRange) return $"Mantén W para acercarte: el sonar llega a {PulseRange:0} m.";
-            if (scan[CaseData.PersonsCompartment] < 1 && C.marked < 0) return "Pulsa Espacio cuando la barra de ola esté en verde. Repite hasta llenar las lecturas.";
-            if (C.marked != CaseData.PersonsCompartment) return "Compara las lecturas y pulsa «Aquí hay personas» en la que suene hueca.";
-            return C.confidence >= CaseData.ConfidenceToBoard ? "Ya tienes confianza suficiente: pulsa «Abordar»." : "Sigue escaneando ese compartimento.";
-        }
-
-        void RefreshPanel()
-        {
-            for (int i = 0; i < 5; i++)
-            {
-                var k = CaseData.Compartments[i];
-                int sig = C.scanSignals[i];
-                string dens = (sig & Bit_Density) != 0 ? k.density : scan[i] > 0 ? $"{scan[i] * 100:0} %" : "—";
-                string th = (sig & Bit_Thermal) != 0 ? $"{k.temp}. {k.cycle}. Agua: {k.water}" : thermal[i] > 0 ? $"{thermal[i] * 100:0} %" : "—";
-                string sn = (sig & Bit_Sound) != 0 ? k.sound : "—";
-                cardText[i].text = $"<color=#3FE0D0>Densidad</color> {dens}  <color=#FFD27A>Térmica</color> {th}  <color=#9fb>Sonido</color> {sn}";
-                scanBars[i].Set(scan[i]);
-                UI.SetLabel(classBtn[i], C.marked == i ? "Personas: marcado" : "Aquí hay personas");
-                UI.SetLabel(selectBtn[i], (selected == i ? "> " : "") + k.name);
-            }
-            C.confidence = CaseData.ComputeConfidence(C.marked, C.scanSignals);
-            confidenceText.text = $"Confianza: {C.confidence:0} % (mínimo {CaseData.ConfidenceToBoard} %)";
-            confBar.Set(C.confidence / 100f);
-            board.interactable = C.confidence >= CaseData.ConfidenceToBoard;
-        }
-
         // ---------- Bucle ----------
+        void TogglePause()
+        {
+            bool pause = pausePanel == null;
+            Time.timeScale = pause ? 0 : 1;
+            if (!pause) { Destroy(pausePanel); return; }
+            var panel = UI.Panel(canvasRoot, new Vector2(.34f, .3f), new Vector2(.66f, .7f));
+            pausePanel = panel.gameObject;
+            var s = UI.VStack(panel.transform, 26, 10);
+            UI.Line(s, "Pausa", 34, Pal.Sonar, true);
+            UI.Line(s, "W/S marcha · A/D timón · Espacio pulso · H hidrófono · T dron · Clic derecho: cámara", 20, Pal.Dim);
+            UI.Btn(s, "Continuar", TogglePause, Pal.Sealed);
+            UI.Btn(s, "Volver a la base", Game.GoToMenu, Pal.Dim);
+        }
+
         void Update()
         {
-            Ocean.DriftDouglas(4, 6.2f, 5f);
             var kb = Keyboard.current;
+            if (kb != null && kb.escapeKey.wasPressedThisFrame) TogglePause();
+            if (pausePanel != null) return;
+            Ocean.DriftDouglas(seaBase, seaBase + 2.2f, 5f);
             pulseCooldown -= Time.deltaTime;
             float d = DistToShip;
 
@@ -499,13 +352,15 @@ namespace Kairos
         void Detected()
         {
             C.suspicion = 0;
-            C.hours += 6;
+            C.hours = Game.NextNight(C.hours + 6);
+            SyncSea();
+            string back = $"Vuelves a distancia segura: {Game.FormatClock(C.hours)}.";
             if (!C.dumped)
             {
                 C.dumped = true;
-                toast.Show("¡Te detectan! El buque entra en alerta y tira pruebas al mar. Vuelves a distancia segura, 6 h después.", Pal.Danger, 7);
+                toast.Show($"¡Te detectan! Tiran pruebas al mar, entre ellas la planilla de turnos: la Condena queda fuera de alcance. {back}", Pal.Danger, 9);
             }
-            else toast.Show("¡Te detectan otra vez! Te retiras a distancia segura, 6 h después.", Pal.Danger, 6);
+            else toast.Show($"¡Te detectan otra vez! {back}", Pal.Danger, 6);
             Sfx.Play(Sfx.Alarm, .7f);
             if (droneActive) EndDrone(false);
             ResetBoat();
@@ -516,8 +371,9 @@ namespace Kairos
         {
             Game.S.fuel = 400;
             Game.AddBudget(-10000);
-            C.hours += 24;
-            toast.Show("Sin combustible: te remolcan. -24 h en el reloj del caso y -10.000 ¢.", Pal.DeckLight, 6);
+            C.hours = Game.NextNight(C.hours + 24);
+            SyncSea();
+            toast.Show($"Sin combustible: te remolcan. -24 h en el reloj del caso y -10.000 ¢. Vuelves: {Game.FormatClock(C.hours)}.", Pal.DeckLight, 6);
             ResetBoat();
         }
     }

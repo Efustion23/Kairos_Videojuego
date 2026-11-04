@@ -47,7 +47,6 @@ namespace Kairos
             return new Vector3(Height(x - e, z) - Height(x + e, z), 2 * e, Height(x, z - e) - Height(x, z + e)).normalized;
         }
 
-        public static float SwellPeriod => 2 * Mathf.PI / Waves[0].z;
         static float SwellPhase(float x, float z) => Waves[0].x * x + Waves[0].y * z + Waves[0].z * T;
         /// 1 en la cresta del oleaje de fondo, -1 en el seno.
         public static float Swell(float x, float z) => Mathf.Sin(SwellPhase(x, z));
@@ -62,6 +61,9 @@ namespace Kairos
             float d = Mathf.DeltaAngle(SwellPhase(x, z) * Mathf.Rad2Deg, -90f) * Mathf.Deg2Rad;
             return Mathf.Abs(d) / Waves[0].z;
         }
+
+        /// Fija el estado del mar, por ejemplo el que marca el reloj del caso.
+        public static void SetSea(float douglas) { Douglas = douglas; driftTarget = -1; }
 
         // El mar cambia en transiciones de minutos: va y viene entre min y max.
         static float driftTarget = -1;
@@ -88,6 +90,7 @@ namespace Kairos
             sh.AddDirectionalLight(Vector3.up, new Color(.34f, .45f, .6f), .55f);
             RenderSettings.ambientProbe = sh;
             Shader.SetGlobalVector("_BoatPos", Vector4.zero);
+            Shader.SetGlobalFloat("_RainDim", 0);
             mesh = RadialGrid(rings, segments);
             var mf = GetComponent<MeshFilter>();
             if (mf != null) mf.sharedMesh = mesh;
@@ -137,47 +140,6 @@ namespace Kairos
             m.vertices = v; m.triangles = idx;
             m.bounds = new Bounds(Vector3.zero, new Vector3(6000, 40, 6000));
             return m;
-        }
-    }
-
-    /// Lluvia ligera alrededor de la cámara. El efecto en la IA está en InfiltrationController.
-    public static class RainFx
-    {
-        public static ParticleSystem Create(Transform follow, float rate = 900)
-        {
-            var go = new GameObject("Rain");
-            go.transform.SetParent(follow, false);
-            go.transform.localPosition = new Vector3(0, 10, 4);
-            var ps = go.AddComponent<ParticleSystem>();
-            ps.Stop();
-            var main = ps.main;
-            main.startLifetime = .8f; main.startSpeed = 24f; main.startSize = .018f; main.maxParticles = 2500;
-            main.startColor = new Color(.6f, .75f, .85f, .35f);
-            main.simulationSpace = ParticleSystemSimulationSpace.World;
-            var em = ps.emission; em.rateOverTime = rate;
-            var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Box; sh.scale = new Vector3(30, .5f, 30);
-            sh.rotation = new Vector3(90, 0, 0);
-            var r = go.GetComponent<ParticleSystemRenderer>();
-            r.renderMode = ParticleSystemRenderMode.Stretch; r.lengthScale = 6f; r.velocityScale = .02f;
-            r.material = Mats.Glow(new Color(.65f, .8f, .9f, .25f), additive: false);
-            ps.Play();
-            return ps;
-        }
-    }
-
-    /// Cuerpo que flota sobre la ola real.
-    public class Buoy : MonoBehaviour
-    {
-        public float draft = .2f, tilt = 1f;
-        public float yaw;
-        void LateUpdate()
-        {
-            var p = transform.position;
-            p.y = Ocean.Height(p.x, p.z) - draft;
-            transform.position = p;
-            var n = Vector3.Slerp(Vector3.up, Ocean.Normal(p.x, p.z), tilt);
-            var f = Quaternion.Euler(0, yaw, 0) * Vector3.forward;
-            transform.rotation = Quaternion.LookRotation(Vector3.ProjectOnPlane(f, n), n);
         }
     }
 }

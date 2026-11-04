@@ -19,7 +19,7 @@ Shader "Kairos/NightSky"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             float4 _Zenith, _Horizon, _MoonDir;
             float _Clouds;
-            float _OceanT;
+            float _OceanT, _RainDim;
             struct A { float4 pos : POSITION; };
             struct V { float4 cs : SV_POSITION; float3 dir : TEXCOORD0; };
             V vert(A a)
@@ -42,7 +42,7 @@ Shader "Kairos/NightSky"
                 float up = saturate(d.y);
                 float3 c = lerp(_Horizon.rgb, _Zenith.rgb, pow(up, .45));
                 float star = step(.9988, Hash(floor(d * 620)));
-                c += star * .55 * smoothstep(.05, .4, up);
+                c += star * .55 * smoothstep(.05, .4, up) * (1 - _RainDim * .9);
                 float3 m = normalize(_MoonDir.xyz);
                 float md = dot(d, m);
                 c += smoothstep(.9992, .9996, md) * float3(.9, .95, 1) + pow(saturate(md), 90) * float3(.12, .16, .2);

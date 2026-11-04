@@ -189,6 +189,17 @@ namespace Kairos
             content.offsetMin = content.offsetMax = Vector2.zero;
             content.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             sr.viewport = view; sr.content = content;
+
+            // Barra visible: sin ella no se nota que la lista sigue más abajo.
+            var track = Rect(view, "Barra", new Vector2(1, 0), Vector2.one, new Vector2(-8, 4), new Vector2(-2, -4));
+            track.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, .06f);
+            var handle = Rect(track, "Asa", Vector2.zero, Vector2.one);
+            var handleImg = handle.gameObject.AddComponent<Image>();
+            handleImg.color = new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, .6f);
+            var bar = track.gameObject.AddComponent<Scrollbar>();
+            bar.handleRect = handle; bar.targetGraphic = handleImg; bar.direction = Scrollbar.Direction.BottomToTop;
+            sr.verticalScrollbar = bar;
+            sr.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
             return content;
         }
 
@@ -224,7 +235,7 @@ namespace Kairos
         public static void Summary(Transform parent, string title, Color titleColor, string[] lines, string next, string button, Action onClick)
         {
             Fullscreen(parent, new Color(.02f, .05f, .07f, .97f));
-            var p = Panel(parent, new Vector2(.22f, .2f), new Vector2(.78f, .8f));
+            var p = Panel(parent, new Vector2(.22f, .24f), new Vector2(.78f, .76f));
             var s = VStack(p.transform, 34, 14);
             s.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleLeft;
             Line(s, title, 40, titleColor, true);
@@ -266,26 +277,6 @@ namespace Kairos
                 col.a = Mathf.Clamp01((until - Time.unscaledTime) * 2f);
                 text.color = col;
             }
-        }
-    }
-
-    /// Materiales en tiempo de ejecución a partir de Resources/KGlow (shader Kairos/Glow).
-    public static class Mats
-    {
-        static Material baseMat;
-        public static Material Glow(Color c, bool additive = true, bool overlay = false, bool round = false, Texture tex = null, bool opaque = false)
-        {
-            if (baseMat == null) baseMat = Resources.Load<Material>("KGlow");
-            var m = new Material(baseMat);
-            m.SetColor("_Color", c);
-            if (tex != null) m.SetTexture("_MainTex", tex);
-            m.SetFloat("_Src", opaque ? (float)UnityEngine.Rendering.BlendMode.One : (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            m.SetFloat("_Dst", opaque ? (float)UnityEngine.Rendering.BlendMode.Zero : additive ? (float)UnityEngine.Rendering.BlendMode.One : (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            m.SetFloat("_ZT", overlay ? (float)UnityEngine.Rendering.CompareFunction.Always : (float)UnityEngine.Rendering.CompareFunction.LessEqual);
-            m.SetFloat("_ZW", opaque ? 1 : 0);
-            m.SetFloat("_Round", round ? 1 : 0);
-            m.renderQueue = opaque ? 2000 : 3000;
-            return m;
         }
     }
 }

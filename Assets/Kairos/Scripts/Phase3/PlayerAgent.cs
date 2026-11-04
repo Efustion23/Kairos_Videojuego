@@ -20,6 +20,7 @@ namespace Kairos
         public bool Aiming { get; private set; }
         public bool Running { get; private set; }
         public bool Moved { get; private set; }
+        public bool IsMoving => moveVel.sqrMagnitude > .04f;
         public float Stamina { get; private set; } = 1f;
         public float Focus => focus;
         public Interactable Near { get; private set; }
@@ -72,7 +73,7 @@ namespace Kairos
         void Update()
         {
             if (I != null) motion.talking = I.mode == InfiltrationController.Mode.Dialog;
-            if (I == null || !I.PlayerCanAct) { HoldingTarget = null; motion.busy = motion.aiming = false; return; }
+            if (I == null || !I.Running) { HoldingTarget = null; motion.busy = motion.aiming = false; return; }
             var kb = Keyboard.current; var mouse = Mouse.current;
             if (kb == null || mouse == null) return;
 
@@ -169,6 +170,8 @@ namespace Kairos
                 if (dy < -.6f || dy > 2.5f) continue; // misma cubierta: nada a través del suelo o el techo
                 float d = (overlap[i].ClosestPoint(transform.position + Vector3.up) - (transform.position + Vector3.up)).sqrMagnitude;
                 if (it is EvidenceProp) d += 1.5f; // la puerta o la persona antes que el objeto
+                if (it is PersonNpc npc && npc.State.following) d += 4f; // quien te sigue va pegado a ti: no tapa lo que tienes delante
+                if (it == I.ObjectiveInteractable) d -= 3f; // lo que pide el objetivo manda sobre lo que hay alrededor
                 if (d < best) { best = d; Near = it; }
             }
 
@@ -193,6 +196,20 @@ namespace Kairos
             }
         }
 
+        /// Sin rostros sin permiso: el motivo si alguien sale en el encuadre; si no, null.
+        public string FaceInFrame(Vector3 from, Vector3 direction)
+        {
+            foreach (var p in I.people)
+            {
+                if (p == null || !p.gameObject.activeInHierarchy) continue;
+                var face = p.transform.position + Vector3.up * 1.5f;
+                var to = face - from;
+                if (to.magnitude < 9f && Vector3.Angle(direction, to) < 12f && p.State.testimony != 1 && !Physics.Linecast(from, face, Layers.SolidMask))
+                    return "Rostro en el encuadre sin permiso";
+            }
+            return null;
+        }
+
         /// Opcional: fotografiar de lejos. De cerca basta con mantener E.
         void ForensicCamera(Mouse mouse)
         {
@@ -212,14 +229,7 @@ namespace Kairos
                 if (e != null && !Game.HasEvidence(e.evidenceId)) { Framed = e; break; }
             }
 
-            // Sin rostros sin permiso.
-            foreach (var p in I.people)
-            {
-                if (p == null || !p.gameObject.activeInHierarchy) continue;
-                var to = p.transform.position + Vector3.up * 1.5f - cam.transform.position;
-                if (to.magnitude < 9f && Vector3.Angle(cam.transform.forward, to) < 12f && p.State.testimony != 1 && !Physics.Linecast(cam.transform.position, p.transform.position + Vector3.up * 1.5f, Layers.SolidMask))
-                { FrameBlock = "Rostro en el encuadre sin permiso"; break; }
-            }
+            FrameBlock = FaceInFrame(cam.transform.position, cam.transform.forward);
 
             if (mouse.leftButton.wasPressedThisFrame)
             {

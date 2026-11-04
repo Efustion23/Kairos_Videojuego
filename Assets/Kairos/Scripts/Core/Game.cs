@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 namespace Kairos
 {
-    /// Paleta del GDD: el color da información de juego, no solo ambiente.
+    /// Paleta del juego: el color da información, no solo ambiente.
     public static class Pal
     {
         public static readonly Color Ocean = Hex("#0B1A24"), Storm = Hex("#2E3A44"), Rust = Hex("#8A3B12"),
@@ -35,7 +35,7 @@ namespace Kairos
     {
         public int phase = 1; // 1-4 fases, 5 repatriación, 6 cerrado
         public float hours;
-        public int abLeft = 60, abDay;
+        public int abLeft = 60;
         public int revealed;     // máscara de capas compradas
         public bool sarDegraded; // pasada SAR comprada con mar gruesa
         public int ir;
@@ -57,7 +57,6 @@ namespace Kairos
         public List<string> presented = new List<string>(), links = new List<string>();
         public int verdict; // 1 retención, 2 congelación, 3 condena
         public int embargo;
-        public bool failed;
     }
 
     [Serializable]
@@ -65,8 +64,8 @@ namespace Kairos
     {
         public string playerName = "Inspector", gender = "No especificar", origin = "Perú";
         public bool omitSensitive, warningAccepted;
-        public float mouseSens = 1f;
-        public int budget = 500000, droneParts = 6, reputation = 20, sentences, casesClosed;
+        public float mouseSens = 1f, masterVolume = 1f, musicVolume = .6f;
+        public int budget = 500000, droneParts = 6, reputation = 20, sentences;
         public float fuel = 4000;
         public int[] upgrades = new int[4];
         public bool networkReorganized;
@@ -96,13 +95,21 @@ namespace Kairos
                     try { s = HasSave ? JsonUtility.FromJson<Save>(File.ReadAllText(SavePath)) : null; }
                     catch (Exception e) { Debug.LogWarning("Partida ilegible, se empieza de cero: " + e.Message); }
                     if (s == null) NewGame();
+                    AudioListener.volume = s.masterVolume;
                 }
                 return s;
             }
         }
         public static CaseState C => S.c;
 
-        public static void NewGame() { s = new Save(); StartCase(); }
+        /// Empieza de cero conservando las preferencias del jugador.
+        public static void NewGame()
+        {
+            var previous = s;
+            s = new Save();
+            if (previous != null) { s.mouseSens = previous.mouseSens; s.masterVolume = previous.masterVolume; s.musicVolume = previous.musicVolume; }
+            StartCase();
+        }
 
         public static void StartCase()
         {
@@ -119,9 +126,20 @@ namespace Kairos
 
         public static bool Has(int branch, int level) => S.upgrades[branch] >= level;
 
+        /// Quién firma el expediente: nombre, género (si se indicó) y origen.
+        public static string Inspector => S.gender == "No especificar" ? $"{S.playerName} · {S.origin}" : $"{S.playerName} · {S.gender} · {S.origin}";
+
+        /// Las incursiones salen siempre de noche: si es de día, se espera a las 20:00 de ese mismo día.
+        public static float NextNight(float hours)
+        {
+            float t = (hours + 22f) % 24f;
+            return t >= 6f && t < 20f ? hours + 20f - t : hours;
+        }
+
         public static void GoToPhase(int phase)
         {
             C.phase = phase;
+            if (phase == 2 || phase == 3) C.hours = NextNight(C.hours);
             Write();
             Time.timeScale = 1;
             SceneManager.LoadScene(PhaseScenes[phase]);

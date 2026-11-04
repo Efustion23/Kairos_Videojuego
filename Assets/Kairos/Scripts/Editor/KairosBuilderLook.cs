@@ -134,6 +134,19 @@ namespace Kairos.EditorTools
             return (c, tread * (1 - puddle * .85f) * .6f + (fine - .5f) * .05f, Mathf.Lerp(.42f, .92f, puddle));
         }
 
+        /// Hoja impresa: renglones, cabecera y un sello.
+        static (Color, float, float) Document(float u, float v)
+        {
+            bool line = u > .1f && u < .9f && v > .08f && v < .78f && (v * 22 % 1f) < .32f && (u < .62f || (v * 22) % 3f > 1f);
+            bool head = u > .1f && u < .55f && v > .84f && v < .92f;
+            float d = new Vector2(u - .74f, v - .2f).magnitude;
+            bool stamp = d < .13f && d > .1f;
+            var c = new Color(.8f, .78f, .69f);
+            if (line || head) c = new Color(.2f, .2f, .22f);
+            if (stamp) c = new Color(.55f, .1f, .08f);
+            return (c, .5f, .15f);
+        }
+
         /// Contenedor corrugado.
         static (Color, float, float) Corrugated(float u, float v)
         {
@@ -283,14 +296,30 @@ namespace Kairos.EditorTools
             foreach (var (x, z) in new[] { (-3.6f, 12.7f), (-3.1f, 7.6f) }) b.Ellipsoid(orange, new Vector3(x, 7.05f, z), Vector3.one * .3f); // boyas sobre las tapas de bodega
 
             // Bidones.
-            foreach (var (x, z, m) in new[] { (5.6f, -38.6f, redPaint), (5.6f, -39.4f, pipeBlue), (4.9f, -39f, redPaint), (-5.7f, 19.2f, yellow), (5.3f, 22.5f, pipeBlue) })
+            foreach (var (x, z, yaw) in new[] { (5.6f, -38.6f, 20f), (5.6f, -39.4f, 140f), (4.9f, -39f, 250f), (-5.7f, 19.2f, 70f), (5.3f, 22.5f, 310f) })
             {
                 var p = new Vector3(x, 6, z);
-                b.Pipe(m, p, p + Vector3.up * .9f, .3f, 12);
-                b.Pipe(darkMetal, p + Vector3.up * .3f, p + Vector3.up * .33f, .31f, 12);
-                b.Pipe(darkMetal, p + Vector3.up * .6f, p + Vector3.up * .63f, .31f, 12);
+                b.Prop("barrel_03", p, yaw, .95f);
                 b.Solid(p + Vector3.up * .45f, new Vector3(.6f, .9f, .6f));
             }
+
+            // Cajas de pescado apiladas junto a la red y en proa.
+            foreach (var (x, z) in new[] { (-5.5f, -28.5f), (5.2f, 19.5f) })
+            {
+                for (int level = 0; level < 3; level++)
+                    b.Prop("plastic_crate_02", new Vector3(x, 6 + level * .29f, z), level * 7f, .62f);
+                b.Solid(new Vector3(x, 6.45f, z), new Vector3(.65f, .9f, .5f));
+            }
+
+            // Bidones y bombonas sueltos: el buque lleva meses sin tocar puerto.
+            b.Prop("metal_jerrycan_green", new Vector3(3.1f, 6, -39.9f), 35, .5f);
+            b.Prop("metal_jerrycan_green", new Vector3(2.6f, 6, -40.2f), 80, .5f);
+            b.Prop("propane_tank", new Vector3(5.4f, 6, -24.2f), 0, .9f);
+            b.Solid(new Vector3(5.4f, 6.45f, -24.2f), new Vector3(.45f, .9f, .45f));
+
+            // Salvavidas y apliques en el mamparo de popa de la habilitación.
+            b.Prop("lifebuoy", new Vector3(3.4f, 7.1f, -20.34f), 0, .8f);
+            foreach (var x in new[] { -1.3f, 1.3f }) b.Prop("industrial_wall_lamp", new Vector3(x, 8.15f, -20.18f), 180, .4f);
 
             // Ventanas y marcos de la habilitación.
             foreach (var z in new[] { -17f, -12.5f, -8f, -3.5f, .5f })
@@ -392,8 +421,7 @@ namespace Kairos.EditorTools
             }
             foreach (var (x, z) in new[] { (1.13f, -25f), (-1.13f, -14f), (1.13f, 8f) })
             {
-                b.Box(super, new Vector3(x, 4.7f, z), new Vector3(.1f, .6f, .42f), null, false);
-                b.Box(screenMat, new Vector3(x - Mathf.Sign(x) * .055f, 4.86f, z), new Vector3(.01f, .06f, .06f), null, false);
+                b.Prop("utility_box_01", new Vector3(x, 4.35f, z), x > 0 ? -90 : 90, .65f);
                 b.Pipe(rubber, new Vector3(x, 5, z), new Vector3(x, 5.72f, z), .015f, 5);
             }
             foreach (var (x, z) in new[] { (1.1f, -8.5f), (-1.1f, 7f), (-1.1f, -24f) })
@@ -423,15 +451,14 @@ namespace Kairos.EditorTools
                 b.Box(mattress, new Vector3(-5.9f, 4.91f, z), new Vector3(1.45f, .1f, 2f), new Vector3(0, (z * 7) % 4 - 2, 0), false);
                 b.Pipe(darkMetal, new Vector3(-5.15f, 3, z - 1.05f), new Vector3(-5.15f, 5.3f, z - 1.05f), .035f, 6);
             }
-            b.Pipe(pipeBlue, new Vector3(-2.2f, 3.6f, 8.5f), new Vector3(-2.2f, 4.05f, 8.5f), .15f, 10);
+            b.Prop("plastic_jerrycan", new Vector3(-2.2f, 3.6f, 8.5f), 25, .45f);
 
             // Habilitación: literas con colchón, banquetas, carteles y lámparas.
             foreach (var z in new[] { -10f, -6.5f, -3f, .5f }) b.Box(mattress, new Vector3(4.2f, 7.84f, z), new Vector3(1.2f, .08f, 2f), null, false);
-            foreach (var z in new[] { -6.8f, -5f, -3.2f })
-            {
-                b.Pipe(darkMetal, new Vector3(-1.9f, 6, z), new Vector3(-1.9f, 6.45f, z), .03f, 6);
-                b.Pipe(crate, new Vector3(-1.9f, 6.45f, z), new Vector3(-1.9f, 6.5f, z), .17f, 10);
-            }
+            foreach (var z in new[] { -6.2f, -5f, -3.2f }) b.Prop("metal_stool_02", new Vector3(-2.15f, 6, z), z * 40, .5f);
+            b.Prop("medical_box", new Vector3(-3.6f, 6.8f, -3.2f), 200, .42f);
+            b.Prop("propane_tank", new Vector3(-4.45f, 6, .9f), 0, .9f);
+            b.Solid(new Vector3(-4.45f, 6.45f, .9f), new Vector3(.45f, .9f, .45f));
             b.Box(yellow, new Vector3(1.14f, 7.5f, -11f), new Vector3(.02f, .5f, .36f), null, false);
             b.Box(super, new Vector3(-1.14f, 7.4f, -3.4f), new Vector3(.02f, .6f, .9f), null, false);
 

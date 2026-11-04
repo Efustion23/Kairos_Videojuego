@@ -1,0 +1,7 @@
+{
+    "name": "Kairos.Editor",
+    "rootNamespace": "Kairos.EditorTools",
+    "references": ["Kairos", "Unity.InputSystem", "Unity.TextMeshPro", "UnityEngine.UI", "Unity.AI.Navigation", "Unity.AI.Navigation.Editor", "Unity.RenderPipelines.Core.Runtime", "Unity.RenderPipelines.Universal.Runtime"],
+    "includePlatforms": ["Editor"],
+    "autoReferenced": true
+}

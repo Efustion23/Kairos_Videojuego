@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Kairos
 {
-    /// Audio sintetizado: el sonido da información de juego (GDD) y no hay assets aún.
+    /// Efectos sintetizados al vuelo: cada sonido da información de juego.
     public static class Sfx
     {
         const int Rate = 44100;
@@ -30,11 +30,11 @@ namespace Kairos
         static float Sin(float hz, float t) => Mathf.Sin(2 * Mathf.PI * hz * t);
 
         static AudioClip radio, stepWet;
-        /// Chasquido y ruido de radio: el guardia cambia de ronda (GDD: "Radio de guardias anticipa cambios de ronda").
+        /// Chasquido y ruido de radio: el guardia cambia de ronda.
         public static AudioClip Radio => radio ??= Make("radio", .45f, (t, u) => (N() * .5f + Sin(1100, t) * .25f * (u > .25f && u < .75f ? Mathf.Sign(Sin(35, t)) : 0)) * (u < .06f || u > .9f ? 1f : .55f) * .55f);
         public static AudioClip StepWet => stepWet ??= Make("stepWet", .16f, (t, u) => (Sin(75, t) * .6f + N() * .55f) * Mathf.Exp(-u * 6) * .65f);
 
-        static AudioClip click, shutter, step, creak, grapple, plasma, alarm, sealedTone, knock, slip, stun, pingDense, pingHollow, hum, wind, voices, breath, drone, rain, engine, seal;
+        static AudioClip click, shutter, step, creak, grapple, plasma, alarm, sealedTone, knock, slip, stun, pingDense, pingHollow, hum, wind, voices, breath, rain, engine, seal;
 
         public static AudioClip Click => click ??= Make("click", .05f, (t, u) => Sin(1400, t) * (1 - u) * .5f);
         public static AudioClip Shutter => shutter ??= Make("shutter", .14f, (t, u) => N() * Mathf.Exp(-u * 9) * (u < .4f || u > .6f ? 1 : .1f) * .6f);
@@ -79,8 +79,6 @@ namespace Kairos
             return (Sin(f0, t) + Sin(f0 * 2, t) * .6f + Sin(f0 * 5, t) * .15f) * gate * .35f;
         }, true);
         public static AudioClip Breath => breath ??= Make("breath", 2.4f, (t, u) => N() * Mathf.Pow(Mathf.Sin(Mathf.PI * ((u * 2) % 1f)), 2) * .25f);
-        public static AudioClip Drone => drone ??= Make("drone", 12f, (t, u) =>
-            (Sin(55, t) * .4f + Sin(82.4f, t) * .3f * (.5f + .5f * Sin(.1f, t)) + Sin(110.2f, t) * .2f * (.5f + .5f * Sin(.17f, t)) + Sin(164.8f, t) * .08f), true);
 
         static AudioSource oneShot;
         static AudioSource Src
