@@ -202,6 +202,7 @@ namespace Kairos
                 }, "Qué sigue: te acercas en lancha y escaneas el casco para saber dónde están las personas.", "Salir en lancha", () => Game.GoToPhase(2));
             }, Pal.Sealed, 23, 54);
             toast = UI.Toasts.Create(canvas.transform, new Vector2(.05f, .04f), new Vector2(.65f, .14f));
+            UI.SceneIntro(canvas.transform, "FASE 1", "Rastreo satelital");
         }
 
         int IR(ShipDef s) => CaseData.ComputeIR(s, C.revealed, C.hours, C.sarDegraded, Decay);

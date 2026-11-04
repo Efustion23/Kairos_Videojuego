@@ -262,6 +262,7 @@ namespace Kairos
             var hintP = UI.Panel(canvas.transform, new Vector2(.08f, .15f), new Vector2(.62f, .24f), default, default, new Color(.02f, .16f, .17f, .92f));
             hintText = UI.Text(hintP.transform, "", 23, Pal.Sonar, TextAlignmentOptions.Center);
             hintText.margin = new Vector4(12, 4, 12, 4);
+            UI.SceneIntro(canvas.transform, "FASE 2", "Escaneo con sonar");
         }
 
         void MarkPersons(int i)
@@ -373,7 +374,10 @@ namespace Kairos
             speed = Mathf.MoveTowards(speed, throttle * MaxSpeed, Time.deltaTime * 6f);
             yaw += rudder * Time.deltaTime * 45f * Mathf.Clamp01(Mathf.Abs(speed) / 4f + .2f);
             buoy.yaw = yaw;
-            boat.position += Quaternion.Euler(0, yaw, 0) * Vector3.forward * speed * Time.deltaTime;
+            var heading = Quaternion.Euler(0, yaw, 0) * Vector3.forward;
+            boat.position += heading * speed * Time.deltaTime;
+            Shader.SetGlobalVector("_BoatPos", new Vector4(boat.position.x, boat.position.y, boat.position.z, Mathf.Abs(speed)));
+            Shader.SetGlobalVector("_BoatDir", heading * Mathf.Sign(speed + .001f));
             engineSrc.pitch = .7f + Mathf.Abs(speed) / MaxSpeed;
 
             if (Mathf.Abs(throttle) > 0)
@@ -385,7 +389,7 @@ namespace Kairos
             var mouse = Mouse.current;
             if (mouse != null && mouse.rightButton.isPressed)
             {
-                var md = mouse.delta.ReadValue();
+                var md = mouse.delta.ReadValue() * Game.S.mouseSens;
                 camYaw += md.x * .2f; camPitch = Mathf.Clamp(camPitch - md.y * .15f, 4, 50);
             }
             var rot = Quaternion.Euler(camPitch, yaw + camYaw, 0);

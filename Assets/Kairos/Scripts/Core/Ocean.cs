@@ -82,9 +82,12 @@ namespace Kairos
             Douglas = douglasAtStart;
             driftTarget = -1;
             // Sin lighting bakeado la sonda de ambiente queda negra: se fija aquí.
+            // Más luz desde el cielo que desde abajo: da volumen a lo que no toca ninguna lámpara.
             var sh = new UnityEngine.Rendering.SphericalHarmonicsL2();
-            sh.AddAmbientLight(ambient);
+            sh.AddAmbientLight(ambient * .8f);
+            sh.AddDirectionalLight(Vector3.up, new Color(.34f, .45f, .6f), .55f);
             RenderSettings.ambientProbe = sh;
+            Shader.SetGlobalVector("_BoatPos", Vector4.zero);
             mesh = RadialGrid(rings, segments);
             var mf = GetComponent<MeshFilter>();
             if (mf != null) mf.sharedMesh = mesh;

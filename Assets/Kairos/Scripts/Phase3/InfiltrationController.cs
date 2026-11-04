@@ -770,6 +770,8 @@ namespace Kairos
             hudPanels = new[] { tl.gameObject, tr.gameObject, bl.gameObject };
             reticle.SetActive(false); holdRoot.SetActive(false); hintRoot.SetActive(false); objMarker.gameObject.SetActive(false);
 
+            UI.SceneIntro(canvas.transform, "FASE 3", "Infiltración");
+
             foreach (var g in guards) AddMark(g.transform, g.displayName, Pal.Danger, 2.2f, g);
             foreach (var p in people) AddMark(p.transform, p.Def.name, Pal.ThermHot, 2.1f);
             foreach (var e in evidenceProps) AddMark(e.transform, e.Def.title, Pal.Sealed, .4f);

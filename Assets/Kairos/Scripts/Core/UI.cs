@@ -47,7 +47,61 @@ namespace Kairos
             i.color = color ?? Pal.PanelBg;
             var o = r.gameObject.AddComponent<Outline>();
             o.effectColor = Pal.Line; o.effectDistance = new Vector2(1, -1);
+            // Filo de instrumento: identifica los paneles como parte de la unidad KAIROS.
+            var edge = Rect(r, "Filo", new Vector2(0, 1), Vector2.one, new Vector2(0, -2), Vector2.zero);
+            var edgeImg = edge.gameObject.AddComponent<Image>();
+            edgeImg.color = new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, .55f); edgeImg.raycastTarget = false;
             return i;
+        }
+
+        /// Oscurecido de izquierda a derecha para que un texto se lea sobre la escena.
+        public static void SideShade(Transform parent, float width)
+        {
+            var r = Rect(parent, "Sombra", Vector2.zero, new Vector2(width, 1));
+            var t = new Texture2D(64, 1, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+            for (int x = 0; x < 64; x++) t.SetPixel(x, 0, new Color(.01f, .03f, .05f, Mathf.Pow(1f - x / 63f, 1.2f) * .94f));
+            t.Apply();
+            var img = r.gameObject.AddComponent<RawImage>();
+            img.texture = t; img.raycastTarget = false;
+        }
+
+        /// Entrada a una escena: sale del negro y muestra un momento en qué fase estás.
+        public static void SceneIntro(Transform canvas, string kicker, string title)
+        {
+            var r = Rect(canvas, "Entrada", Vector2.zero, Vector2.one);
+            r.gameObject.AddComponent<Intro>().Build(kicker, title);
+        }
+
+        class Intro : MonoBehaviour
+        {
+            Image black; TextMeshProUGUI kick, big; RectTransform line; float t;
+            public void Build(string kicker, string title)
+            {
+                black = Fullscreen(transform, Color.black);
+                black.raycastTarget = false;
+                if (string.IsNullOrEmpty(title)) return;
+                big = Text(Rect(transform, "Titulo", new Vector2(.1f, .46f), new Vector2(.9f, .6f)), title, 64, Pal.Text, TextAlignmentOptions.Center, true);
+                big.characterSpacing = 6;
+                kick = Text(Rect(transform, "Fase", new Vector2(.1f, .6f), new Vector2(.9f, .66f)), kicker, 26, Pal.Sonar, TextAlignmentOptions.Center, true);
+                kick.characterSpacing = 30;
+                line = Rect(transform, "Linea", new Vector2(.5f, .455f), new Vector2(.5f, .455f));
+                line.sizeDelta = new Vector2(0, 2);
+                var img = line.gameObject.AddComponent<Image>(); img.color = Pal.Sonar; img.raycastTarget = false;
+            }
+            void Update()
+            {
+                t += Time.unscaledDeltaTime;
+                float hold = big != null ? 1.5f : .15f;
+                float a = 1f - Mathf.Clamp01((t - hold) / .9f);
+                black.color = new Color(0, 0, 0, a);
+                if (big != null)
+                {
+                    float show = Mathf.Clamp01(t / .35f) * Mathf.Clamp01(1f - (t - 1.5f) / .4f);
+                    big.alpha = kick.alpha = show;
+                    line.sizeDelta = new Vector2(Mathf.SmoothStep(0, 480, Mathf.Clamp01(t / .7f)), 2) * show;
+                }
+                if (a <= 0) Destroy(gameObject);
+            }
         }
 
         /// Texto que ocupa todo su padre (o un rectángulo relativo).

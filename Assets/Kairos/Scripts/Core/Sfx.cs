@@ -29,6 +29,11 @@ namespace Kairos
 
         static float Sin(float hz, float t) => Mathf.Sin(2 * Mathf.PI * hz * t);
 
+        static AudioClip radio, stepWet;
+        /// Chasquido y ruido de radio: el guardia cambia de ronda (GDD: "Radio de guardias anticipa cambios de ronda").
+        public static AudioClip Radio => radio ??= Make("radio", .45f, (t, u) => (N() * .5f + Sin(1100, t) * .25f * (u > .25f && u < .75f ? Mathf.Sign(Sin(35, t)) : 0)) * (u < .06f || u > .9f ? 1f : .55f) * .55f);
+        public static AudioClip StepWet => stepWet ??= Make("stepWet", .16f, (t, u) => (Sin(75, t) * .6f + N() * .55f) * Mathf.Exp(-u * 6) * .65f);
+
         static AudioClip click, shutter, step, creak, grapple, plasma, alarm, sealedTone, knock, slip, stun, pingDense, pingHollow, hum, wind, voices, breath, drone, rain, engine, seal;
 
         public static AudioClip Click => click ??= Make("click", .05f, (t, u) => Sin(1400, t) * (1 - u) * .5f);
@@ -96,14 +101,14 @@ namespace Kairos
 
         public static void Play(AudioClip clip, float volume = 1f) => Src.PlayOneShot(clip, volume);
 
-        public static void PlayAt(AudioClip clip, Vector3 pos, float volume = 1f, float maxDist = 30f)
+        public static void PlayAt(AudioClip clip, Vector3 pos, float volume = 1f, float maxDist = 30f, float pitch = 1f)
         {
             var go = new GameObject("sfx3d");
             go.transform.position = pos;
             var a = go.AddComponent<AudioSource>();
-            a.clip = clip; a.volume = volume; a.spatialBlend = 1; a.maxDistance = maxDist; a.rolloffMode = AudioRolloffMode.Linear;
+            a.clip = clip; a.volume = volume; a.spatialBlend = 1; a.maxDistance = maxDist; a.rolloffMode = AudioRolloffMode.Linear; a.pitch = pitch;
             a.Play();
-            UnityEngine.Object.Destroy(go, clip.length + .1f);
+            UnityEngine.Object.Destroy(go, clip.length / pitch + .1f);
         }
 
         public static AudioSource Loop(GameObject host, AudioClip clip, float volume, float spatial = 0, float maxDist = 25f)

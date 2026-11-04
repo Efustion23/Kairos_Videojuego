@@ -12,7 +12,7 @@ namespace Kairos.EditorTools
 {
     /// Genera materiales, el buque Hai Feng 77 y las 5 escenas. Menú: Kairos > Generar juego.
     /// Coordenadas del buque: proa +Z, popa -Z, babor -X. Cubierta principal y=6, cubierta inferior y=3.
-    public static class KairosBuilder
+    public static partial class KairosBuilder
     {
         const string Root = "Assets/Kairos", ScenesDir = Root + "/Scenes", GenDir = Root + "/Generated";
 
@@ -41,10 +41,79 @@ namespace Kairos.EditorTools
                 Quad(P(-1, 1, 1), P(1, 1, 1), P(1, 1, -1), P(-1, 1, -1), r * Vector3.up);
                 Quad(P(-1, -1, -1), P(1, -1, -1), P(1, -1, 1), P(-1, -1, 1), r * Vector3.down);
             }
+            /// Tubo entre dos puntos, con tapas y normales suaves.
+            public void Cylinder(Vector3 a, Vector3 b, float r, int segs)
+            {
+                var dir = (b - a).normalized;
+                var x = Vector3.Cross(dir, Mathf.Abs(dir.y) > .9f ? Vector3.right : Vector3.up).normalized;
+                var y = Vector3.Cross(dir, x);
+                float len = (b - a).magnitude;
+                int start = v.Count;
+                for (int i = 0; i <= segs; i++)
+                {
+                    float ang = i * Mathf.PI * 2 / segs;
+                    var radial = x * Mathf.Cos(ang) + y * Mathf.Sin(ang);
+                    float u = i * Mathf.PI * 2 * r * .33f / segs;
+                    v.Add(a + radial * r); n.Add(radial); uv.Add(new Vector2(u, 0));
+                    v.Add(b + radial * r); n.Add(radial); uv.Add(new Vector2(u, len * .33f));
+                }
+                for (int i = 0; i < segs; i++)
+                {
+                    int s = start + i * 2;
+                    t.Add(s); t.Add(s + 2); t.Add(s + 1);
+                    t.Add(s + 1); t.Add(s + 2); t.Add(s + 3);
+                }
+                Cap(a, -dir, x, y, r, segs);
+                Cap(b, dir, x, y, r, segs);
+            }
+
+            void Cap(Vector3 c, Vector3 normal, Vector3 x, Vector3 y, float r, int segs)
+            {
+                int center = v.Count;
+                v.Add(c); n.Add(normal); uv.Add(Vector2.zero);
+                for (int i = 0; i <= segs; i++)
+                {
+                    float ang = i * Mathf.PI * 2 / segs;
+                    v.Add(c + (x * Mathf.Cos(ang) + y * Mathf.Sin(ang)) * r); n.Add(normal); uv.Add(new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * r * .33f);
+                }
+                bool flip = Vector3.Dot(Vector3.Cross(x, y), normal) > 0;
+                for (int i = 0; i < segs; i++)
+                {
+                    t.Add(center);
+                    t.Add(center + (flip ? i + 1 : i + 2));
+                    t.Add(center + (flip ? i + 2 : i + 1));
+                }
+            }
+
+            public void Ellipsoid(Vector3 c, Vector3 radii, int rows, int cols)
+            {
+                int start = v.Count;
+                for (int j = 0; j <= rows; j++)
+                {
+                    float la = Mathf.PI * j / rows - Mathf.PI / 2;
+                    for (int i = 0; i <= cols; i++)
+                    {
+                        float lo = Mathf.PI * 2 * i / cols;
+                        var d = new Vector3(Mathf.Cos(la) * Mathf.Cos(lo), Mathf.Sin(la), Mathf.Cos(la) * Mathf.Sin(lo));
+                        v.Add(c + Vector3.Scale(d, radii));
+                        n.Add(new Vector3(d.x / radii.x, d.y / radii.y, d.z / radii.z).normalized);
+                        uv.Add(new Vector2(lo * radii.x * .33f, la * radii.y * .33f));
+                    }
+                }
+                for (int j = 0; j < rows; j++)
+                    for (int i = 0; i < cols; i++)
+                    {
+                        int a = start + j * (cols + 1) + i, b = a + 1, d = a + cols + 1, e = d + 1;
+                        t.Add(a); t.Add(d); t.Add(b);
+                        t.Add(b); t.Add(d); t.Add(e);
+                    }
+            }
+
             public Mesh ToMesh(string name)
             {
                 var m = new Mesh { name = name, indexFormat = IndexFormat.UInt32 };
                 m.SetVertices(v); m.SetNormals(n); m.SetUVs(0, uv); m.SetTriangles(t, 0); m.RecalculateBounds();
+                m.RecalculateTangents(); // el relieve de las texturas los necesita
                 return m;
             }
         }
@@ -52,34 +121,8 @@ namespace Kairos.EditorTools
         // ---------- Materiales ----------
         static Material steel, rust, deck, paint, floor, crate, frozen, skinA, skinB, skinC, skinD, coat, suit, worker, bulb, cyanGlow, darkMetal, windowMat;
 
-        static Texture2D NoiseTexture(string file, Color a, Color b, float scale, float streak)
-        {
-            string path = $"{GenDir}/{file}.png";
-            const int S = 512;
-            var tex = new Texture2D(S, S, TextureFormat.RGBA32, true);
-            var px = new Color[S * S];
-            float Tile(float x, float y, float f)
-            {
-                // Perlin periódico por mezcla de bordes.
-                float u = x / S, v = y / S;
-                float n00 = Mathf.PerlinNoise(x * f, y * f), n10 = Mathf.PerlinNoise((x - S) * f, y * f);
-                float n01 = Mathf.PerlinNoise(x * f, (y - S) * f), n11 = Mathf.PerlinNoise((x - S) * f, (y - S) * f);
-                return Mathf.Lerp(Mathf.Lerp(n00, n10, u), Mathf.Lerp(n01, n11, u), v);
-            }
-            for (int y = 0; y < S; y++)
-                for (int x = 0; x < S; x++)
-                {
-                    float n = Tile(x, y, scale) * .55f + Tile(x, y, scale * 3.3f) * .3f + Tile(x * 3f, y * .2f, scale * 1.4f) * streak;
-                    n = Mathf.SmoothStep(0, 1, Mathf.InverseLerp(.28f, .72f, n));
-                    px[y * S + x] = Color.Lerp(a, b, n);
-                }
-            tex.SetPixels(px); tex.Apply();
-            System.IO.File.WriteAllBytes(path, tex.EncodeToPNG());
-            AssetDatabase.ImportAsset(path);
-            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-        }
-
-        static Material Lit(string name, Color c, float smooth = .3f, float metal = .5f, Texture2D tex = null, Color? emission = null)
+        /// Con normal, el canal alfa de la textura lleva la lisura: lo oxidado es mate y lo mojado brilla.
+        static Material Lit(string name, Color c, float smooth = .3f, float metal = .5f, Texture2D tex = null, Color? emission = null, Texture2D normal = null)
         {
             string path = $"{GenDir}/{name}.mat";
             var m = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -94,39 +137,15 @@ namespace Kairos.EditorTools
                 m.SetKeyword(new LocalKeyword(m.shader, "_EMISSION"), true);
                 m.SetColor("_EmissionColor", emission.Value);
             }
+            if (normal != null)
+            {
+                m.SetTexture("_BumpMap", normal);
+                m.SetKeyword(new LocalKeyword(m.shader, "_NORMALMAP"), true);
+                m.SetFloat("_SmoothnessTextureChannel", 1);
+                m.SetKeyword(new LocalKeyword(m.shader, "_SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A"), true);
+            }
             EditorUtility.SetDirty(m);
             return m;
-        }
-
-        static void BuildMaterials()
-        {
-            var rustTex = NoiseTexture("T_Rust", new Color(.30f, .24f, .22f), Pal.Rust, .018f, .25f);
-            var steelTex = NoiseTexture("T_Steel", new Color(.18f, .21f, .23f), new Color(.34f, .30f, .27f), .02f, .15f);
-            var deckTex = NoiseTexture("T_Deck", new Color(.1f, .12f, .13f), new Color(.27f, .22f, .19f), .03f, .1f);
-            var paintTex = NoiseTexture("T_Paint", Pal.HullPaint, new Color(.2f, .13f, .12f), .02f, .35f);
-            // Metálico bajo: no hay sondas de reflexión que den brillo al metal.
-            steel = Lit("M_Steel", Color.white, .35f, .15f, steelTex);
-            rust = Lit("M_Rust", Color.white, .28f, .1f, rustTex);
-            deck = Lit("M_Deck", Color.white, .55f, .1f, deckTex); // cubierta mojada
-            paint = Lit("M_HullPaint", Color.white, .35f, .1f, paintTex);
-            floor = Lit("M_Floor", new Color(.7f, .7f, .7f), .25f, .1f, steelTex);
-            crate = Lit("M_Crate", new Color(.22f, .3f, .36f), .25f, .2f, steelTex);
-            frozen = Lit("M_Frozen", new Color(.55f, .72f, .9f), .7f, .1f, steelTex);
-            darkMetal = Lit("M_DarkMetal", new Color(.14f, .15f, .16f), .4f, .2f);
-            skinA = Lit("M_SkinA", new Color(.55f, .38f, .26f), .3f, 0);
-            skinB = Lit("M_SkinB", new Color(.33f, .22f, .15f), .3f, 0);
-            skinC = Lit("M_SkinC", new Color(.68f, .5f, .36f), .3f, 0);
-            skinD = Lit("M_SkinD", new Color(.45f, .31f, .22f), .3f, 0);
-            coat = Lit("M_GuardCoat", new Color(.14f, .15f, .13f), .3f, 0);
-            suit = Lit("M_Suit", new Color(.06f, .13f, .16f), .45f, .3f);
-            worker = Lit("M_Worker", new Color(.42f, .36f, .24f), .15f, 0);
-            bulb = Lit("M_Bulb", Color.white, .2f, 0, null, Pal.DeckLight * 6f);
-            cyanGlow = Lit("M_Instrument", Color.black, .6f, 0, null, Pal.Sonar * 2.2f);
-            windowMat = Lit("M_Window", new Color(.04f, .06f, .07f), .9f, .2f, null, Pal.DeckLight * .25f);
-
-            string glowPath = "Assets/Kairos/Resources/KGlow.mat";
-            if (AssetDatabase.LoadAssetAtPath<Material>(glowPath) == null)
-                AssetDatabase.CreateAsset(new Material(Shader.Find("Kairos/Glow")), glowPath);
         }
 
         // ---------- Casco ----------
@@ -172,7 +191,7 @@ namespace Kairos.EditorTools
             var m = new Mesh { name = "HaiFeng_Hull", indexFormat = IndexFormat.UInt32, subMeshCount = 2 };
             m.SetVertices(verts); m.SetUVs(0, uv);
             m.SetTriangles(subRust, 0); m.SetTriangles(subPaint, 1);
-            m.RecalculateNormals(); m.RecalculateBounds();
+            m.RecalculateNormals(); m.RecalculateBounds(); m.RecalculateTangents();
             return m;
         }
 
@@ -212,6 +231,14 @@ namespace Kairos.EditorTools
                 go.transform.SetLocalPositionAndRotation(c, r);
                 go.AddComponent<BoxCollider>().size = s;
             }
+
+            MeshAcc Of(Material m)
+            {
+                if (!acc.TryGetValue(m, out var a)) acc[m] = a = new MeshAcc();
+                return a;
+            }
+            public void Pipe(Material m, Vector3 a, Vector3 b, float r, int segs = 8) => Of(m).Cylinder(a, b, r, segs);
+            public void Ellipsoid(Material m, Vector3 c, Vector3 radii, int rows = 8, int cols = 12) => Of(m).Ellipsoid(c, radii, rows, cols);
 
             public void Solid(Vector3 c, Vector3 s, Vector3? euler = null)
             {
@@ -258,6 +285,7 @@ namespace Kairos.EditorTools
                 l.shadows = shadows ? LightShadows.Soft : LightShadows.None;
                 go.AddComponent<UniversalAdditionalLightData>();
                 Box(bulb, p + Vector3.up * .05f, new Vector3(.35f, .1f, .35f), null, false);
+                Box(darkMetal, p + Vector3.up * .15f, new Vector3(.5f, .1f, .5f), null, false); // pantalla de la lámpara
             }
 
             public void Spot(string name, Vector3 p, Vector3 euler, Color c, float range, float angle, float intensity)
@@ -377,23 +405,23 @@ namespace Kairos.EditorTools
 
             // --- Habilitación (y 6-9) ---
             float hy0 = 6f, hy1 = 9f;
-            b.WallX(rust, -20f, -5, 5, hy0, hy1, 0);
-            b.WallX(rust, 2f, -5, 5, hy0, hy1, 0);
-            b.WallZ(rust, 5f, -20, 2, hy0, hy1);
-            b.WallZ(rust, -5f, -20, 2, hy0, hy1);
+            b.WallX(super, -20f, -5, 5, hy0, hy1, 0);
+            b.WallX(super, 2f, -5, 5, hy0, hy1, 0);
+            b.WallZ(super, 5f, -20, 2, hy0, hy1);
+            b.WallZ(super, -5f, -20, 2, hy0, hy1);
             b.WallZ(steel, 1.25f, -20, 2, hy0, hy1, -16, -7);
             b.WallZ(steel, -1.25f, -20, 2, hy0, hy1, -16, -7);
             b.WallX(steel, -12f, 1.25f, 5, hy0, hy1);
             b.WallX(steel, -12f, -5, -1.25f, hy0, hy1);
-            b.Box(rust, new Vector3(0, 9.05f, -9), new Vector3(10.2f, .12f, 22.2f));  // techo
-            b.Box(rust, new Vector3(6.05f, 9.05f, -3f), new Vector3(2.1f, .12f, 10.2f)); // rellano al final de la rampa
+            b.Box(super, new Vector3(0, 9.05f, -9), new Vector3(10.2f, .12f, 22.2f));  // techo
+            b.Box(super, new Vector3(6.05f, 9.05f, -3f), new Vector3(2.1f, .12f, 10.2f)); // rellano al final de la rampa
             b.Box(darkMetal, new Vector3(0, 8.96f, -9), new Vector3(10, .04f, 22), null, false);
 
             // Mobiliario de habilitación
             b.Box(crate, new Vector3(-3.5f, 6.45f, -18.8f), new Vector3(2.4f, .9f, 1f));   // camarote capitán
             b.Box(darkMetal, new Vector3(-4.4f, 6.8f, -14f), new Vector3(.8f, 1.6f, 1f));  // caja fuerte
             b.Box(crate, new Vector3(3.5f, 6.45f, -18.8f), new Vector3(2.4f, .9f, 1f));    // camarote oficial
-            b.Box(crate, new Vector3(-3.2f, 6.4f, -5f), new Vector3(2f, .8f, 5f));         // comedor
+            b.Box(crate, new Vector3(-3.4f, 6.4f, -5f), new Vector3(1.6f, .8f, 5f));       // comedor: deja paso junto a la puerta
             foreach (var z in new[] { -10f, -6.5f, -3f, .5f }) b.Box(darkMetal, new Vector3(4.2f, 6.9f, z), new Vector3(1.3f, 1.8f, 2.2f)); // literas
             b.Lamp("Luz Hab 1", new Vector3(0, 8.8f, -15), new Color(.95f, .85f, .65f), 9, 2.2f);
             b.Lamp("Luz Hab 2", new Vector3(0, 8.8f, -4), new Color(.95f, .85f, .65f), 9, 2.2f);
@@ -406,22 +434,22 @@ namespace Kairos.EditorTools
             float bridgeRamp = Mathf.Atan2(3f, 6f) * Mathf.Rad2Deg;
             b.Box(floor, new Vector3(6f, 7.5f, -11f), new Vector3(1.9f, .18f, rampLen), new Vector3(-bridgeRamp, 0, 0));
             b.Solid(new Vector3(6f, 7f, -7.5f), new Vector3(2f, 2f, 1f));
-            b.Box(rust, new Vector3(1, 9.6f, 2.05f), new Vector3(12.2f, 1f, .15f));
-            b.Box(rust, new Vector3(0, 9.6f, -20.05f), new Vector3(10.2f, 1f, .15f));
-            b.Box(rust, new Vector3(-5.05f, 9.6f, -9), new Vector3(.15f, 1f, 22.2f));
-            b.Box(rust, new Vector3(7.05f, 9.6f, -3f), new Vector3(.15f, 1f, 10f));
-            b.Box(rust, new Vector3(5.05f, 9.6f, -14f), new Vector3(.15f, 1f, 12f));   // separa la rampa del techo
-            b.Box(rust, new Vector3(7.05f, 8.3f, -11f), new Vector3(.15f, 3.8f, 6.2f)); // barandilla de la rampa
+            b.Box(super, new Vector3(1, 9.6f, 2.05f), new Vector3(12.2f, 1f, .15f));
+            b.Box(super, new Vector3(0, 9.6f, -20.05f), new Vector3(10.2f, 1f, .15f));
+            b.Box(super, new Vector3(-5.05f, 9.6f, -9), new Vector3(.15f, 1f, 22.2f));
+            b.Box(super, new Vector3(7.05f, 9.6f, -3f), new Vector3(.15f, 1f, 10f));
+            b.Box(super, new Vector3(5.05f, 9.6f, -14f), new Vector3(.15f, 1f, 12f));   // separa la rampa del techo
+            b.Box(super, new Vector3(7.05f, 8.3f, -11f), new Vector3(.15f, 3.8f, 6.2f)); // barandilla de la rampa
 
             // --- Puente (y 9-12) ---
             float by0 = 9.1f, by1 = 12f;
-            b.WallZ(rust, 4f, -14, -4, by0, by1);
-            b.WallZ(rust, -4f, -14, -4, by0, by1);
-            b.WallX(rust, -14f, -4, 4, by0, by1);
-            b.WallX(rust, -4f, -4, 4, by0, by1, 3f); // puerta a proa, desde el rellano
+            b.WallZ(super, 4f, -14, -4, by0, by1);
+            b.WallZ(super, -4f, -14, -4, by0, by1);
+            b.WallX(super, -14f, -4, 4, by0, by1);
+            b.WallX(super, -4f, -4, 4, by0, by1, 3f); // puerta a proa, desde el rellano
             b.Box(windowMat, new Vector3(-1f, 11f, -3.85f), new Vector3(5.5f, 1.1f, .1f), null, false);
             b.Box(windowMat, new Vector3(-3.85f, 11f, -9f), new Vector3(.1f, 1.1f, 8f), null, false);
-            b.Box(rust, new Vector3(0, 12.05f, -9), new Vector3(8.4f, .12f, 10.4f));
+            b.Box(super, new Vector3(0, 12.05f, -9), new Vector3(8.4f, .12f, 10.4f));
             b.Box(darkMetal, new Vector3(0, 9.6f, -5f), new Vector3(5f, 1f, .9f));            // consola
             b.Box(cyanGlow, new Vector3(0, 10.12f, -5.1f), new Vector3(4.6f, .04f, .6f), null, false);
             b.Box(crate, new Vector3(-2.6f, 9.55f, -11.8f), new Vector3(1.6f, .9f, 1.2f));    // mesa de cartas
@@ -461,18 +489,8 @@ namespace Kairos.EditorTools
             b.Lamp("Luz Tejado", new Vector3(5.8f, 11f, -3), amber, 8, 3.5f);
             b.Spot("Foco Mastil", new Vector3(0, 12.5f, -2.5f), new Vector3(72, 0, 0), amber, 40, 70, 12);
 
-            // Mallas combinadas por material, como un único asset cada una.
-            int idx = 0;
-            foreach (var kv in b.acc)
-            {
-                var go = new GameObject("Geo_" + kv.Key.name, typeof(MeshFilter), typeof(MeshRenderer));
-                go.transform.SetParent(b.root.transform, false);
-                go.isStatic = true;
-                var mesh = kv.Value.ToMesh("HaiFeng_" + kv.Key.name);
-                AssetDatabase.CreateAsset(mesh, $"{GenDir}/HaiFeng_Geo{idx++}.asset");
-                go.GetComponent<MeshFilter>().sharedMesh = mesh;
-                go.GetComponent<MeshRenderer>().sharedMaterial = kv.Key;
-            }
+            ShipDetails(b);
+            Combine(b, "HaiFeng"); // una malla por material, como un único asset cada una
 
             var prefabPath = $"{Root}/Prefabs/HaiFeng77.prefab";
             PrefabUtility.SaveAsPrefabAsset(b.root, prefabPath);
@@ -504,17 +522,44 @@ namespace Kairos.EditorTools
             var root = new GameObject(name) { layer = Layers.Actor };
             legsMat = legsMat ? legsMat : darkMetal;
             var bodyRoot = Pivot(root.transform, "Body", Vector3.zero);
-            Part(bodyRoot, PrimitiveType.Capsule, body, new Vector3(0, 1.22f, 0), new Vector3(.46f, .42f, .28f));
-            Part(bodyRoot, PrimitiveType.Sphere, skin, new Vector3(0, 1.72f, 0), new Vector3(.24f, .27f, .25f));
-            if (hat != null) Part(bodyRoot, PrimitiveType.Cylinder, hat, new Vector3(0, 1.84f, 0), new Vector3(.26f, .05f, .26f));
-            var armL = Pivot(bodyRoot, "ArmL", new Vector3(-.3f, 1.5f, 0));
-            Part(armL, PrimitiveType.Capsule, body, new Vector3(0, -.32f, 0), new Vector3(.12f, .33f, .12f));
-            var armR = Pivot(bodyRoot, "ArmR", new Vector3(.3f, 1.5f, 0));
-            Part(armR, PrimitiveType.Capsule, body, new Vector3(0, -.32f, 0), new Vector3(.12f, .33f, .12f));
-            var legL = Pivot(bodyRoot, "LegL", new Vector3(-.13f, .85f, 0));
-            Part(legL, PrimitiveType.Capsule, legsMat, new Vector3(0, -.42f, 0), new Vector3(.17f, .43f, .17f));
-            var legR = Pivot(bodyRoot, "LegR", new Vector3(.13f, .85f, 0));
-            Part(legR, PrimitiveType.Capsule, legsMat, new Vector3(0, -.42f, 0), new Vector3(.17f, .43f, .17f));
+            bool guard = hat != null;
+            // Torso con hombros y caderas, cuello y cabeza: una silueta de persona, no una cápsula.
+            Part(bodyRoot, PrimitiveType.Capsule, body, new Vector3(0, 1.2f, 0), new Vector3(.42f, .36f, .25f));
+            Part(bodyRoot, PrimitiveType.Sphere, body, new Vector3(0, 1.43f, 0), new Vector3(.5f, .18f, .26f));
+            Part(bodyRoot, PrimitiveType.Sphere, legsMat, new Vector3(0, .92f, 0), new Vector3(.36f, .2f, .24f));
+            Part(bodyRoot, PrimitiveType.Cylinder, skin, new Vector3(0, 1.54f, 0), new Vector3(.09f, .07f, .09f));
+            var head = Part(bodyRoot, PrimitiveType.Sphere, skin, new Vector3(0, 1.69f, .01f), new Vector3(.2f, .25f, .22f));
+            head.name = "Cabeza";
+            if (guard)
+            {
+                Part(bodyRoot, PrimitiveType.Cube, vest, new Vector3(0, 1.24f, 0), new Vector3(.4f, .05f, .26f));
+                Part(bodyRoot, PrimitiveType.Cube, vest, new Vector3(0, 1.08f, 0), new Vector3(.4f, .05f, .24f));
+                Part(bodyRoot, PrimitiveType.Sphere, hat, new Vector3(0, 1.77f, 0), new Vector3(.22f, .13f, .24f)); // gorra
+                Part(bodyRoot, PrimitiveType.Cube, hat, new Vector3(0, 1.75f, .13f), new Vector3(.16f, .02f, .12f));
+            }
+            else
+            {
+                Part(bodyRoot, PrimitiveType.Sphere, rope, new Vector3(0, 1.75f, -.01f), new Vector3(.21f, .17f, .23f)); // gorro de lana
+                Part(bodyRoot, PrimitiveType.Cube, jacket, new Vector3(0, 1.2f, .115f), new Vector3(.3f, .42f, .03f));
+            }
+            Transform Arm(string n, float x)
+            {
+                var a = Pivot(bodyRoot, n, new Vector3(x, 1.46f, 0));
+                Part(a, PrimitiveType.Capsule, body, new Vector3(0, -.15f, 0), new Vector3(.11f, .17f, .11f));
+                Part(a, PrimitiveType.Capsule, body, new Vector3(0, -.43f, .02f), new Vector3(.09f, .16f, .09f));
+                Part(a, PrimitiveType.Sphere, skin, new Vector3(0, -.62f, .03f), new Vector3(.09f, .1f, .09f));
+                return a;
+            }
+            Transform Leg(string n, float x)
+            {
+                var l = Pivot(bodyRoot, n, new Vector3(x, .88f, 0));
+                Part(l, PrimitiveType.Capsule, legsMat, new Vector3(0, -.2f, 0), new Vector3(.16f, .24f, .16f));
+                Part(l, PrimitiveType.Capsule, legsMat, new Vector3(0, -.56f, 0), new Vector3(.12f, .22f, .12f));
+                Part(l, PrimitiveType.Cube, rubber, new Vector3(0, -.84f, .05f), new Vector3(.12f, .08f, .26f)); // bota
+                return l;
+            }
+            var armL = Arm("ArmL", -.27f); var armR = Arm("ArmR", .27f);
+            var legL = Leg("LegL", -.1f); var legR = Leg("LegR", .1f);
             var w = root.AddComponent<Walker>();
             w.legL = legL; w.legR = legR; w.armL = armL; w.armR = armR; w.body = bodyRoot;
             return root;
@@ -542,6 +587,7 @@ namespace Kairos.EditorTools
             var skin = model.GetComponentInChildren<SkinnedMeshRenderer>();
             skin.sharedMaterial = mat;
             skin.updateWhenOffscreen = true; // el modelo trae unos límites diminutos y desaparecería al acercar la cámara
+            skin.forceMeshLod = 4; // 56 mil triángulos en vez de 787 mil (Mesh LOD activado en el importador del FBX)
             model.transform.localScale = Vector3.one * (1.8f / skin.bounds.size.y); // los clips ya apoyan los pies en el origen
 
             var animator = model.GetComponent<Animator>();
@@ -602,7 +648,8 @@ namespace Kairos.EditorTools
             var vig = nightProfile.Add<Vignette>(true);
             vig.intensity.Override(.3f); vig.smoothness.Override(.5f);
             var ca = nightProfile.Add<ColorAdjustments>(true);
-            ca.postExposure.Override(.45f); ca.contrast.Override(8f); ca.saturation.Override(-6f);
+            ca.postExposure.Override(.6f); ca.contrast.Override(10f); ca.saturation.Override(-4f);
+            GradePost(nightProfile);
             foreach (var c in nightProfile.components) AssetDatabase.AddObjectToAsset(c, nightProfile);
             EditorUtility.SetDirty(nightProfile);
         }
@@ -633,6 +680,8 @@ namespace Kairos.EditorTools
                 if (oceanMat == null) { oceanMat = new Material(Shader.Find("Kairos/Ocean")); AssetDatabase.CreateAsset(oceanMat, op); }
                 oceanMat.SetColor("_Deep", Pal.Ocean);
                 oceanMat.SetColor("_SkyTint", Pal.Storm);
+                oceanMat.SetTexture("_WaterNormal", waterNormal);
+                EditorUtility.SetDirty(oceanMat);
             }
             RenderSettings.skybox = skyMat;
             RenderSettings.sun = l;
@@ -650,6 +699,7 @@ namespace Kairos.EditorTools
             var ocean = o.AddComponent<Ocean>();
             ocean.douglasAtStart = douglas;
             ocean.ambient = RenderSettings.ambientLight;
+            Fleet();
             PostVolume();
         }
 
@@ -660,19 +710,7 @@ namespace Kairos.EditorTools
             list.Add(new EditorBuildSettingsScene(path, true));
         }
 
-        static GameObject Boat(string name = "Lancha")
-        {
-            var root = new GameObject(name);
-            Part(root.transform, PrimitiveType.Cube, darkMetal, new Vector3(0, .35f, 0), new Vector3(2.4f, .7f, 6.2f));
-            Part(root.transform, PrimitiveType.Cube, suit, new Vector3(0, .75f, -.5f), new Vector3(1.8f, .25f, 3.6f));
-            var bow = Part(root.transform, PrimitiveType.Cube, darkMetal, new Vector3(0, .36f, 3.4f), new Vector3(1.7f, .68f, 1.7f));
-            bow.localRotation = Quaternion.Euler(0, 45, 0);
-            Part(root.transform, PrimitiveType.Cube, darkMetal, new Vector3(0, 1.3f, .6f), new Vector3(1.5f, .9f, 1.1f));
-            Part(root.transform, PrimitiveType.Cube, cyanGlow, new Vector3(0, 1.45f, 1.17f), new Vector3(1.1f, .25f, .03f));
-            var dome = Part(root.transform, PrimitiveType.Sphere, darkMetal, new Vector3(0, 2f, .2f), new Vector3(.55f, .3f, .55f));
-            dome.name = "Domo sonar";
-            return root;
-        }
+        static GameObject Boat() => (GameObject)PrefabUtility.InstantiatePrefab(BoatPrefab());
 
         [MenuItem("Kairos/Generar juego")]
         public static void BuildAll()
@@ -684,6 +722,7 @@ namespace Kairos.EditorTools
             BuildMaterials();
             BuildProfile();
             skyMat = null;
+            boatPrefab = null;
             var shipPrefab = BuildShip();
 
             var scenes = new List<EditorBuildSettingsScene>();

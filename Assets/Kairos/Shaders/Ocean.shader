@@ -6,6 +6,7 @@ Shader "Kairos/Ocean"
         _Shallow("Crest tint", Color) = (0.07, 0.2, 0.25, 1)
         _SkyTint("Sky", Color) = (0.18, 0.227, 0.267, 1)
         _FoamColor("Foam", Color) = (0.6, 0.7, 0.75, 1)
+        [Normal] _WaterNormal("Water normal", 2D) = "bump" {}
     }
     SubShader
     {
@@ -21,11 +22,13 @@ Shader "Kairos/Ocean"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
+            TEXTURE2D(_WaterNormal); SAMPLER(sampler_WaterNormal);
             CBUFFER_START(UnityPerMaterial)
-                float4 _Deep, _Shallow, _SkyTint, _FoamColor;
+                float4 _Deep, _Shallow, _SkyTint, _FoamColor, _WaterNormal_ST;
             CBUFFER_END
             float4 _OceanWaves[4];
             float _OceanAmp, _OceanT;
+            float4 _BoatPos, _BoatDir; // xyz posición y w velocidad; xz rumbo
 
             struct A { float4 pos : POSITION; };
             struct V { float4 cs : SV_POSITION; float3 ws : TEXCOORD0; float fog : TEXCOORD1; };
@@ -45,13 +48,13 @@ Shader "Kairos/Ocean"
                     g += _OceanWaves[i].w * _OceanWaves[i].xy * cos(dot(_OceanWaves[i].xy, p) + _OceanWaves[i].z * _OceanT);
                 return g * _OceanAmp;
             }
-            float Ripple(float2 p, float t)
+            // Distancia aproximada al casco del Hai Feng 77, que siempre está en el origen.
+            float ShipDist(float2 p)
             {
-                // Dominio deformado y direcciones no alineadas: evita rayas regulares en el brillo de la luna.
-                p += .8 * float2(sin(p.y * .37 + t * .2), sin(p.x * .41 - t * .17));
-                return .5 * sin(dot(p, float2(1.3, .4)) + t * 1.7) + .5 * sin(dot(p, float2(-.7, 1.1)) - t * 1.3)
-                     + .3 * sin(dot(p, float2(2.9, -2.1)) + t * 2.3) + .2 * sin(dot(p, float2(-3.7, 4.3)) - t * 3.1)
-                     + .12 * sin(dot(p, float2(6.1, 5.3)) + t * 3.7);
+                float x = abs(p.x), z = p.y;
+                float k = (z - 15.0) / 30.0;
+                float beam = z < 15.0 ? 7.0 : 7.0 * sqrt(max(0.0, 1.0 - k * k));
+                return max(x - beam, max(-45.0 - z, z - 45.0));
             }
 
             V vert(A a)
@@ -68,25 +71,50 @@ Shader "Kairos/Ocean"
             half4 frag(V i) : SV_Target
             {
                 float dist = length(i.ws - _WorldSpaceCameraPos);
-                float detail = saturate(1 - dist / 220.0);
-                float2 g = WaveGrad(i.ws.xz);
-                float2 p = i.ws.xz * .35;
-                float e = .08;
-                float r0 = Ripple(p, _OceanT);
-                float2 rg = float2(Ripple(p + float2(e, 0), _OceanT) - r0, Ripple(p + float2(0, e), _OceanT) - r0) / e;
-                g += rg * .03 * detail * (0.4 + _OceanAmp);
+                float t = _OceanT;
+                float2 p = i.ws.xz;
+                // Dos capas de pequeñas olas a distinta escala que se cruzan: rompen las bandas regulares.
+                float3 n1 = UnpackNormal(SAMPLE_TEXTURE2D(_WaterNormal, sampler_WaterNormal, p * .05 + float2(.013, .021) * t));
+                float3 n2 = UnpackNormal(SAMPLE_TEXTURE2D(_WaterNormal, sampler_WaterNormal, p * .17 + float2(-.031, .017) * t));
+                float2 g = WaveGrad(p) + (n1.xy + n2.xy * .7) * (.06 + _OceanAmp * .1);
                 float3 n = normalize(float3(-g.x, 1, -g.y));
                 float3 v = normalize(_WorldSpaceCameraPos - i.ws);
                 Light l = GetMainLight();
                 float fres = pow(1 - saturate(dot(n, v)), 4);
-                float h01 = saturate(WaveH(i.ws.xz) / max(_OceanAmp, .01) * .5 + .5);
+                float h01 = saturate(WaveH(p) / max(_OceanAmp, .01) * .5 + .5);
                 float3 c = lerp(_Deep.rgb, _Shallow.rgb, h01 * .7);
                 c = lerp(c, _SkyTint.rgb, fres * .85);
                 float3 hv = normalize(l.direction + v);
-                float spec = pow(saturate(dot(n, hv)), 220) * .9 + pow(saturate(dot(n, hv)), 24) * .03;
-                c += l.color * spec;
-                float foam = smoothstep(.72, .98, h01 + r0 * .07) * saturate(_OceanAmp - .15) * detail;
-                c = lerp(c, _FoamColor.rgb * (.25 + l.color * .4), foam * .55);
+                float nh = saturate(dot(n, hv));
+                c += l.color * (pow(nh, 320) * .45 + pow(nh, 60) * .02);
+
+                float detail = saturate(1 - dist / 260.0);
+                float grain = SAMPLE_TEXTURE2D(_WaterNormal, sampler_WaterNormal, p * .31 + float2(.02, -.03) * t).r;
+                grain = saturate(grain * 1.6 - .3);
+                float foam = smoothstep(.72, .98, h01 + (n1.x * .2)) * saturate(_OceanAmp - .15) * detail;
+
+                // Estela de la lancha: una V de espuma que se abre y se apaga.
+                if (_BoatPos.w > .2)
+                {
+                    float2 rel = p - _BoatPos.xz;
+                    float along = -dot(rel, _BoatDir.xz);
+                    float side = dot(rel, float2(_BoatDir.z, -_BoatDir.x));
+                    if (along > -1.5)
+                    {
+                        float len = 6.0 + _BoatPos.w * 5.0;
+                        float spread = 1.2 + saturate(along / len) * len * .22;
+                        float edge = abs(abs(side) - spread * .75);
+                        float wake = max(smoothstep(.9, 0, edge), smoothstep(spread * .4, 0, abs(side)) * .8);
+                        foam = max(foam, wake * saturate(1 - along / len) * saturate((along + 1.5) * .7) * saturate(_BoatPos.w * .25));
+                    }
+                }
+
+                // El casco del barco rompe el agua y sus focos la tiñen.
+                float d = max(ShipDist(p), 0.0);
+                foam = max(foam, smoothstep(1.8, .1, d) * (.15 + saturate(_OceanAmp) * .35));
+                c += float3(.95, .62, .22) * exp(-d / 7.0) * (.012 + fres * .1);
+
+                c = lerp(c, _FoamColor.rgb * (.3 + l.color * .35), saturate(foam * grain * 1.2));
                 c = MixFog(c, i.fog);
                 return half4(c, 1);
             }

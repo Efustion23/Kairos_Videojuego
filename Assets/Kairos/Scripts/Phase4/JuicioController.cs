@@ -30,6 +30,8 @@ namespace Kairos
             Sfx.Loop(gameObject, Sfx.Drone, .3f);
             if (C.trialDays < 0) C.trialDays = StartDays;
             if (C.phase >= 5) ShowRepatriation(); else BuildBoard();
+            if (C.phase >= 5) UI.SceneIntro(canvas.transform, "", "");
+            else UI.SceneIntro(canvas.transform, "FASE 4", "Juicio financiero");
         }
 
         // ---------- Tablero ----------

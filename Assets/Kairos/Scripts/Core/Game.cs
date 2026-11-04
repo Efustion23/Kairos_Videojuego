@@ -65,6 +65,7 @@ namespace Kairos
     {
         public string playerName = "Inspector", gender = "No especificar", origin = "Perú";
         public bool omitSensitive, warningAccepted;
+        public float mouseSens = 1f;
         public int budget = 500000, droneParts = 6, reputation = 20, sentences, casesClosed;
         public float fuel = 4000;
         public int[] upgrades = new int[4];

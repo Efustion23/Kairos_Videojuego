@@ -77,7 +77,7 @@ namespace Kairos
             if (kb == null || mouse == null) return;
 
             var md = mouse.delta.ReadValue();
-            float sens = Aiming ? .05f : .11f;
+            float sens = (Aiming ? .05f : .11f) * Game.S.mouseSens;
             yaw += md.x * sens;
             pitch = Mathf.Clamp(pitch - md.y * sens, -40, 60);
 
@@ -127,7 +127,8 @@ namespace Kairos
             lastStep = motion.Steps;
             float radius = Running ? 8f : 2.5f; // caminar es sigiloso; correr, no
             if (Game.Has(2, 1)) radius *= .7f;
-            Sfx.PlayAt(Sfx.Step, transform.position, Running ? .6f : .25f, 12);
+            // Metal seco o cubierta mojada, y ningún paso suena igual al anterior.
+            Sfx.PlayAt(I.OnWetDeck(transform.position) ? Sfx.StepWet : Sfx.Step, transform.position, Running ? .6f : .25f, 12, Random.Range(.88f, 1.12f));
             if (!I.StepsMasked) I.EmitNoise(transform.position, radius);
         }
 

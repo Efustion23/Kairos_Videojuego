@@ -149,6 +149,9 @@ namespace Kairos
                 wait = Random.Range(.8f, 2.4f);
                 wp = (wp + 1) % route.Length;
                 agent.SetDestination(route[wp].position);
+                // La radio delata un cambio de ronda: solo se oye de cerca y avisa al jugador.
+                if ((transform.position - I.player.transform.position).sqrMagnitude < 18f * 18f)
+                    Sfx.PlayAt(Sfx.Radio, transform.position + Vector3.up * 1.4f, .5f, 20);
             }
         }
 

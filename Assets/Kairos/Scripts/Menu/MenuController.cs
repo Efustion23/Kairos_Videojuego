@@ -22,14 +22,17 @@ namespace Kairos
             Sfx.Loop(gameObject, Sfx.Wind, .25f);
             Sfx.Loop(gameObject, Sfx.Drone, .22f);
             if (Game.HasSave && Game.S.warningAccepted && Game.C.phase > 1) ShowBase(); else ShowTitle();
+            UI.SceneIntro(canvas.transform, "", "");
         }
 
         void Update()
         {
             if (cam == null) return;
             orbit += Time.deltaTime * .012f;
-            cam.transform.position = new Vector3(Mathf.Sin(orbit + 2.2f) * 150, 12 + Ocean.Height(0, 0) * .3f, Mathf.Cos(orbit + 2.2f) * 150);
-            cam.transform.LookAt(new Vector3(0, 9, 0));
+            cam.transform.position = new Vector3(Mathf.Sin(orbit + 2.2f) * 115, 9 + Ocean.Height(0, 0) * .3f, Mathf.Cos(orbit + 2.2f) * 115);
+            cam.transform.LookAt(new Vector3(0, 11, 0));
+            // Deja el barco a la derecha de la pantalla, libre del menú.
+            cam.lensShift = new Vector2(-.14f, 0);
         }
 
         void Screen() => UI.Clear(root);
@@ -37,10 +40,11 @@ namespace Kairos
         void ShowTitle()
         {
             Screen();
+            UI.SideShade(root, .62f);
             var col = UI.VStack(root, 60, 10, new Vector2(0, 0), new Vector2(.42f, 1));
             col.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleLeft;
-            UI.Line(col, "KAIROS", 110, Pal.Sonar, true);
-            UI.Line(col, "Sombras en Altamar", 38, Pal.Text);
+            UI.Line(col, "KAIROS", 112, Pal.Sonar, true).characterSpacing = 22;
+            UI.Line(col, "Sombras en Altamar", 38, Pal.Text).characterSpacing = 4;
             UI.Line(col, "Ningún océano es tan vasto ni ninguna noche tan oscura como para ocultar la dignidad humana.", 22, Pal.Dim);
             UI.Line(col, " ", 20);
             if (Game.HasSave) UI.Btn(col, "Continuar", ShowBase, Pal.Sealed, 26, 56);
@@ -231,6 +235,10 @@ namespace Kairos
             void Label() => UI.SetLabel(toggle, "Omitir descripciones sensibles: " + (Game.S.omitSensitive ? "SÍ" : "NO"));
             toggle.onClick.AddListener(() => { Game.S.omitSensitive = !Game.S.omitSensitive; Game.Write(); Label(); });
             Label();
+            var sens = UI.Btn(s, "", null, null, 22, 52);
+            void SensLabel() => UI.SetLabel(sens, $"Sensibilidad del ratón: {Mathf.RoundToInt(Game.S.mouseSens * 100)} %");
+            sens.onClick.AddListener(() => { Game.S.mouseSens = Game.S.mouseSens >= 2f ? .5f : Game.S.mouseSens + .25f; Game.Write(); SensLabel(); });
+            SensLabel();
             var vol = UI.Btn(s, "", null, null, 22, 52);
             void VolLabel() => UI.SetLabel(vol, $"Volumen general: {Mathf.RoundToInt(AudioListener.volume * 100)} %");
             vol.onClick.AddListener(() => { AudioListener.volume = AudioListener.volume <= .25f ? 1f : AudioListener.volume - .25f; VolLabel(); });
