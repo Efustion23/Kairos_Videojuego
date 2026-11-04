@@ -814,7 +814,7 @@ namespace Kairos.EditorTools
 
             // Jugador
             var player = Humanoid("Inspector", suit, skinA, suit);
-            player.transform.position = new Vector3(0, 6.1f, -43f);
+            player.transform.position = new Vector3(2.5f, 6.1f, -38.5f); // lejos de la salida: no se ofrece nada más subir
             var cc = player.AddComponent<CharacterController>();
             cc.height = 1.8f; cc.radius = .3f; cc.center = new Vector3(0, .95f, 0); cc.stepOffset = .35f; cc.slopeLimit = 50;
             var agent = player.AddComponent<PlayerAgent>();
@@ -831,25 +831,20 @@ namespace Kairos.EditorTools
             var captain = Guard(gameplay, "Capitán", new Vector3(0, 9.15f, -7), coat, new[] {
                 new Vector3(0, 9.1f, -7), new Vector3(-2, 9.1f, -11), new Vector3(2.5f, 9.1f, -9) });
             guards.Add(captain);
-            captain.viewRange = 10;
+            captain.viewRange = 9;
 
-            // Cámaras del barco
+            // Cámara del barco: vigila la cubierta de popa; el pasillo inferior queda libre.
             var cam1 = new GameObject("Camara popa").AddComponent<SecurityCam>();
             cam1.transform.SetParent(gameplay, false);
             cam1.transform.SetPositionAndRotation(new Vector3(0, 8.6f, -20.4f), Quaternion.Euler(0, 180, 0));
             cam1.floorY = 6f; cam1.range = 12f; cam1.alarmName = "La cámara de popa";
             Part(cam1.transform, PrimitiveType.Cube, darkMetal, Vector3.zero, new Vector3(.18f, .18f, .4f));
-            var cam2 = new GameObject("Camara pasillo").AddComponent<SecurityCam>();
-            cam2.transform.SetParent(gameplay, false);
-            cam2.transform.SetPositionAndRotation(new Vector3(0, 5.5f, -8f), Quaternion.Euler(0, 0, 0));
-            cam2.floorY = 3f; cam2.range = 11f; cam2.yawA = -20; cam2.yawB = 20; cam2.angle = 40f; cam2.alarmName = "La cámara del pasillo";
-            Part(cam2.transform, PrimitiveType.Cube, darkMetal, Vector3.zero, new Vector3(.18f, .18f, .4f));
 
             // Puertas cerradas (encajan en los huecos de los mamparos)
             var doorSize = new Vector3(.3f, 2.2f, 1.4f);
             var doors = new List<LockedDoor>
             {
-                Door(gameplay, "babor", "escotilla de babor", new Vector3(-1.25f, 4.1f, 2), doorSize, 8f, true, false, "ari", "moussa", "thant"),
+                Door(gameplay, "babor", "escotilla de babor", new Vector3(-1.25f, 4.1f, 2), doorSize, 6f, true, false, "ari", "moussa", "thant"),
                 Door(gameplay, "servicio", "puerta de servicio", new Vector3(-4f, 4.1f, -6), new Vector3(1.4f, 2.2f, .3f), 6f, false, false),
                 Door(gameplay, "capitan", "puerta del capitán", new Vector3(-1.25f, 7.1f, -16), doorSize, 6f, true, false),
                 Door(gameplay, "oficial", "puerta del oficial", new Vector3(1.25f, 7.1f, -16), doorSize, 4f, true, false),
@@ -871,13 +866,14 @@ namespace Kairos.EditorTools
             {
                 Evidence(gameplay, "e_celda", new Vector3(-6.3f, 4.2f, 3.5f), new Vector3(.08f, .8f, 1.2f), rust),
                 Evidence(gameplay, "e_pasaportes", new Vector3(-3.95f, 7.35f, -14f), new Vector3(.3f, .25f, .5f), paper),
-                Evidence(gameplay, "e_deudas", new Vector3(3.5f, 6.95f, -18.8f), new Vector3(.5f, .08f, .7f), paper),
+                Evidence(gameplay, "e_deudas", new Vector3(2.9f, 6.95f, -18.8f), new Vector3(.5f, .08f, .7f), paper),
                 Evidence(gameplay, "e_contratos", new Vector3(-3.2f, 6.85f, -5f), new Vector3(.6f, .06f, .9f), paper),
-                Evidence(gameplay, "e_manifiesto", new Vector3(-2.6f, 10.05f, -11.8f), new Vector3(.8f, .05f, .6f), paper),
+                // En el camarote del oficial: el camino principal no obliga a pasar por el capitán.
+                Evidence(gameplay, "e_manifiesto", new Vector3(4.1f, 6.95f, -18.8f), new Vector3(.7f, .05f, .6f), paper),
                 Evidence(gameplay, "e_registro", new Vector3(-3.5f, 6.95f, -18.8f), new Vector3(.7f, .1f, .5f), paper),
                 Evidence(gameplay, "e_turnos", new Vector3(4.86f, 7.5f, -7f), new Vector3(.06f, .9f, .7f), paper),
                 Evidence(gameplay, "e_candados", new Vector3(-1.05f, 4.3f, 1.05f), new Vector3(.15f, .35f, .3f), darkMetal),
-                Evidence(gameplay, "e_facturas", new Vector3(5.2f, 5.3f, -20f), new Vector3(.5f, .08f, .7f), paper),
+                Evidence(gameplay, "e_facturas", new Vector3(6.66f, 4.3f, -21f), new Vector3(.06f, .7f, .5f), paper),
             };
 
             // Consola del puente y salida
@@ -944,11 +940,13 @@ namespace Kairos.EditorTools
             Must(CaseData.ComputeIR(CaseData.Target, 1, 0) < CaseData.IrToScan, "AIS solo no basta");
             foreach (var s in CaseData.Ships) if (!s.target) Must(CaseData.ComputeIR(s, all, 0) < CaseData.IrToScan, s.name + " no debe pasar de 60");
 
-            int[] truth = new int[5];
-            for (int i = 0; i < 5; i++) truth[i] = CaseData.Compartments[i].kind;
-            Must(Mathf.Approximately(CaseData.ComputeConfidence(truth, new[] { 7, 7, 7, 7, 7 }), 100f), "todo bien clasificado con 3 señales da 100 %");
-            Must(CaseData.ComputeConfidence(truth, new[] { 5, 5, 5, 5, 5 }) >= CaseData.ConfidenceToBoard, "sin dron (sonar e hidrófono) se puede llegar a 70 %");
-            Must(CaseData.ComputeConfidence(new[] { -1, -1, -1, -1, -1 }, new[] { 7, 7, 7, 7, 7 }) == 0, "sin clasificar no hay confianza");
+            int k4 = CaseData.PersonsCompartment;
+            Must(CaseData.Compartments[k4].kind == 1, "el compartimento marcado es el de las personas");
+            Must(Mathf.Approximately(CaseData.ComputeConfidence(k4, new[] { 7, 7, 7, 7, 7 }), 100f), "con las 3 señales da 100 %");
+            Must(CaseData.ComputeConfidence(k4, new[] { 0, 0, 0, 1, 0 }) >= CaseData.ConfidenceToBoard, "basta con el sonar y marcar bien");
+            Must(CaseData.ComputeConfidence(k4, new[] { 0, 0, 0, 6, 0 }) < CaseData.ConfidenceToBoard, "las ayudas no sustituyen al sonar");
+            Must(CaseData.ComputeConfidence(0, new[] { 7, 7, 7, 7, 7 }) == 0, "marcar donde no hay personas no da confianza");
+            Must(CaseData.ComputeConfidence(-1, new[] { 7, 7, 7, 7, 7 }) == 0, "sin marcar no hay confianza");
 
             Must(CaseData.VerdictFor(3) == 0 && CaseData.VerdictFor(4) == 1 && CaseData.VerdictFor(7) == 2 && CaseData.VerdictFor(11) == 3, "umbrales OIT 4/7/11");
             Must(!CaseData.ChainComplete(new List<string> { "0-3", "3-4" }), "cadena incompleta");
@@ -958,6 +956,18 @@ namespace Kairos.EditorTools
             var everything = new List<string>();
             foreach (var e in CaseData.EvidenceDefs) everything.Add(e.id);
             Must(CaseData.CountIndicators(everything) == 11, "las 11 pruebas de OIT son alcanzables");
+            Must(everything.Count <= CaseData.MaxEvidence, "todas las pruebas caben en el maletín");
+
+            // El camino que marca el objetivo debe bastar para una sentencia.
+            var path = new List<string> { "e_facturas", "e_celda", "t_ari", "e_manifiesto" };
+            var pathLinks = new List<string>();
+            foreach (var id in path) pathLinks.AddRange(CaseData.Evidence(id).edges);
+            Must(CaseData.ChainComplete(pathLinks), "el camino guiado completa la cadena");
+            Must(CaseData.VerdictFor(CaseData.CountIndicators(path)) >= 1, "el camino guiado da al menos una Orden de Retención");
+
+            // Lo que se puede perder nunca rompe ese camino.
+            foreach (var id in CaseData.BurnOrder) Must(!path.Contains(id), id + " no debe destruirse: es del camino guiado");
+            foreach (var id in CaseData.DumpedWhenDetected) Must(!path.Contains(id), id + " no debe tirarse al mar: es del camino guiado");
             foreach (var e in CaseData.EvidenceDefs)
                 foreach (var k in e.edges) Must(k == "0-1" || k == "0-2" || k == "0-3" || k == "3-4" || k == "4-5" || k == "1-5", "enlace desconocido " + k);
             Debug.Log("KAIROS: reglas OK");

@@ -42,8 +42,10 @@ namespace Kairos
         public float suspicion, confidence;
         public bool dumped;      // el buque tiró pruebas al mar tras detectarnos
         public int[] scanSignals = new int[5];  // bits: 1 densidad, 2 térmica, 4 sonido
-        public int[] classified = { -1, -1, -1, -1, -1 };
+        public int marked = -1;  // compartimento que marcaste como "aquí hay personas"
         public bool boarded;
+        public bool hasCheckpoint; // último punto seguro a bordo
+        public float cpX, cpY, cpZ;
         public List<SealedEvidence> evidence = new List<SealedEvidence>();
         public List<string> burned = new List<string>();
         public List<string> openDoors = new List<string>();
@@ -67,6 +69,7 @@ namespace Kairos
         public float fuel = 4000;
         public int[] upgrades = new int[4];
         public bool networkReorganized;
+        public List<string> hints = new List<string>(); // tutorial ya visto
         public CaseState c = new CaseState();
     }
 

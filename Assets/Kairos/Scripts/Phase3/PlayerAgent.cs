@@ -3,19 +3,19 @@ using UnityEngine.InputSystem;
 
 namespace Kairos
 {
-    /// Inspector en tercera persona: sigilo, cámara forense y herramientas. Sin armas letales.
+    /// Inspector en tercera persona: pocas teclas, y E hace lo correcto según lo que tengas delante.
     [RequireComponent(typeof(CharacterController))]
     public class PlayerAgent : MonoBehaviour
     {
         public Camera cam;
         public Walker walker;
-        public float walkSpeed = 2.7f, runSpeed = 5.2f, crouchSpeed = 1.3f;
+        public float walkSpeed = 3f, runSpeed = 5.2f;
 
         CharacterController cc;
         float yaw, pitch = 8f, velY, stepT, slipT, stumble, breathT, focus, roll;
-        public bool Crouched { get; private set; }
         public bool Aiming { get; private set; }
         public bool Running { get; private set; }
+        public bool Moved { get; private set; }
         public float Stamina { get; private set; } = 1f;
         public float Focus => focus;
         public Interactable Near { get; private set; }
@@ -24,7 +24,7 @@ namespace Kairos
         public string FrameBlock { get; private set; }
 
         InfiltrationController I => InfiltrationController.I;
-        public Vector3 ChestPos => transform.position + Vector3.up * (Crouched ? .75f : 1.25f);
+        public Vector3 ChestPos => transform.position + Vector3.up * 1.25f;
         readonly Collider[] overlap = new Collider[16];
 
         void Awake()
@@ -33,13 +33,20 @@ namespace Kairos
             yaw = transform.eulerAngles.y;
         }
 
-        /// Multiplicador de detección: focos, agacharse y apantallamiento térmico.
+        public void Teleport(Vector3 pos)
+        {
+            cc.enabled = false;
+            transform.position = pos;
+            cc.enabled = true;
+            stumble = 0;
+        }
+
+        /// Multiplicador de detección: los focos delatan, la sombra protege.
         public float Visibility
         {
             get
             {
-                float v = I.InDangerLight(transform.position) ? 1.5f : .8f;
-                if (Crouched) v *= .6f;
+                float v = I.InDangerLight(transform.position) ? 1.3f : .75f;
                 if (Game.Has(2, 2)) v *= .8f;
                 return v;
             }
@@ -56,7 +63,6 @@ namespace Kairos
             yaw += md.x * sens;
             pitch = Mathf.Clamp(pitch - md.y * sens, -40, 60);
 
-            if (kb.cKey.wasPressedThisFrame) { Crouched = !Crouched; walker.crouched = Crouched; }
             Aiming = mouse.rightButton.isPressed;
 
             Vector3 input = Vector3.zero;
@@ -65,10 +71,11 @@ namespace Kairos
             if (kb.aKey.isPressed) input.x -= 1;
             if (kb.dKey.isPressed) input.x += 1;
             bool moving = input.sqrMagnitude > .01f;
+            if (moving) Moved = true;
 
-            Running = kb.leftShiftKey.isPressed && moving && !Crouched && !Aiming && Stamina > .02f;
+            Running = kb.leftShiftKey.isPressed && moving && !Aiming && Stamina > .02f;
             Stamina = Mathf.Clamp01(Stamina + (Running ? -Time.deltaTime / 9f : Time.deltaTime / 7f));
-            float speed = Aiming ? 1.1f : Crouched ? crouchSpeed : Running ? runSpeed : walkSpeed;
+            float speed = Aiming ? 1.1f : Running ? runSpeed : walkSpeed;
             if (stumble > 0) { stumble -= Time.deltaTime; speed = .3f; }
 
             var dir = Quaternion.Euler(0, yaw, 0) * input.normalized;
@@ -83,9 +90,8 @@ namespace Kairos
             Interactions(kb);
             ForensicCamera(mouse);
 
-            if (kb.qKey.wasPressedThisFrame) I.UseJammer();
-            if (kb.vKey.wasPressedThisFrame) I.UseStunner();
-            if (kb.pKey.wasPressedThisFrame) I.CallPatrol();
+            if (kb.qKey.wasPressedThisFrame) I.UseTool();
+            if (kb.fKey.wasPressedThisFrame) I.UseVisor();
         }
 
         void Footsteps(bool moving)
@@ -93,10 +99,10 @@ namespace Kairos
             if (!moving) return;
             stepT -= Time.deltaTime;
             if (stepT > 0) return;
-            float radius = Crouched ? 1.5f : Running ? 9f : 4f;
-            stepT = Crouched ? .7f : Running ? .32f : .5f;
+            float radius = Running ? 8f : 2.5f; // caminar es sigiloso; correr, no
+            stepT = Running ? .32f : .5f;
             if (Game.Has(2, 1)) radius *= .7f;
-            Sfx.PlayAt(Sfx.Step, transform.position, Crouched ? .15f : Running ? .6f : .3f, 12);
+            Sfx.PlayAt(Sfx.Step, transform.position, Running ? .6f : .25f, 12);
             if (!I.StepsMasked) I.EmitNoise(transform.position, radius);
         }
 
@@ -117,9 +123,9 @@ namespace Kairos
             slipT = 2f;
             if (Random.value < .15f)
             {
-                stumble = 1f;
+                stumble = .6f;
                 Sfx.PlayAt(Sfx.Slip, transform.position, .8f, 15);
-                I.EmitNoise(transform.position, 9f);
+                I.EmitNoise(transform.position, 6f);
                 I.Toast("Resbalón en la cubierta mojada.", Pal.DeckLight, 1.5f);
             }
         }
@@ -161,12 +167,13 @@ namespace Kairos
             }
         }
 
+        /// Opcional: fotografiar de lejos. De cerca basta con mantener E.
         void ForensicCamera(Mouse mouse)
         {
             Framed = null; FrameBlock = null;
             if (!Aiming) { focus = 0; return; }
             float move = mouse.delta.ReadValue().magnitude;
-            focus = Mathf.Clamp01(focus + (move > 6f ? -Time.deltaTime * 1.2f : Time.deltaTime * .9f));
+            focus = Mathf.Clamp01(focus + (move > 12f ? -Time.deltaTime : Time.deltaTime * 1.6f));
 
             var ray = new Ray(cam.transform.position, cam.transform.forward);
             int mask = (1 << Layers.Interact) | Layers.SolidMask;
@@ -194,7 +201,7 @@ namespace Kairos
                 I.EmitNoise(transform.position, 2f);
                 if (FrameBlock != null) { I.Toast(FrameBlock + ": la cámara no dispara.", Pal.DeckLight); return; }
                 if (Framed == null) { I.Toast("Nada que documentar en el encuadre.", Pal.Dim, 1.5f); return; }
-                if (focus < .8f) { I.Toast($"Enfoque {focus * 100:0} %: necesitas más de 80 %. Quédate quieto.", Pal.DeckLight, 2f); return; }
+                if (focus < .8f) { I.Toast($"Enfoque {focus * 100:0} %: quédate quieto un momento.", Pal.DeckLight, 2f); return; }
                 I.Photograph(Framed);
             }
         }
@@ -206,8 +213,7 @@ namespace Kairos
             cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, Aiming ? 32f : 62f, Time.unscaledDeltaTime * 8f);
             roll = Mathf.Lerp(roll, I.HeelAngle * .35f, Time.deltaTime * 2.5f);
             var rot = Quaternion.Euler(pitch, yaw, roll);
-            float height = Crouched ? 1.05f : 1.55f;
-            var head = transform.position + Vector3.up * height;
+            var head = transform.position + Vector3.up * 1.55f;
             Vector3 offset = Aiming ? new Vector3(.32f, .05f, -.55f) : new Vector3(.42f, .15f, -3.2f);
             var desired = head + rot * offset;
             var to = desired - head;

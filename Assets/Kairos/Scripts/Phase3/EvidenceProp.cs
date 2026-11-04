@@ -7,7 +7,8 @@ namespace Kairos
     {
         public string evidenceId;
         public EvidenceDef Def => CaseData.Evidence(evidenceId);
-        public override string Prompt => $"{Def.title}: clic derecho para encuadrar con la cámara forense";
-        public override void Use() { }
+        public override float Hold => 1.2f; // el enfoque de la cámara forense
+        public override string Prompt => $"[Mantén E] Fotografiar: {Def.title}";
+        public override void Use() => InfiltrationController.I.Photograph(this);
     }
 }

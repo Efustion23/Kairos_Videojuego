@@ -31,7 +31,7 @@ namespace Kairos
             var to = p.ChestPos - transform.position;
             var flat = new Vector3(to.x, 0, to.z);
             bool seen = to.magnitude < range + 2f && flat.magnitude < range && Vector3.Angle(transform.forward, flat) < angle * .5f && !Physics.Linecast(transform.position, p.ChestPos, Layers.SolidMask);
-            charge = Mathf.Clamp01(charge + (seen ? Time.deltaTime * .8f * p.Visibility : -Time.deltaTime * .3f));
+            charge = Mathf.Clamp01(charge + (seen ? Time.deltaTime * .5f * p.Visibility : -Time.deltaTime * .3f));
             if (charge >= 1f)
             {
                 charge = 0;

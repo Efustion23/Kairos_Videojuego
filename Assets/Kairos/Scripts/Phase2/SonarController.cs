@@ -13,7 +13,7 @@ namespace Kairos
     {
         public Camera cam;
         public Transform ship, boat;
-        public Vector3 boatStart = new Vector3(-90, 0, -430);
+        public Vector3 boatStart = new Vector3(-90, 0, -300); // ya a tiro de sonar y por el lado de babor
 
         const int Bit_Density = 1, Bit_Thermal = 2, Bit_Sound = 4;
         const float MaxSpeed = 18f;
@@ -36,7 +36,7 @@ namespace Kairos
         Color savedBg; CameraClearFlags savedClear; int savedMask;
 
         // UI
-        TextMeshProUGUI status, confidenceText, crestText;
+        TextMeshProUGUI status, confidenceText, crestText, hintText;
         UI.Bar suspBar, crestBar, confBar, listenBar;
         readonly TextMeshProUGUI[] cardText = new TextMeshProUGUI[5];
         readonly Button[] classBtn = new Button[5], selectBtn = new Button[5];
@@ -46,7 +46,7 @@ namespace Kairos
 
         float WakeRange => Game.Has(1, 4) ? 100 : Game.Has(1, 1) ? 200 : 300;
         float PulseRange => Game.Has(0, 4) ? 600 : 350;
-        float CrestWindow => Game.Has(0, 1) ? .45f : .3f; // media ventana: 0,6 s y 0,9 s
+        float CrestWindow => Game.Has(0, 1) ? .7f : .5f; // media ventana: 1 s y 1,4 s
         float HydroRange => Game.Has(0, 3) ? 350 : 200;
         float DistToShip => Vector3.Distance(new Vector3(boat.position.x, 0, boat.position.z), new Vector3(ship.position.x, 0, ship.position.z));
 
@@ -68,7 +68,7 @@ namespace Kairos
             listenSrc = Sfx.Loop(gameObject, Sfx.Hum, 0);
             Sfx.Loop(gameObject, Sfx.Wind, .3f);
             Sfx.Loop(gameObject, Sfx.Drone, .14f);
-            toast.Show("Te acercas de noche. A menos de " + WakeRange + " m la estela te delata con luna: reduce la marcha.", Pal.DeckLight, 7);
+            toast.Show("Quédate quieto o ve despacio: a toda marcha, tu estela te delata cerca del buque.", Pal.DeckLight, 7);
             RefreshPanel();
         }
 
@@ -236,34 +236,56 @@ namespace Kairos
             var right = UI.Panel(canvas.transform, new Vector2(.68f, .38f), new Vector2(1, 1));
             var rs = UI.VStack(right.transform, 12, 5);
             UI.Line(rs, "Lectura del casco", 24, Pal.Sonar, true);
-            UI.Line(rs, "Distingue bodegas de compartimentos con personas. Frío uniforme y masa densa son carga; calor, voces y consumo de agua, no.", 16, Pal.Dim);
+            UI.Line(rs, "Encuentra dónde hay personas. La carga da una masa densa y homogénea; un espacio habitado suena hueco y con objetos sueltos.", 16, Pal.Dim);
             for (int i = 0; i < 5; i++)
             {
                 int k = i;
                 var row = UI.HStack(rs, 36);
                 selectBtn[i] = UI.Btn(row, CaseData.Compartments[i].name, () => { selected = k; RefreshPanel(); }, null, 18, 36);
-                classBtn[i] = UI.Btn(row, "¿?", () => CycleClass(k), Pal.DeckLight, 18, 36);
+                classBtn[i] = UI.Btn(row, "Aquí hay personas", () => MarkPersons(k), Pal.DeckLight, 18, 36);
                 scanBars[i] = UI.NewBar(rs, Pal.Sonar, 5);
                 cardText[i] = UI.Line(rs, "", 15);
             }
-            UI.Line(rs, "Hidrófono sobre el compartimento elegido", 15, Pal.Dim);
+            UI.Line(rs, "Opcional: H escucha el compartimento elegido y T lanza el dron térmico. Suben la confianza.", 15, Pal.Dim);
             listenBar = UI.NewBar(rs, Pal.ThermHot, 6);
             confidenceText = UI.Line(rs, "", 22, Pal.Text, true);
             confBar = UI.NewBar(rs, Pal.Sealed, 12);
             var bottom = UI.HStack(rs, 46);
-            board = UI.Btn(bottom, "Abordar: Fase 3", () => Game.GoToPhase(3), Pal.Sealed, 21, 46);
+            board = UI.Btn(bottom, "Abordar: Fase 3", () => UI.Summary(canvas.transform, "Compartimento localizado", Pal.Sealed, new[]
+            {
+                $"Confianza: <b>{C.confidence:0} %</b>. {CaseData.Compartments[CaseData.PersonsCompartment].name}: {CaseData.Compartments[CaseData.PersonsCompartment].density}.",
+                C.dumped ? "<color=#F2A73B>Te detectaron y tiraron algunas pruebas al mar, pero el caso sigue.</color>" : "El buque no se ha enterado de que estás aquí.",
+            }, "Qué sigue: subes a bordo, reúnes pruebas y hablas con las personas retenidas.", "Lanzar el garfio", () => Game.GoToPhase(3)), Pal.Sealed, 21, 46);
             UI.Btn(bottom, "Volver a base", Game.GoToMenu, Pal.Dim, 19, 46);
             toast = UI.Toasts.Create(canvas.transform, new Vector2(.05f, .03f), new Vector2(.62f, .13f));
 
-            // Retícula de pulso: mínima, el objetivo es siempre el buque.
-            var hint = UI.Text(canvas.transform, "", 20, Pal.Sonar, TextAlignmentOptions.Center);
-            hint.rectTransform.anchorMin = new Vector2(.1f, .15f); hint.rectTransform.anchorMax = new Vector2(.6f, .2f);
+            var hintP = UI.Panel(canvas.transform, new Vector2(.08f, .15f), new Vector2(.62f, .24f), default, default, new Color(.02f, .16f, .17f, .92f));
+            hintText = UI.Text(hintP.transform, "", 23, Pal.Sonar, TextAlignmentOptions.Center);
+            hintText.margin = new Vector4(12, 4, 12, 4);
         }
 
-        void CycleClass(int i)
+        void MarkPersons(int i)
         {
-            C.classified[i] = C.classified[i] >= 2 ? 0 : C.classified[i] + 1;
+            var k = CaseData.Compartments[i];
+            if (scan[i] < 1) { toast.Show($"{k.name}: aún sin lectura. Sigue disparando pulsos.", Pal.DeckLight); return; }
+            if (k.kind == 1)
+            {
+                C.marked = i;
+                Sfx.Play(Sfx.Seal, .8f);
+                toast.Show($"{k.name}: {k.density}. Aquí hay alguien.", Pal.Sealed, 5);
+            }
+            else toast.Show($"{k.name}: {k.density}. {(k.kind == 0 ? "Es carga congelada" : "Es maquinaria")}, no personas. Prueba con otro.", Pal.DeckLight, 5);
             RefreshPanel();
+        }
+
+        /// Un solo paso a la vez, según lo que falte.
+        string CurrentHint(float d)
+        {
+            if (droneActive) return "Dron térmico: W/S avanzar, A/D girar. Vuela sobre el barco y pulsa T para volver.";
+            if (d > PulseRange) return $"Mantén W para acercarte: el sonar llega a {PulseRange:0} m.";
+            if (scan[CaseData.PersonsCompartment] < 1 && C.marked < 0) return "Pulsa Espacio cuando la barra de ola esté en verde. Repite hasta llenar las lecturas.";
+            if (C.marked != CaseData.PersonsCompartment) return "Compara las lecturas y pulsa «Aquí hay personas» en la que suene hueca.";
+            return C.confidence >= CaseData.ConfidenceToBoard ? "Ya tienes confianza suficiente: pulsa «Abordar»." : "Sigue escaneando ese compartimento.";
         }
 
         void RefreshPanel()
@@ -277,10 +299,10 @@ namespace Kairos
                 string sn = (sig & Bit_Sound) != 0 ? k.sound : "—";
                 cardText[i].text = $"<color=#3FE0D0>Densidad</color> {dens}  <color=#FFD27A>Térmica</color> {th}  <color=#9fb>Sonido</color> {sn}";
                 scanBars[i].Set(scan[i]);
-                UI.SetLabel(classBtn[i], C.classified[i] < 0 ? "Sin clasificar" : CaseData.KindNames[C.classified[i]]);
+                UI.SetLabel(classBtn[i], C.marked == i ? "Personas: marcado" : "Aquí hay personas");
                 UI.SetLabel(selectBtn[i], (selected == i ? "> " : "") + k.name);
             }
-            C.confidence = CaseData.ComputeConfidence(C.classified, C.scanSignals);
+            C.confidence = CaseData.ComputeConfidence(C.marked, C.scanSignals);
             confidenceText.text = $"Confianza: {C.confidence:0} % (mínimo {CaseData.ConfidenceToBoard} %)";
             confBar.Set(C.confidence / 100f);
             board.interactable = C.confidence >= CaseData.ConfidenceToBoard;
@@ -321,18 +343,19 @@ namespace Kairos
             // Sospecha
             float rate = -2f;
             float factor = Game.Has(1, 4) ? .5f : 1f;
-            if (d < WakeRange && Mathf.Abs(speed) > 2.5f) rate = 8f * Mathf.Abs(speed) / MaxSpeed * factor;
+            if (d < WakeRange && Mathf.Abs(speed) > 2.5f) rate = 4f * Mathf.Abs(speed) / MaxSpeed * factor;
             if (droneActive && Vector3.Distance(drone.position, ship.position) < 22f) rate = Mathf.Max(rate, 3f * factor);
             C.suspicion = Mathf.Clamp(C.suspicion + rate * Time.deltaTime, 0, 100);
             if (C.suspicion >= 100) Detected();
 
             // HUD
+            hintText.text = CurrentHint(d);
             suspBar.Set(C.suspicion / 100f);
             float sw = Ocean.Swell(boat.position.x, boat.position.z);
             crestBar.Set((sw + 1) * .5f);
             bool onCrest = Ocean.SecondsFromCrest(boat.position.x, boat.position.z) <= CrestWindow;
             crestBar.img.color = onCrest ? Pal.Sealed : Pal.Sonar;
-            crestText.text = onCrest ? "<color=#6CFF8A>EN LA CRESTA: ¡pulso a pleno rendimiento!</color>" : "Ola: el pulso rinde más en la cresta";
+            crestText.text = onCrest ? "<color=#6CFF8A>¡AHORA! Pulsa Espacio</color>" : "Ola: el pulso rinde más en verde";
             status.text = $"Distancia al buque: <b>{d:0} m</b>\nMarcha: {Mathf.Abs(speed):0} m/s\nCombustible: {Game.S.fuel:0} L\nRepuestos de dron: {Game.S.droneParts}\nDouglas: {Ocean.Douglas:0.0}{(droneActive ? $"\n<color=#FFD27A>Batería del dron: {droneBattery:0} s. T: volver</color>" : "")}";
         }
 
@@ -406,14 +429,14 @@ namespace Kairos
 
         void Pulse(float d)
         {
-            pulseCooldown = 1.2f;
+            pulseCooldown = .9f;
             bool crest = Ocean.SecondsFromCrest(boat.position.x, boat.position.z) <= CrestWindow;
-            float q = crest ? 1f : Game.Has(1, 3) ? .6f : .35f;
+            float q = crest ? 1f : Game.Has(1, 3) ? .85f : .6f;
             if (d > PulseRange) { toast.Show($"Fuera de alcance del sonar: acércate a {PulseRange:0} m.", Pal.DeckLight); return; }
             if (Game.Has(0, 2)) q *= 1.5f;
             if (d < 150f)
             {
-                C.suspicion = Mathf.Min(100, C.suspicion + (Game.Has(1, 4) ? 6 : 12));
+                C.suspicion = Mathf.Min(100, C.suspicion + (Game.Has(1, 4) ? 3 : 6));
                 toast.Show("Pulso a menos de 150 m: el buque lo nota.", Pal.Danger);
             }
             StartCoroutine(Ring());
@@ -428,13 +451,13 @@ namespace Kairos
             }
 
             var side = Mathf.Sign(ship.InverseTransformPoint(boat.position).x);
-            float rangeFactor = d < 220 ? .34f : .22f;
+            float rangeFactor = d < 220 ? .4f : .28f;
             float dense = 0, total = 0;
             var rnd = new System.Random(Time.frameCount);
             for (int i = 0; i < 5; i++)
             {
                 var k = CaseData.Compartments[i];
-                float sideF = Mathf.Sign(k.center.x) == side ? 1f : .35f;
+                float sideF = Mathf.Sign(k.center.x) == side ? 1f : .6f;
                 scan[i] = Mathf.Min(1, scan[i] + q * rangeFactor * sideF);
                 if (scan[i] >= 1) C.scanSignals[i] |= Bit_Density;
                 int points = (int)(320 * q * sideF);

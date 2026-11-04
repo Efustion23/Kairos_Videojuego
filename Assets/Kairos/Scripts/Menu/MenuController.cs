@@ -249,7 +249,7 @@ namespace Kairos
             UI.Btn(s, "Borrar partida y empezar de cero", () => { Game.NewGame(); Game.Write(); ShowWarning(); }, Pal.Danger, 22, 50);
 
             UI.Line(s, "Controles", 26, Pal.DeckLight, true);
-            UI.Line(s, "Lancha: W/S acelerar, A/D timón, Espacio pulso, H hidrófono, T dron, clic derecho girar cámara.\nA bordo: WASD mover, ratón mirar, Shift correr, C agacharse, E interactuar, clic derecho cámara forense, clic izquierdo foto, Q bloqueador, V aturdidor, P patrullera, Tab maletín, Esc pausa.", 21, Pal.Dim);
+            UI.Line(s, "Lancha: W/S marcha, A/D timón, Espacio pulso de sonar. Opcional: H hidrófono, T dron, clic derecho girar cámara.\nA bordo: WASD mover, ratón mirar, Shift correr, E usar lo que tienes delante, F visor, Q herramienta, Tab maletín, Esc pausa. Opcional: clic derecho y clic izquierdo para fotografiar de lejos.", 21, Pal.Dim);
         }
     }
 }

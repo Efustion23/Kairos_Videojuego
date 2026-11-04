@@ -113,7 +113,7 @@ namespace Kairos
             var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
             go.name = name;
             Destroy(go.GetComponent<Collider>());
-            if (collider) go.AddComponent<SphereCollider>().radius = 1.2f;
+            if (collider) go.AddComponent<SphereCollider>().radius = 2f; // más grande que el punto: fácil de acertar
             go.transform.SetParent(globe, false);
             go.transform.localScale = Vector3.one * size;
             go.GetComponent<MeshRenderer>().material = Mats.Glow(c, true, false, round);
@@ -123,7 +123,7 @@ namespace Kairos
         void AddMarker(ShipDef s)
         {
             var m = new Marker { ship = s };
-            m.go = Quad(s.id, Pal.Sonar, .0032f, true, true);
+            m.go = Quad(s.id, Pal.Sonar, .0048f, true, true);
             m.halo = Quad(s.id + "_viirs", new Color(Pal.DeckLight.r, Pal.DeckLight.g, Pal.DeckLight.b, .6f), .014f);
             m.ring = Quad(s.id + "_sar", new Color(1, 1, 1, .85f), .0026f, false);
             m.ring.transform.SetParent(m.go.transform.parent);
@@ -187,35 +187,54 @@ namespace Kairos
                 layerBtns[i] = UI.Btn(rightPanel, CaseData.Layers[i].name, () => BuyLayer(k), null, 21, 42);
                 layerInfo[i] = UI.Line(rightPanel, "", 17, Pal.Dim);
             }
-            var time = UI.HStack(rightPanel, 42);
-            UI.Btn(time, "+1 hora", () => Advance(1));
-            UI.Btn(time, "+3 horas", () => Advance(3));
-            UI.Btn(time, "Volver a base", Game.GoToMenu, Pal.Dim);
+            UI.Btn(rightPanel, "Volver a base", Game.GoToMenu, Pal.Dim, 19, 36);
 
             UI.Line(rightPanel, "Índice de Riesgo", 26, Pal.Sonar, true);
             irText = UI.Line(rightPanel, "Selecciona un buque en el mapa.", 22);
             irBar = UI.NewBar(rightPanel, Pal.DeckLight, 12);
             dossier = UI.Line(rightPanel, "", 18);
-            deploy = UI.Btn(rightPanel, "Desplegar lancha: Fase 2", () => { C.ir = selected != null ? IR(selected) : 0; Game.GoToPhase(2); }, Pal.Sealed, 23, 54);
+            deploy = UI.Btn(rightPanel, "Desplegar lancha: Fase 2", () =>
+            {
+                C.ir = selected != null ? IR(selected) : 0;
+                UI.Summary(canvas.transform, $"{selected.name}: IR {C.ir}", Pal.Sealed, new[]
+                {
+                    "El índice de riesgo justifica acercarse. Sigues trabajando de noche, más allá de la milla 200.",
+                }, "Qué sigue: te acercas en lancha y escaneas el casco para saber dónde están las personas.", "Salir en lancha", () => Game.GoToPhase(2));
+            }, Pal.Sealed, 23, 54);
             toast = UI.Toasts.Create(canvas.transform, new Vector2(.05f, .04f), new Vector2(.65f, .14f));
         }
 
         int IR(ShipDef s) => CaseData.ComputeIR(s, C.revealed, C.hours, C.sarDegraded, Decay);
         int LayerCost(int i) => i == CaseData.LayerSAR && Game.Has(3, 3) ? 8 : CaseData.Layers[i].cost;
 
-        string LayerBlock(int i)
+        string LayerBlock(int i) => LayerBlockAt(i, C.hours, C.abLeft);
+
+        string LayerBlockAt(int i, float h, int ab)
         {
-            float h = C.hours;
             if ((C.revealed & (1 << i)) != 0) return null;
-            if (C.abLeft < LayerCost(i)) return "Sin ancho de banda: espera al día siguiente";
+            if (ab < LayerCost(i)) return "Sin ancho de banda hasta mañana";
             if (i == CaseData.LayerVIIRS && !CaseData.Night(h)) return "Solo de noche";
             if ((i == CaseData.LayerVIIRS || i == CaseData.LayerOptical) && CaseData.Cloudy(h)) return "Bloqueada por nubes";
-            if (i == CaseData.LayerSAR && !CaseData.SarNow(h)) return $"Próxima pasada en {CaseData.NextSarPass(h) - h:0.#} h";
+            if (i == CaseData.LayerSAR && !CaseData.SarNow(h)) return "Satélite fuera de pasada";
             return null;
+        }
+
+        /// Horas hasta que se pueda comprar la capa. Así nadie calcula horas ni se pierde una pasada.
+        float HoursUntilOpen(int i)
+        {
+            int today = Mathf.FloorToInt(C.hours / 24f);
+            for (float t = 0; t <= 96f; t += .5f)
+            {
+                float h = C.hours + t;
+                if (LayerBlockAt(i, h, Mathf.FloorToInt(h / 24f) > today ? 60 : C.abLeft) == null) return t;
+            }
+            return 0;
         }
 
         void BuyLayer(int i)
         {
+            float wait = HoursUntilOpen(i);
+            if (wait > 0) Advance(wait);
             if (LayerBlock(i) != null) return;
             C.abLeft -= LayerCost(i);
             C.revealed |= 1 << i;
@@ -250,9 +269,10 @@ namespace Kairos
                 var d = CaseData.Layers[i];
                 bool owned = (C.revealed & (1 << i)) != 0;
                 string block = LayerBlock(i);
-                layerBtns[i].interactable = !owned && block == null;
-                UI.SetLabel(layerBtns[i], owned ? $"{d.name}: activa" : $"{d.name}: {LayerCost(i)} AB");
-                layerInfo[i].text = d.shows + (block != null ? $"  <color=#F2A73B>{block}</color>" : owned ? "" : $"  ({d.limit})");
+                float wait = owned ? 0 : HoursUntilOpen(i);
+                layerBtns[i].interactable = !owned;
+                UI.SetLabel(layerBtns[i], owned ? $"{d.name}: activa" : wait > 0 ? $"{d.name}: esperar {wait:0.#} h y usar ({LayerCost(i)} AB)" : $"{d.name}: {LayerCost(i)} AB");
+                layerInfo[i].text = d.shows + (block != null ? $"  <color=#F2A73B>{block}</color>" : "");
             }
 
             var parts = new List<string>();
@@ -283,13 +303,21 @@ namespace Kairos
             // Objetivo guiado para el tutorial del Sector 1.
             string o;
             if (!zoomed) o = "<b>Lo que sabemos</b>\nUn potero de 90 m ha desaparecido del AIS frente a Argentina.\n\nHaz clic en el <color=#3FE0D0>Sector 1</color> del globo.";
-            else if (selected == null) o = "<b>Cruza capas</b>\nHaz clic en un buque. AIS es gratis, pero un buque puede apagarlo. Busca la señal perdida.";
-            else if (ir < CaseData.IrToScan) o = "<b>Sube el IR a 60</b>\nCompra capas con tu ancho de banda. Avanza el tiempo si una capa está bloqueada, pero cada día que pasa el buque se aleja: IR -" + Decay + ".";
-            else o = "<b>Índice suficiente</b>\nYa puedes desplegar la lancha contra " + selected.name + ".";
+            else if (selected == null) o = "<b>Busca al sospechoso</b>\nUn buque ha apagado su señal. Haz clic en <color=#3FE0D0>Hai Feng 77 (última señal)</color>, o investiga otro.";
+            else if (ir < CaseData.IrToScan && !selected.target) o = $"<b>{selected.name}</b>\nNo parece nuestro objetivo. Prueba con Hai Feng 77.";
+            else if (ir < CaseData.IrToScan) o = $"<b>Sube el IR a {CaseData.IrToScan}</b>\nUsa capas de satélite para confirmar sospechas. Prueba <color=#3FE0D0>{NextLayerTip()}</color>. Si hay que esperar, el botón lo hace por ti.";
+            else o = "<b>Índice suficiente</b>\nPulsa <color=#6CFF8A>Desplegar lancha</color>.";
             objective.text = o;
 
             foreach (var m in markers) UpdateMarker(m);
             cloudMat.SetColor("_Color", new Color(1, 1, 1, CaseData.Cloudy(h) ? .85f : .18f));
+        }
+
+        string NextLayerTip()
+        {
+            foreach (var i in new[] { CaseData.LayerSAR, CaseData.LayerVMS, CaseData.LayerVIIRS, CaseData.LayerOptical })
+                if ((C.revealed & (1 << i)) == 0) return CaseData.Layers[i].name;
+            return "esperar";
         }
 
         void UpdateMarker(Marker m)

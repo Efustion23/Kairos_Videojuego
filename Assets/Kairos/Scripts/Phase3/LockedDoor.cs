@@ -61,7 +61,7 @@ namespace Kairos
             if (flash != null) Destroy(flash.gameObject);
             if (solid != null) solid.SetActive(false);
             gameObject.SetActive(false);
-            if (announce) { Sfx.PlayAt(Sfx.Knock, transform.position, .5f); I.Toast(char.ToUpper(doorName[0]) + doorName.Substring(1) + " abierta.", Pal.Sonar); I.RebuildNav(); }
+            if (announce) { Sfx.PlayAt(Sfx.Knock, transform.position, .5f); I.Toast(char.ToUpper(doorName[0]) + doorName.Substring(1) + " abierta.", Pal.Sonar); I.RebuildNav(); I.Progressed(); }
         }
     }
 }

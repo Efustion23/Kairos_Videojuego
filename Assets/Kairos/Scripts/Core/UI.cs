@@ -166,6 +166,19 @@ namespace Kairos
             return i;
         }
 
+        /// Pantalla de resumen al cerrar una fase: qué lograste y qué viene después.
+        public static void Summary(Transform parent, string title, Color titleColor, string[] lines, string next, string button, Action onClick)
+        {
+            Fullscreen(parent, new Color(.02f, .05f, .07f, .97f));
+            var p = Panel(parent, new Vector2(.22f, .2f), new Vector2(.78f, .8f));
+            var s = VStack(p.transform, 34, 14);
+            s.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleLeft;
+            Line(s, title, 40, titleColor, true);
+            foreach (var l in lines) Line(s, l, 24);
+            Line(s, next, 22, Pal.Dim);
+            Btn(s, button, onClick, Pal.Sealed, 24, 56);
+        }
+
         /// Línea entre dos puntos de un mismo RectTransform (para el grafo de pruebas).
         public static Image Segment(Transform parent, Vector2 a, Vector2 b, Color color, float width = 3)
         {

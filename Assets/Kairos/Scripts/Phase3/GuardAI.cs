@@ -6,7 +6,7 @@ namespace Kairos
     public class GuardAI : MonoBehaviour
     {
         public Transform[] route;
-        public float viewRange = 13f, viewAngle = 105f;
+        public float viewRange = 11f, viewAngle = 100f;
         public string displayName = "Guardia";
         public GuardState state;
         public float suspicion;
@@ -44,8 +44,19 @@ namespace Kairos
             if (stunned > 0) return;
             float d = Vector3.Distance(pos, transform.position);
             if (d > radius) return;
-            suspicion = Mathf.Min(.95f, suspicion + (1 - d / radius) * .4f);
+            suspicion = Mathf.Max(suspicion, Mathf.Min(.65f, suspicion + (1 - d / radius) * .25f)); // oír nunca dispara la alerta
             lastKnown = pos;
+        }
+
+        /// Tras un repliegue: vuelve a su ronda, lo más lejos posible del punto seguro.
+        public void Regroup(Vector3 safePoint)
+        {
+            suspicion = 0; radio = 0; lostFor = 0; state = GuardState.Tranquilo;
+            if (agent == null || !agent.isOnNavMesh || route == null || route.Length == 0) return;
+            for (int i = 0; i < route.Length; i++)
+                if (Vector3.Distance(route[i].position, safePoint) > Vector3.Distance(route[wp].position, safePoint)) wp = i;
+            agent.Warp(route[wp].position);
+            agent.ResetPath();
         }
 
         public void Lure(Vector3 pos) { suspicion = Mathf.Max(suspicion, .65f); lastKnown = pos; }
@@ -70,16 +81,16 @@ namespace Kairos
             bool seen = false; float dist = 99f;
             if (!I.Distracted)
             {
-                if (See(p.ChestPos, out float dp)) { seen = true; dist = dp; lastKnown = p.transform.position; suspicion += Time.deltaTime * Mathf.Lerp(1.1f, .35f, dp / EffectiveRange) * p.Visibility * (I.Lockdown ? 1.5f : 1f); }
+                if (See(p.ChestPos, out float dp)) { seen = true; dist = dp; lastKnown = p.transform.position; suspicion += Time.deltaTime * Mathf.Lerp(.7f, .25f, dp / EffectiveRange) * p.Visibility * (I.Lockdown ? 1.5f : 1f); }
                 foreach (var f in I.Followers)
-                    if (See(f.transform.position + Vector3.up, out float df)) { seen = true; lastKnown = f.transform.position; suspicion += Time.deltaTime * .6f; }
+                    if (See(f.transform.position + Vector3.up, out float df)) { seen = true; lastKnown = f.transform.position; suspicion += Time.deltaTime * .3f; }
             }
 
             if (seen) lostFor = 0;
             else
             {
                 lostFor += Time.deltaTime;
-                if (lostFor > 1.5f) suspicion -= Time.deltaTime * (state == GuardState.Alerta ? .07f : .12f);
+                if (lostFor > 1.5f) suspicion -= Time.deltaTime * (state == GuardState.Alerta ? .15f : .2f);
             }
             suspicion = Mathf.Clamp01(suspicion);
 
@@ -106,16 +117,16 @@ namespace Kairos
                     if (!agent.pathPending && agent.remainingDistance < .8f) transform.Rotate(0, 70f * Time.deltaTime, 0);
                     break;
                 case GuardState.Alerta:
-                    agent.speed = 4.4f;
+                    agent.speed = 3.8f; // correr (5,2) siempre te saca de encima
                     agent.SetDestination(lastKnown);
                     if (!agent.pathPending && agent.remainingDistance < .8f) transform.Rotate(0, 90f * Time.deltaTime, 0);
                     if (I.JamActive) radio = 0;
                     else
                     {
                         radio += Time.deltaTime;
-                        if (radio > 8f && !I.Lockdown) { radio = 0; I.StartLockdown(displayName + " avisa por radio"); }
+                        if (radio > 15f && !I.Lockdown) { radio = 0; I.StartLockdown(displayName + " avisa por radio"); }
                     }
-                    if (seen && Vector3.Distance(p.transform.position, transform.position) < 1.5f) I.Caught();
+                    if (seen && Vector3.Distance(p.transform.position, transform.position) < 1.2f) I.Caught();
                     break;
                 case GuardState.Bloqueo:
                     agent.speed = 3.2f;

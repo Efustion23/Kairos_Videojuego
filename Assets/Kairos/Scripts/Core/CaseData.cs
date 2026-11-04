@@ -20,7 +20,7 @@ namespace Kairos
     /// Datos del caso de apertura. Todos los buques y empresas son ficticios (ver GDD).
     public static class CaseData
     {
-        public const int MaxEvidence = 12;
+        public const int MaxEvidence = 13; // caben todas: nadie debe descartar pruebas
         public const int IrToScan = 60, ConfidenceToBoard = 70;
 
         // ---------- Fase 1 ----------
@@ -123,20 +123,15 @@ namespace Kairos
             new Compartment { name = "K5 Proa babor", center = new Vector3(-3.9f, 1.5f, 16f), size = new Vector3(5.2f, 8f, 12f), kind = 0,
                 temp = "-28 °C, uniforme", density = "0,75, homogénea", densityValue = .75f, cycle = "Constante 24 h", water = "Sin consumo", sound = "Zumbido de compresores" },
         };
-        public static readonly string[] KindNames = { "Bodega", "Personas", "Máquinas" };
+        public const int PersonsCompartment = 3;
 
-        /// Cada compartimento vale hasta 1: 0,4 por clasificarlo bien y 0,2 por cada señal que lo respalda.
-        public static float ComputeConfidence(int[] classified, int[] signals)
+        /// Basta con encontrar el compartimento con personas: 40 por marcarlo, 40 por su lectura de sonar,
+        /// y 10 por cada ayuda opcional (dron e hidrófono).
+        public static float ComputeConfidence(int marked, int[] signals)
         {
-            float sum = 0;
-            for (int i = 0; i < Compartments.Length; i++)
-            {
-                if (classified[i] != Compartments[i].kind) continue;
-                int n = 0;
-                for (int bit = 1; bit <= 4; bit <<= 1) if ((signals[i] & bit) != 0) n++;
-                sum += .4f + .2f * n;
-            }
-            return 100f * sum / Compartments.Length;
+            if (marked != PersonsCompartment) return 0;
+            int s = signals[PersonsCompartment];
+            return 40f + ((s & 1) != 0 ? 40f : 0) + ((s & 2) != 0 ? 10f : 0) + ((s & 4) != 0 ? 10f : 0);
         }
 
         // ---------- Fase 3 ----------
@@ -211,16 +206,18 @@ namespace Kairos
             E("t_moussa", "Testimonio de Moussa Diallo", 'A', "Testimonio con consentimiento y lector biométrico.", new[] { 0, 8 }, new[] { "0-2" }),
         };
         public static EvidenceDef Evidence(string id) => System.Array.Find(EvidenceDefs, e => e.id == id);
-        public static readonly string[] DumpedWhenDetected = { "e_turnos", "e_facturas" };
+        // Lo que se puede perder nunca incluye lo necesario para llegar al beneficiario final.
+        public static readonly string[] DumpedWhenDetected = { "e_turnos", "e_candados" };
+        public static readonly string[] BurnOrder = { "e_candados", "e_turnos", "e_contratos", "e_deudas" };
 
         public static readonly NodeDef[] Nodes =
         {
             new NodeDef { name = "Hai Feng 77", role = "Buque", pos = new Vector2(.12f, .5f) },
             new NodeDef { name = "Polar Meridian", role = "Frigorífico", pos = new Vector2(.42f, .85f) },
             new NodeDef { name = "Agencia Puerto Claro", role = "Reclutadora", pos = new Vector2(.42f, .15f) },
-            new NodeDef { name = "Marea Austral Shipping", role = "Armador registrado", pos = new Vector2(.42f, .5f) },
-            new NodeDef { name = "Cormorán Trade Ltd", role = "Empresa fachada", pos = new Vector2(.68f, .5f) },
-            new NodeDef { name = "Tidewater Austral", role = "Beneficiario final", pos = new Vector2(.88f, .5f) },
+            new NodeDef { name = "Marea Austral Shipping", role = "Armador registrado", pos = new Vector2(.4f, .5f) },
+            new NodeDef { name = "Cormorán Trade Ltd", role = "Empresa fachada", pos = new Vector2(.64f, .5f) },
+            new NodeDef { name = "Tidewater Austral", role = "Beneficiario final", pos = new Vector2(.875f, .5f) },
         };
 
         public static string EdgeKey(int a, int b) => a < b ? a + "-" + b : b + "-" + a;
@@ -266,10 +263,10 @@ namespace Kairos
         };
         public static readonly string[,] UpgradeEffects =
         {
-            { "Ventana de cresta de 0,6 a 0,9 s", "Cada pulso avanza un 50 % más", "Hidrófono a 350 m en vez de 200 m", "Pulso a pleno rendimiento hasta 600 m" },
-            { "La estela delata a 200 m en vez de 300 m", "30 % menos de combustible", "Pulso fuera de cresta rinde 60 %", "La estela delata a 100 m; menos sospecha" },
+            { "Ventana de cresta de 1 a 1,4 s", "Cada pulso avanza un 50 % más", "Hidrófono a 350 m en vez de 200 m", "Pulso a pleno rendimiento hasta 600 m" },
+            { "La estela delata a 200 m en vez de 300 m", "30 % menos de combustible", "Pulso fuera de cresta rinde 85 %", "La estela delata a 100 m; menos sospecha" },
             { "Pasos 30 % más silenciosos", "Guardias te detectan 20 % más lento", "Las personas escoltadas van más rápido", "Más confianza al hablar en su idioma" },
-            { "Transbordos visibles en AIS", "El IR cae 2 por día en vez de 5", "SAR cuesta 8 AB en vez de 15", "Marca qué enlaces admite cada prueba" },
+            { "Transbordos visibles en AIS", "El IR cae 2 por día en vez de 5", "SAR cuesta 8 AB en vez de 15", "Cada acción del juicio cuesta la mitad de tiempo" },
         };
         public static readonly int[] UpgradeCost = { 40000, 90000, 180000, 350000 };
         public static readonly int[] UpgradeRep = { 0, 30, 55, 80 };
