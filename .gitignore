@@ -9,6 +9,10 @@
 /[Mm]emoryCaptures/
 /[Rr]ecordings/
 
+# FBX de Mixamo con el modelo entero (40 MB cada uno): el juego usa los clips extraídos en Clips/
+/Assets/Kairos/Models/Protagonista/Animaciones/
+/Assets/Kairos/Models/Protagonista/Animaciones.meta
+
 # IDE: Unity los genera
 .vs/
 .vscode/

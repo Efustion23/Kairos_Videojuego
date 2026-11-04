@@ -8,11 +8,15 @@ namespace Kairos
     public class PlayerAgent : MonoBehaviour
     {
         public Camera cam;
-        public Walker walker;
-        public float walkSpeed = 3f, runSpeed = 5.2f;
+        public HumanoidMotion motion;
+        public float walkSpeed = 2f, runSpeed = 5.2f;
+        public float acceleration = 11f, braking = 15f, turnSharpness = 11f;
 
         CharacterController cc;
-        float yaw, pitch = 8f, velY, stepT, slipT, stumble, breathT, focus, roll;
+        float yaw, pitch = 8f, velY, slipT, stumble, breathT, focus, roll, camVelY;
+        int lastStep;
+        Vector3 moveVel, camAnchor, camVelXZ;
+        bool camReady;
         public bool Aiming { get; private set; }
         public bool Running { get; private set; }
         public bool Moved { get; private set; }
@@ -39,6 +43,19 @@ namespace Kairos
             transform.position = pos;
             cc.enabled = true;
             stumble = 0;
+            moveVel = Vector3.zero;
+            camReady = false; // la cámara salta con el personaje, sin arrastrarse por el barco
+        }
+
+        /// Mira a un punto, con la cámara detrás: en una conversación se ve a las dos personas.
+        public void FaceTo(Vector3 point)
+        {
+            var dir = point - transform.position; dir.y = 0;
+            if (dir.sqrMagnitude < .01f) return;
+            transform.rotation = Quaternion.LookRotation(dir);
+            yaw = transform.eulerAngles.y;
+            pitch = 8f;
+            moveVel = Vector3.zero;
         }
 
         /// Multiplicador de detección: los focos delatan, la sombra protege.
@@ -54,7 +71,8 @@ namespace Kairos
 
         void Update()
         {
-            if (I == null || !I.PlayerCanAct) { HoldingTarget = null; return; }
+            if (I != null) motion.talking = I.mode == InfiltrationController.Mode.Dialog;
+            if (I == null || !I.PlayerCanAct) { HoldingTarget = null; motion.busy = motion.aiming = false; return; }
             var kb = Keyboard.current; var mouse = Mouse.current;
             if (kb == null || mouse == null) return;
 
@@ -78,29 +96,36 @@ namespace Kairos
             float speed = Aiming ? 1.1f : Running ? runSpeed : walkSpeed;
             if (stumble > 0) { stumble -= Time.deltaTime; speed = .3f; }
 
+            // Arranca, frena y cambia de dirección con inercia: el cuerpo tiene peso.
             var dir = Quaternion.Euler(0, yaw, 0) * input.normalized;
+            moveVel = Vector3.MoveTowards(moveVel, dir * speed, (moving ? acceleration : braking) * Time.deltaTime);
             velY = cc.isGrounded ? -2f : velY - 18f * Time.deltaTime;
-            cc.Move((dir * speed + Vector3.up * velY) * Time.deltaTime);
-            if (Aiming) transform.rotation = Quaternion.Euler(0, yaw, 0);
-            else if (moving) transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(dir), 540f * Time.deltaTime);
+            cc.Move((moveVel + Vector3.up * velY) * Time.deltaTime);
 
-            Footsteps(moving);
+            // Gira hacia donde se mueve, con una curva suave en vez de a velocidad fija.
+            var facing = Aiming ? Quaternion.Euler(0, yaw, 0)
+                : moveVel.sqrMagnitude > .04f ? Quaternion.LookRotation(moveVel) : transform.rotation;
+            transform.rotation = Quaternion.Slerp(transform.rotation, facing, 1f - Mathf.Exp(-turnSharpness * Time.deltaTime));
+
+            Footsteps();
             Breath();
             Slip(moving);
             Interactions(kb);
             ForensicCamera(mouse);
+            motion.busy = HoldingTarget != null;
+            motion.typing = HoldingTarget is BridgeConsole;
+            motion.aiming = Aiming;
 
             if (kb.qKey.wasPressedThisFrame) I.UseTool();
             if (kb.fKey.wasPressedThisFrame) I.UseVisor();
         }
 
-        void Footsteps(bool moving)
+        /// Suena y se oye justo cuando el pie toca el suelo.
+        void Footsteps()
         {
-            if (!moving) return;
-            stepT -= Time.deltaTime;
-            if (stepT > 0) return;
+            if (motion.Steps == lastStep) return;
+            lastStep = motion.Steps;
             float radius = Running ? 8f : 2.5f; // caminar es sigiloso; correr, no
-            stepT = Running ? .32f : .5f;
             if (Game.Has(2, 1)) radius *= .7f;
             Sfx.PlayAt(Sfx.Step, transform.position, Running ? .6f : .25f, 12);
             if (!I.StepsMasked) I.EmitNoise(transform.position, radius);
@@ -210,10 +235,18 @@ namespace Kairos
         {
             if (I == null || cam == null || I.mode != InfiltrationController.Mode.Play && I.mode != InfiltrationController.Mode.Dialog && I.mode != InfiltrationController.Mode.Menu) return;
 
-            cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, Aiming ? 32f : 62f, Time.unscaledDeltaTime * 8f);
+            float runFov = Running ? 66f : 62f;
+            cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, Aiming ? 32f : runFov, Time.unscaledDeltaTime * 6f);
             roll = Mathf.Lerp(roll, I.HeelAngle * .35f, Time.deltaTime * 2.5f);
             var rot = Quaternion.Euler(pitch, yaw, roll);
-            var head = transform.position + Vector3.up * 1.55f;
+
+            // La cámara sigue con un ligero retardo, más lento en altura: rampas y escalones no la sacuden.
+            var target = transform.position + Vector3.up * 1.55f;
+            if (!camReady) { camAnchor = target; camVelXZ = Vector3.zero; camVelY = 0; camReady = true; }
+            var flatAnchor = new Vector3(camAnchor.x, 0, camAnchor.z);
+            flatAnchor = Vector3.SmoothDamp(flatAnchor, new Vector3(target.x, 0, target.z), ref camVelXZ, Aiming ? .02f : .05f);
+            camAnchor = new Vector3(flatAnchor.x, Mathf.SmoothDamp(camAnchor.y, target.y, ref camVelY, .12f), flatAnchor.z);
+            var head = camAnchor;
             Vector3 offset = Aiming ? new Vector3(.32f, .05f, -.55f) : new Vector3(.42f, .15f, -3.2f);
             var desired = head + rot * offset;
             var to = desired - head;

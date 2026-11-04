@@ -311,7 +311,7 @@ namespace Kairos
             bool offscreen = behind || x < 0 || x > 1 || y < 0 || y > 1;
             if (offscreen && !clamp) return false;
             if (behind) y = 0;
-            x = Mathf.Clamp(x, .05f, .95f); y = Mathf.Clamp(y, .1f, .82f); // sin tapar los paneles
+            x = Mathf.Clamp(x, .05f, .95f); y = Mathf.Clamp(y, .27f, .82f); // sin tapar paneles ni avisos
             r.anchoredPosition = new Vector2(x * canvasRect.rect.width, y * canvasRect.rect.height);
             return true;
         }
@@ -432,6 +432,7 @@ namespace Kairos
             {
                 C.stunUsed = true;
                 g.Stun(60f);
+                player.motion.PlayStun();
                 Sfx.PlayAt(Sfx.Stun, g.transform.position, 1f);
                 Toast($"{g.displayName} queda fuera de combate 60 s. Sin heridas.", Pal.Sonar);
                 return;
@@ -477,7 +478,8 @@ namespace Kairos
         public void OpenDialog(PersonNpc npc)
         {
             SetOverlay(Mode.Dialog);
-            var p = UI.Panel(overlay, new Vector2(.28f, .12f), new Vector2(.72f, .88f));
+            player.FaceTo(npc.transform.position);
+            var p = UI.Panel(overlay, new Vector2(.52f, .08f), new Vector2(.98f, .92f)); // a un lado: los personajes siguen a la vista
             var s = UI.VStack(p.transform, 26, 8);
             var d = npc.Def; var st = npc.State;
             UI.Line(s, d.name, 34, Pal.Sonar, true);
@@ -524,9 +526,9 @@ namespace Kairos
             if (st.trust >= 60 && st.explained && d.willTestify && !planHeard.Contains(st.id))
                 UI.Btn(s, "«¿Hay algo que deba saber?»", () => { planHeard.Add(st.id); RevealPlan(st); Say(d.plan); });
             if (st.talked && !st.medkit && C.kits > 0)
-                UI.Btn(s, $"Ofrecer botiquín ({C.kits})", () => { st.medkit = true; C.kits--; st.trust += 25; Say("Acepta. Por primera vez respira con calma."); });
+                UI.Btn(s, $"Ofrecer botiquín ({C.kits})", () => { st.medkit = true; C.kits--; st.trust += 25; player.motion.PlayKneel(); Say("Acepta. Por primera vez respira con calma."); });
             if (st.talked && !st.ration && C.rations > 0)
-                UI.Btn(s, $"Ofrecer raciones ({C.rations})", () => { st.ration = true; C.rations--; st.trust += 15; Say("Come despacio. Comparte la mitad con quien tiene al lado."); });
+                UI.Btn(s, $"Ofrecer raciones ({C.rations})", () => { st.ration = true; C.rations--; st.trust += 15; player.motion.PlayKneel(); Say("Come despacio. Comparte la mitad con quien tiene al lado."); });
             if (st.trust >= 80 && !st.helped)
                 UI.Btn(s, "«¿Quieres ayudarme?» (siempre puede decir que no)", () =>
                 {

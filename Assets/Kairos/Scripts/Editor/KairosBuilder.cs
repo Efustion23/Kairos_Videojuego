@@ -520,6 +520,38 @@ namespace Kairos.EditorTools
             return root;
         }
 
+        /// El protagonista: modelo de Models/Protagonista, a 1,80 m y con los pies en el origen.
+        static GameObject Inspector(out HumanoidMotion motion)
+        {
+            const string dir = Root + "/Models/Protagonista/";
+            var normalImporter = (TextureImporter)AssetImporter.GetAtPath(dir + "Textures_v2/Protagonista_v2_Normal.png");
+            if (normalImporter.textureType != TextureImporterType.NormalMap)
+            {
+                normalImporter.textureType = TextureImporterType.NormalMap;
+                normalImporter.SaveAndReimport();
+            }
+            var mat = Lit("M_Protagonista", Color.white, .35f, .1f, AssetDatabase.LoadAssetAtPath<Texture2D>(dir + "Textures_v2/Protagonista_v2_Color.jpg"));
+            mat.SetTexture("_BumpMap", AssetDatabase.LoadAssetAtPath<Texture2D>(dir + "Textures_v2/Protagonista_v2_Normal.png"));
+            mat.SetKeyword(new LocalKeyword(mat.shader, "_NORMALMAP"), true);
+
+            var root = new GameObject("Inspector") { layer = Layers.Actor };
+            var model = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(dir + "Protagonista_v2.fbx"));
+            model.transform.SetParent(root.transform, false);
+            foreach (var t in model.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = Layers.Actor;
+
+            var skin = model.GetComponentInChildren<SkinnedMeshRenderer>();
+            skin.sharedMaterial = mat;
+            skin.updateWhenOffscreen = true; // el modelo trae unos límites diminutos y desaparecería al acercar la cámara
+            model.transform.localScale = Vector3.one * (1.8f / skin.bounds.size.y); // los clips ya apoyan los pies en el origen
+
+            var animator = model.GetComponent<Animator>();
+            animator.applyRootMotion = false;
+            animator.runtimeAnimatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(KairosAnimBuilder.ControllerPath);
+            motion = model.AddComponent<HumanoidMotion>();
+            motion.animator = animator;
+            return root;
+        }
+
         static NavMeshAgent Agent(GameObject go)
         {
             var a = go.AddComponent<NavMeshAgent>();
@@ -813,12 +845,12 @@ namespace Kairos.EditorTools
             surface.overrideVoxelSize = true; surface.voxelSize = .1f;
 
             // Jugador
-            var player = Humanoid("Inspector", suit, skinA, suit);
+            var player = Inspector(out var motion);
             player.transform.position = new Vector3(2.5f, 6.1f, -38.5f); // lejos de la salida: no se ofrece nada más subir
             var cc = player.AddComponent<CharacterController>();
             cc.height = 1.8f; cc.radius = .3f; cc.center = new Vector3(0, .95f, 0); cc.stepOffset = .35f; cc.slopeLimit = 50;
             var agent = player.AddComponent<PlayerAgent>();
-            agent.cam = cam; agent.walker = player.GetComponent<Walker>();
+            agent.cam = cam; agent.motion = motion;
 
             // Guardias: rondas en bucle con huecos para colarse.
             var guards = new List<GuardAI>();
