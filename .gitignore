@@ -1,4 +1,7 @@
-# Unity: se regenera en cada máquina
+# Unity .gitignore estándar profesional
+# Creado para KAIROS: Sombras en Altamar
+
+# Directorios generados por Unity (reconstruidos localmente)
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
@@ -8,19 +11,23 @@
 /[Uu]ser[Ss]ettings/
 /[Mm]emoryCaptures/
 /[Rr]ecordings/
+/[Aa]ssets/[Aa]ssetStoreTools*
 
-# FBX de Mixamo con el modelo entero (40 MB cada uno): el juego usa los clips extraídos en Clips/
-/Assets/Kairos/Models/Protagonista/Animaciones/
-/Assets/Kairos/Models/Protagonista/Animaciones.meta
+# Archivos de cache y locks
+/[Tt]emp/UnityLockfile
+sysinfo.txt
+crashlytics-build.properties
 
-# IDE: Unity los genera
+# Archivos de soluciones de IDEs generados automáticamente por Unity
 .vs/
 .vscode/
 .idea/
 *.csproj
+*.unityproj
 *.sln
 *.slnx
 *.suo
+*.tmp
 *.user
 *.userprefs
 *.pidb
@@ -31,13 +38,19 @@
 *.opendb
 *.VC.db
 
-# Sistema
-.DS_Store
-Thumbs.db
-
-# Builds sueltas y volcados
+# Builds compiladas y volcados
 *.apk
 *.aab
 *.unitypackage
-sysinfo.txt
-crashlytics-build.properties
+*.app
+*.exe
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# FBX de Mixamo con modelo crudo completo (se usan los clips extraídos en Clips/)
+/Assets/Kairos/Models/Protagonista/Animaciones/
+/Assets/Kairos/Models/Protagonista/Animaciones.meta
