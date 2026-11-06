@@ -24,3 +24,4 @@ Adjunta capturas de la consola de Unity si hay errores rojos (`NullReferenceExce
 **Entorno:**
 - Versión de Unity: Unity 6 LTS
 - Rama donde ocurrió: `develop` / `feature/...`
+

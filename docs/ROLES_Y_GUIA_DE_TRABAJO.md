@@ -1,101 +1,127 @@
-# 👥 Roles y Guía de Trabajo en Equipo (3 Personas)
+# 👥 Roles y Guía Oficial de Trabajo en Equipo
 
-> **KAIROS: Sombras en Altamar**  
-> *Guía operativa para coordinar el desarrollo en Unity sin conflictos de ramas ni colisiones de escenas.*
+> **KAIROS: Sombras en Altamar — Desarrollo Unity 6 (Semanas 10–15)**  
+> *Asignación oficial de integrantes, roles, ramas en GitHub, etiquetas de Trello y protocolos de trabajo.*
 
 ---
 
-## 1. Asignación de Roles y Responsabilidades
+## 1. Integrantes del Equipo y Asignación de Roles
 
-Para maximizar la eficiencia y evitar que dos personas editen los mismos archivos de Unity simultáneamente, el proyecto se divide en 3 áreas bien delimitadas:
+| Código | Integrante | Rol Principal | Rama de Trabajo en GitHub | Etiqueta en Trello | Horario de Trabajo |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| **AB** | **Benites Fierro Alexander Aiken** | **Dirección de Diseño, UI/UX, Narrativa y Gestión de Escenas** | [`feature/alexander-ui-narrativa`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/alexander-ui-narrativa) | 🟦 Azul Cian (`Diseño y UI`) | Lun, Mié y Vie / Sáb<br>`18:00 – 21:00` |
+| **DT** | **Tornero Bermudez Diego Ali Gadiel** | **Programación Principal en Unity, Mecánicas, Sonar e IA** | [`feature/diego-gameplay-ia`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/diego-gameplay-ia) | 🟧 Ámbar/Naranja (`Programación Unity`) | Mar, Jue y Vie / Sáb<br>`18:00 – 21:00` |
+| **CV** | **Veliz Cochachi Christopher Jesus** | **Dirección de Arte 3D, Entorno Marítimo, Iluminación y Audio** | [`feature/christopher-arte-audio`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/christopher-arte-audio) | 🟩 Verde Esmeralda (`Arte 3D y Audio`) | Lun, Mié, Jue / Sáb<br>`18:00 – 21:00` |
+
+---
+
+## 2. Detalle de Responsabilidades por Integrante
 
 ```mermaid
 graph TD
-    subgraph "Equipo Núcleo (3 Desarrolladores)"
-        P1["👨‍💻 Desarrollador 1<br/><b>Lead Gameplay & Systems Programmer</b><br/>• Fase 1 (Satelital) & Fase 3 (Infiltración)<br/>• Lógica C#, Fórmulas matemáticas, Tests"]
-        P2["🎨 Desarrollador 2<br/><b>Technical Artist & Level Designer</b><br/>• Fase 2 (Sonar/Vóxeles/Termografía)<br/>• Escenarios 3D, Shaders, Océano, Iluminación"]
-        P3["🎧 Desarrollador 3<br/><b>UI/UX, Audio, Narrative & Integration</b><br/>• Fase 4 (Grafo Judicial & Códice)<br/>• HUDs, TextMeshPro, FMOD/Audio, PRs"]
+    subgraph "Equipo Núcleo KAIROS"
+        AB["🟦 Alexander Benites (AB)<br/><b>Diseño, UI/UX & Narrativa</b><br/>• Rama: feature/alexander-ui-narrativa<br/>• Interfaz orbital, HUD sonar, Diálogos y Maletín"]
+        DT["🟧 Diego Tornero (DT)<br/><b>Programación Principal & IA</b><br/>• Rama: feature/diego-gameplay-ia<br/>• CharacterController, Flotación, Sonar Raycast e IA"]
+        CV["🟩 Christopher Veliz (CV)<br/><b>Arte 3D, Iluminación & Audio</b><br/>• Rama: feature/christopher-arte-audio<br/>• Modelado buque, Shaders océano/térmico, Audio y Post-Processing"]
     end
 ```
 
-### 🧑‍💻 Persona 1: Lead Gameplay & Systems Programmer
-* **Enfoque Principal:** Arquitectura de código C#, mecánicas de control del jugador, IA de guardia y simulaciones.
+### 🟦 Alexander Benites (AB) — Dirección de Diseño, UI/UX y Narrativa
+* **Rama oficial:** `feature/alexander-ui-narrativa`
+* **Etiqueta Trello:** Azul Cian (`Diseño y UI · feature/alexander-ui-narrativa`)
 * **Módulos bajo su responsabilidad:**
-  * **Fase 1:** Simulador de flotas AIS, reloj de simulación, cálculo del Índice de Riesgo ($IR$).
-  * **Fase 3:** `PlayerAgent.cs`, CharacterController, sistema de interacción (`Interactable.cs`), linterna, cámara de registro.
-  * **IA de Infiltración:** `SecurityCam.cs`, `VisionFan.cs`, patrullaje de `Walker.cs` / `PersonNpc.cs`, estados de alerta.
-  * **Criptografía & Datos:** Sistema de sellado digital SHA-256 para el maletín de pruebas y persistencia.
-  * **Pruebas Automatizadas:** Unit tests en `Assets/Kairos/Tests/EditMode`.
+  * **Sistemas de Interfaz (Canvas & TextMeshPro):**
+    * Panel interactivo de rastreo satelital de la Fase 1 (capas AIS, VIIRS y SAR).
+    * Retícula cian del visor acústico del sonar y medidor de sospecha (0 a 100).
+    * HUD de sigilo, brújula táctica y alertas visuales de proximidad de guardias.
+    * Interfaz del maletín estanco de 12 evidencias con sello criptográfico.
+    * Menú principal de inicio, créditos y pantalla de sentencia judicial.
+  * **Diseño Narrativo & Códice:**
+    * Redacción de árboles de diálogo con los pescadores y sobrevivientes.
+    * Fichas de los 11 Indicadores de Trabajo Forzado de la OIT.
+    * Trazado de mapas 2D de cubiertas y colocación estratégica de las 5 evidencias documentales clave.
 
-### 🎨 Persona 2: Technical Artist & Level Designer
-* **Enfoque Principal:** Construcción de escenarios 3D, shaders, atmósfera visual y sistemas volumétricos.
+### 🟧 Diego Tornero (DT) — Programación Principal en Unity, Mecánicas e IA
+* **Rama oficial:** `feature/diego-gameplay-ia`
+* **Etiqueta Trello:** Ámbar / Naranja (`Programación Unity · feature/diego-gameplay-ia`)
 * **Módulos bajo su responsabilidad:**
-  * **Escenarios 3D:** Modelado modular con ProBuilder / Blender de los buques (*Hai Feng 77*, arrastreros, reefers), colocación de props de Poly Haven y colisionadores.
-  * **Agua y Clima:** Shaders de océano (`Ocean.shader`), oleaje FFT, flotabilidad (Burst) y `NightSky.shader`.
-  * **Fase 2:** Sistema de vóxeles (0.5 m) del casco, pulso acústico del sonar y Custom Pass para la vista térmica.
-  * **Iluminación & Post-Procesado:** Perfiles URP/HDRP Volume, Ambient Occlusion (SSAO), niebla volumétrica y paleta cromática (azul petróleo, óxido, cobalto).
-  * **Optimización Gráfica:** LODs, batching, presupuestos de GPU (máx. 16.6 ms / 60 fps).
+  * **Control del Jugador y Físicas:**
+    * CharacterController en tercera persona, cámara orbital, postura agachado de sigilo y detección de escaleras.
+    * Propulsión, giro y flotabilidad de la lancha RHIB de intercepción.
+    * Sincronización de la ventana de abordaje con la cresta de la ola en popa.
+  * **Mecánica del Sonar Acústico (Fase 2):**
+    * Programación del emisor de pulso esférico y detección por capas (`LayerMask`).
+    * Marcado 3D de bodegas ocultas y motores detrás del casco de metal.
+  * **Inteligencia Artificial de Vigilancia:**
+    * Máquina de estados en NavMesh (`Patrulla`, `Sospecha`, `Alerta`).
+    * Conos de visión dinámicos afectados por lluvia, postura y luz.
+    * Reacción de guardias ante escora del buque (>15°) y ruidos de pasos.
+  * **Cámara de Pruebas y Cierre de Bucle:**
+    * Validación de encuadre y enfoque fotográfico para la recolección de pistas.
+    * Conexión fluida del bucle completo de las 4 fases.
+    * Perfilado de rendimiento a 60 FPS estables y empaquetado de la build final (.exe).
 
-### 🎧 Persona 3: UI/UX, Audio, Narrative & Integration (Producer/QA)
-* **Enfoque Principal:** Interfaces de usuario, ambientación sonora, narrativa interactiva y control de calidad.
+### 🟩 Christopher Veliz (CV) — Dirección de Arte 3D, Entorno Marítimo, Iluminación y Audio
+* **Rama oficial:** `feature/christopher-arte-audio`
+* **Etiqueta Trello:** Verde Esmeralda (`Arte 3D y Audio · feature/christopher-arte-audio`)
 * **Módulos bajo su responsabilidad:**
-  * **UI / HUD de las 4 Fases:** Pantalla orbital del satélite, interfaz del sonar, HUD de sigilo (sospecha/visibilidad) y maletín de pruebas.
-  * **Fase 4:** `JuicioController.cs`, grafo de evidencias contra *Tidewater Holdings*, pantalla de sentencia y Fondo de Decomiso.
-  * **Audio & FMOD:** Diseño sonoro de tormenta, crujido de cuadernas, alarmas, ruidos de maquinaria, hidrófono y pistas musicales CC0.
-  * **Narrativa & Códice:** Textos de los 11 Indicadores de la OIT, testimonios de tripulantes y fichas documentales.
-  * **Control de Integración:** Revisión de Pull Requests, validación de que el proyecto compile limpio en `develop` y reporte de bugs.
+  * **Escenarios 3D y Modelado Modular:**
+    * Greybox modular del casco, puente de mando, bodegas y cubiertas del pesquero *Hai Feng 77*.
+    * Texturizado PBR con materiales de acero corroído, óxido ferroso y salitre.
+    * Modelado de props coleccionables de evidencia: bitácora real, pasaportes, radio VHF y plotter GPS.
+  * **Shaders, Iluminación y Post-Processing:**
+    * Shader de oleaje oceánico nocturno y superficie marina.
+    * Shader Graph de barrido volumétrico cian (`#3FE0D0`) y filtro de visión térmica fría/caliente.
+    * Posicionamiento de reflectores halógenos amarillos en cubierta, niebla volumétrica y lluvia.
+    * Calibración de color grading y bloom en perfiles de Post-Processing.
+  * **Diseño y Mezcla de Audio:**
+    * Pings acústicos y eco metálico subacuático para el sonar.
+    * Audio espacial 3D de pasos sobre chapa metálica, crujidos de casco y maquinaria.
+    * Música adaptativa de tensión e infiltración nocturna.
 
 ---
 
-## 2. Las 4 Reglas de Oro de Unity en Equipo
+## 3. Protocolo de Ramas en Git
 
-> [!CAUTION]
-> En Unity, los archivos de escenas (`.unity`) y prefabs (`.prefab`) son archivos serializados en YAML. Si dos personas modifican la misma escena al mismo tiempo, el conflicto de Git es casi imposible de resolver manualmente sin romper la escena.
-
-Sigan estrictamente estas cuatro reglas:
-
-1. **La Regla del Prefab (Nunca trabajen sobre la escena cruda):**  
-   * Ningún miembro del equipo debe decorar o programar directamente en la escena principal.  
-   * Se crea una escena de trabajo personal (ej. `Sandbox_P1.unity`, `Sandbox_P2_Props.unity`).  
-   * Todo objeto, habitación, NPC o módulo de gameplay se construye y guarda como **Prefab** en `Assets/Kairos/Prefabs/`.  
-   * En la escena oficial solo se arrastran los Prefabs finales.
-2. **Archivos `.meta` Obligatorios:**  
-   * Cada vez que agreguen un modelo 3D, script, audio o imagen, Unity genera automáticamente un archivo `.meta`.  
-   * **El archivo `.meta` DEBE incluirse en el mismo commit que el archivo de origen.** Si suben un `.cs` o un `.png` sin su `.meta`, a sus compañeros les saldrán referencias rotas ("Missing Script / Missing Material").
-3. **Guardar Escena y Proyecto antes de Commitear:**  
-   * En Unity: `Ctrl + S` (Save Scene) y luego `File -> Save Project`.  
-   * Cierren Unity o deseleccionen la escena antes de hacer git pull/rebase para evitar que Unity sobrescriba cambios en memoria.
-4. **Respetar los Límites de Carpeta:**  
-   * Programador 1 trabaja principalmente en `Assets/Kairos/Scripts/` y `Tests/`.  
-   * Artista 2 trabaja en `Assets/Kairos/Models/`, `Shaders/` y `Generated/`.  
-   * UI/Audio 3 trabaja en `Assets/Kairos/Resources/` y `Scripts/UI/`.
-
----
-
-## 3. Flujo Diario de Trabajo (Paso a Paso)
-
-Antes de empezar a trabajar cada día:
-
-```bash
-# 1. Situarse en la rama de integración y actualizar
-git checkout develop
-git pull origin develop
-
-# 2. Crear una rama de tarea específica (ejemplo Persona 1)
-git checkout -b feature/fase1-calculo-riesgo
-
-# 3. Trabajar en Unity, guardar escena y proyecto
-# 4. Verificar qué archivos se modificaron
-git status
-
-# 5. Agregar archivos (incluyendo siempre los .meta asociados)
-git add Assets/Kairos/Scripts/Phase1/RiskCalculator.cs Assets/Kairos/Scripts/Phase1/RiskCalculator.cs.meta
-
-# 6. Hacer commit con la convención estándar
-git commit -m "feat(fase1): implementar calculo de indice de riesgo IR con pruebas unitarias"
-
-# 7. Subir la rama a GitHub
-git push -u origin feature/fase1-calculo-riesgo
-
-# 8. Abrir un Pull Request en GitHub hacia 'develop' para que el equipo lo revise
+```mermaid
+gitGraph
+   commit id: "H0: Repositorio Listo"
+   branch develop
+   checkout develop
+   commit id: "develop base"
+   branch feature/alexander-ui-narrativa
+   branch feature/diego-gameplay-ia
+   branch feature/christopher-arte-audio
+   checkout feature/alexander-ui-narrativa
+   commit id: "ui(satellite): panel Fase 1"
+   checkout feature/diego-gameplay-ia
+   commit id: "feat(player): movimiento sigilo"
+   checkout feature/christopher-arte-audio
+   commit id: "art(ship): barco modular 3D"
+   checkout develop
+   merge feature/alexander-ui-narrativa
+   merge feature/diego-gameplay-ia
+   merge feature/christopher-arte-audio
+   checkout main
+   merge develop tag: "Entrega Semanas 10-15"
 ```
+
+1. **`main`**: Rama para versiones evaluadas y entregas finales. Nadie comitea directo a `main`.
+2. **`develop`**: Rama común de integración.
+3. **Ramas personales activas en GitHub:**
+   * `git checkout feature/alexander-ui-narrativa`
+   * `git checkout feature/diego-gameplay-ia`
+   * `git checkout feature/christopher-arte-audio`
+
+---
+
+## 4. Las 4 Reglas de Oro de Unity en Equipo
+
+1. **Trabajar con Prefabs (Prohibido editar la misma escena):**  
+   Cada integrante trabaja en su propia escena de pruebas local (`Sandbox_Alexander.unity`, `Sandbox_Diego.unity`, `Sandbox_Christopher.unity`). Todo elemento final se guarda como **Prefab** en `Assets/Kairos/Prefabs/`.
+2. **Archivos `.meta` Obligatorios:**  
+   Todo archivo nuevo añadido a Unity (`.cs`, `.png`, `.fbx`, `.prefab`, `.asset`) **debe comitearse junto con su correspondiente archivo `.meta`**.
+3. **Guardado Antes de Commitear:**  
+   En Unity: presionar `Ctrl + S` y luego `File -> Save Project` antes de hacer `git add`.
+4. **Git LFS:**  
+   Todos los binarios pesados (modelos 3D, texturas, audios) ya están protegidos y rastreados por Git LFS a través del archivo [`.gitattributes`](file:///d:/Kairos_Videojuego/.gitattributes).

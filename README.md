@@ -19,6 +19,19 @@
 
 ---
 
+## 👥 Equipo de Desarrollo y Asignación de Roles (Semanas 10–15)
+
+| Código | Integrante | Rol Principal | Rama Oficial en GitHub | Etiqueta Trello |
+| :---: | :--- | :--- | :--- | :--- |
+| **AB** | **Benites Fierro Alexander Aiken** | **Dirección de Diseño, UI/UX, Narrativa y Gestión de Escenas** | [`feature/alexander-ui-narrativa`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/alexander-ui-narrativa) | 🟦 Azul Cian (`Diseño y UI`) |
+| **DT** | **Tornero Bermudez Diego Ali Gadiel** | **Programación Principal en Unity, Mecánicas, Sonar e IA** | [`feature/diego-gameplay-ia`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/diego-gameplay-ia) | 🟧 Ámbar/Naranja (`Programación Unity`) |
+| **CV** | **Veliz Cochachi Christopher Jesus** | **Dirección de Arte 3D, Entorno Marítimo, Iluminación y Audio** | [`feature/christopher-arte-audio`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/christopher-arte-audio) | 🟩 Verde Esmeralda (`Arte 3D y Audio`) |
+
+👉 **Consulta la guía completa de trabajo y protocolos en:** [`docs/ROLES_Y_GUIA_DE_TRABAJO.md`](docs/ROLES_Y_GUIA_DE_TRABAJO.md)  
+👉 **Consulta el desglose de las 18 tarjetas del Tablero de Trello en:** [`docs/PLAN_DE_TAREAS_SPRINTS.md`](docs/PLAN_DE_TAREAS_SPRINTS.md)
+
+---
+
 ## 📖 Acerca del Juego
 
 **KAIROS: Sombras en Altamar** es un videojuego de investigación y sigilo no violento inspirado en hechos reales, donde encarnas a un **Inspector Civil de Derechos Humanos y Pesca Marítima**. Tu misión es monitorear los océanos internacionales, detectar buques de flotas oscuras dedicados a la pesca ilegal (INDNR) y la trata laboral, abordar discretamente en medio de tormentas nocturnas, asegurar pruebas con sellado digital criptográfico y llevar a las corporaciones trasnacionales ante los tribunales marítimos.
@@ -47,40 +60,16 @@ flowchart LR
 
 ---
 
-## 👥 Organización del Equipo (3 Desarrolladores)
+## 🌿 Estructura de Ramas en GitHub
 
-Para garantizar un flujo de trabajo sin roces ni conflictos de escenas en Unity, el equipo se organiza bajo las siguientes disciplinas:
+* **`main`**: Rama para entregas finales y versiones evaluadas estables.
+* **`develop`**: Rama base de integración diaria.
+* **Ramas activas de cada integrante:**
+  * [`feature/alexander-ui-narrativa`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/alexander-ui-narrativa): UI/UX, HUDs, Diálogos y Maletín de Pruebas.
+  * [`feature/diego-gameplay-ia`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/diego-gameplay-ia): Movimiento, Físicas, Sonar e Inteligencia Artificial.
+  * [`feature/christopher-arte-audio`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/christopher-arte-audio): Arte 3D Modular, Shaders, Iluminación y Audio.
 
-| Rol | Responsable | Módulos Principales |
-| :--- | :--- | :--- |
-| **Lead Gameplay & Systems Programmer** | **Persona 1** | Fase 1 (Satelital), Fase 3 (Controlador de Infiltración, IA de guardia), Criptografía SHA-256, Unit Tests. |
-| **Technical Artist & Level Designer** | **Persona 2** | Fase 2 (Sonar/Vóxeles/Termografía), Escenarios 3D y modulares, Shaders de Océano y Clima, Iluminación y Post-Processing. |
-| **UI/UX, Audio, Narrative & QA** | **Persona 3** | Interfaces de las 4 fases (Canvas/TMP), Fase 4 (Grafo Judicial), Diseño de audio FMOD, Códice de la OIT y revisión de PRs. |
-
-👉 **Consulta la guía completa de trabajo en:** [`docs/ROLES_Y_GUIA_DE_TRABAJO.md`](docs/ROLES_Y_GUIA_DE_TRABAJO.md)
-
----
-
-## 🌿 Convención de Ramas y Commits
-
-### Estructura de Ramas
-* **`main`**: Versiones estables y entregables finales. Protegida contra commits directos.
-* **`develop`**: Rama principal de desarrollo e integración continua.
-* **Ramas de trabajo:**
-  * `feature/<nombre>`: Nuevas mecánicas o código (`feature/fase1-calculo-ir`).
-  * `art/<nombre>`: Modelos 3D, escenarios o shaders (`art/buque-potero-modular`).
-  * `ui/<nombre>`: Interfaces y menús (`ui/hud-infiltracion`).
-  * `audio/<nombre>`: Efectos y ambientación sonora (`audio/tormenta-olas`).
-  * `fix/<nombre>`: Corrección de bugs (`fix/vision-guardia-error`).
-
-### Formato de Commits (Conventional Commits)
-```bash
-feat(fase1): agregar detector de anomalia por apagado de ais
-art(shaders): optimizar calculo de espuma en ocean shader
-fix(fase3): corregir collider de mamparo en cubierta B
-```
-
-👉 **Revisa todos los lineamientos en:** [`docs/CONVENCION_DE_COMMITS_Y_RAMAS.md`](docs/CONVENCION_DE_COMMITS_Y_RAMAS.md)
+👉 **Revisa la guía de commits y Pull Requests en:** [`docs/CONVENCION_DE_COMMITS_Y_RAMAS.md`](docs/CONVENCION_DE_COMMITS_Y_RAMAS.md)
 
 ---
 
@@ -119,31 +108,16 @@ Kairos_Videojuego/
 
 ## 🚀 Guía de Inicio Rápido (Setup para el Equipo)
 
-1. **Instalar Prerrequisitos:**
-   * **Unity 6 LTS** (versión recomendada: `6000.3.x`).
-   * **Git** y **Git LFS** ([Descargar Git LFS](https://git-lfs.github.com/)).
-2. **Clonar el Repositorio con LFS:**
+1. **Clonar con Git LFS:**
    ```bash
-   git clone <URL_DEL_REPOSITORIO>
+   git clone https://github.com/Efustion23/Kairos_Videojuego.git
    cd Kairos_Videojuego
    git lfs install
    git lfs pull
    ```
+2. **Cambiar a tu rama de trabajo:**
+   * **Alexander:** `git checkout feature/alexander-ui-narrativa`
+   * **Diego:** `git checkout feature/diego-gameplay-ia`
+   * **Christopher:** `git checkout feature/christopher-arte-audio`
 3. **Abrir en Unity Hub:**
-   * Abre Unity Hub, haz clic en **Add** y selecciona la carpeta `Kairos_Videojuego`.
-   * Permite que Unity compile la biblioteca inicial de `Library/` (puede tardar unos minutos en la primera apertura).
-4. **Crear tu Rama de Trabajo:**
-   ```bash
-   git checkout develop
-   git pull origin develop
-   git checkout -b feature/mi-primera-tarea
-   ```
-
----
-
-## 📚 Documentación Adicional
-
-* 📘 [Resumen Ejecutivo del GDD y Fórmulas](docs/GDD_RESUMEN_EJECUTIVO.md)
-* 👥 [Roles y Guía de Trabajo en Equipo](docs/ROLES_Y_GUIA_DE_TRABAJO.md)
-* 🌿 [Convención de Commits y Ramas](docs/CONVENCION_DE_COMMITS_Y_RAMAS.md)
-* 📋 [Plan de Tareas y Sprints](docs/PLAN_DE_TAREAS_SPRINTS.md)
+   * Seleccionar la versión `Unity 6 LTS (6000.3.x)`.

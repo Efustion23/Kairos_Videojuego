@@ -26,3 +26,4 @@
 - [ ] Todos los archivos nuevos (`.cs`, `.png`, `.prefab`, `.fbx`, etc.) incluyen sus respectivos `.meta`.
 - [ ] No se modificaron escenas compartidas directamente (se usaron Prefabs).
 - [ ] Los tests en `Assets/Kairos/Tests` siguen pasando exitosamente (si aplica).
+

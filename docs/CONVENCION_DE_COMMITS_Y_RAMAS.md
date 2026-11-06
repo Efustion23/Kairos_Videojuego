@@ -94,3 +94,4 @@ Cada commit debe explicar claramente qué se hizo y a qué módulo pertenece:
    * Confirmar que compila sin errores en la consola de Unity.
 3. **Aprobación:** Al menos **una de las otras dos personas del equipo debe revisar y aprobar el PR** en GitHub antes de hacer *Merge*.
 4. **Tipo de Merge:** Usar preferentemente **Squash and Merge** o **Rebase and Merge** para mantener el historial de `develop` limpio y lineal.
+

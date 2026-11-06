@@ -21,3 +21,4 @@ Qué se necesita construir y por qué es importante según el GDD.
 - [ ] Criterio 1
 - [ ] Criterio 2
 - [ ] Criterio 3
+

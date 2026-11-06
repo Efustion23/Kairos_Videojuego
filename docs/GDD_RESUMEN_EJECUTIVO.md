@@ -104,3 +104,4 @@ flowchart LR
 * **Sin Violencia como Espectáculo:** El abuso se comprende mediante huellas contextuales y testimonios, nunca mediante violencia gráfica explícita.
 * **Respeto a las Víctimas:** Personajes con trasfondo y nombres reales en sus lenguas nativas (indonesio, tagalo, birmano, ghanés).
 * **Precisión Documental:** Ninguna cifra real es inventada; todas corresponden a investigaciones verificadas de la OIT, FAO, AP y GFW.
+
