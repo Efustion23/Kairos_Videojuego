@@ -375,22 +375,183 @@
     .phase-step.p4 .phase-number { color: var(--sealed-green); }
 
     /* SCRIPT SPEECH GUIDE */
-    .speech-box {
-      background: rgba(7, 24, 34, 0.65);
-      border-left: 4px solid var(--sonar-cyan);
-      padding: 1.2rem 1.4rem;
-      border-radius: 0 10px 10px 0;
-      margin: 1.2rem 0;
-      font-style: normal;
+    /* SCRIPT SPEECH GUIDE & TELEPROMPTER DINÁMICO */
+    .teleprompter-container {
+      background: rgba(11, 26, 36, 0.95);
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-top: 1.5rem;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.5), 0 0 25px rgba(63, 224, 208, 0.1);
+      position: relative;
     }
-    .speaker-name {
+
+    .speaker-selector-bar {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      margin-bottom: 1.8rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .speaker-nav-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 10px 18px;
+      border-radius: 10px;
       font-family: 'Space Grotesk', sans-serif;
-      font-weight: 700;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+
+    .speaker-nav-btn:hover {
+      background: rgba(63, 224, 208, 0.12);
+      border-color: var(--sonar-cyan);
+      color: #FFF;
+    }
+
+    .speaker-nav-btn.active-ab {
+      background: rgba(63, 224, 208, 0.2);
+      border-color: var(--sonar-cyan);
+      color: var(--sonar-cyan);
+      box-shadow: 0 0 16px var(--sonar-glow);
+    }
+
+    .speaker-nav-btn.active-dt {
+      background: rgba(255, 210, 122, 0.2);
+      border-color: var(--radar-amber);
       color: var(--radar-amber);
-      margin-bottom: 0.4rem;
+      box-shadow: 0 0 16px rgba(255, 210, 122, 0.3);
+    }
+
+    .speaker-nav-btn.active-cv {
+      background: rgba(108, 255, 138, 0.2);
+      border-color: var(--sealed-green);
+      color: var(--sealed-green);
+      box-shadow: 0 0 16px rgba(108, 255, 138, 0.3);
+    }
+
+    .speaker-slide {
+      display: none;
+      animation: slideIn 0.3s ease;
+    }
+
+    .speaker-slide.active {
+      display: block;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .speech-bubble {
+      background: #040d13;
+      border: 1px solid var(--border-bright);
+      border-radius: 14px;
+      padding: 1.8rem;
+      font-size: 1.15rem;
+      line-height: 1.8;
+      color: #F0F6F8;
+      position: relative;
+      margin-bottom: 1.5rem;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.4);
+    }
+
+    .speech-bubble mark {
+      background: rgba(63, 224, 208, 0.2);
+      color: var(--sonar-cyan);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .unity-cue-card {
+      background: rgba(255, 210, 122, 0.08);
+      border: 1px dashed var(--radar-amber);
+      border-radius: 12px;
+      padding: 1.2rem 1.4rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 1.5rem;
+    }
+
+    .unity-cue-icon {
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .timer-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      background: rgba(0,0,0,0.3);
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 1.5rem;
+    }
+
+    .timer-display {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--sonar-cyan);
+      min-width: 60px;
+    }
+
+    .timer-progress {
+      flex: 1;
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .timer-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--sonar-cyan), var(--radar-amber));
+      transition: width 1s linear;
+    }
+
+    .teleprompter-controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .control-btn {
+      background: rgba(255, 255, 255, 0.08);
+      color: #FFF;
+      border: 1px solid var(--border);
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
       display: flex;
       align-items: center;
       gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .control-btn:hover {
+      background: var(--sonar-cyan);
+      color: #070e14;
+      border-color: var(--sonar-cyan);
     }
 
     /* CHECKLIST LISTS */
@@ -752,51 +913,177 @@
 
     <!-- ==================== TAB 4: GUION PARA EXPOSICIÓN ==================== -->
     <div id="tab-exposicion" class="tab-pane">
-      <div style="margin-bottom: 2rem;">
-        <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; margin-bottom: 0.4rem;">Guion Estructurado para la Exposición</h2>
-        <p style="color: var(--text-dim);">Cómo presentar el proyecto ante el docente o jurado para demostrar visión comercial, calidad técnica y trabajo en equipo.</p>
+      <div style="margin-bottom: 1.5rem;">
+        <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; margin-bottom: 0.4rem;">Guion Interactivo de Exposición (Teleprompter)</h2>
+        <p style="color: var(--text-dim);">Haz clic en cada integrante para ver exactamente qué decir con palabras simples, qué acción mostrar en Unity y cronometrar los 60 segundos.</p>
       </div>
 
-      <!-- INTRO GENERAL -->
-      <div class="speech-box">
-        <div class="speaker-name">🎙️ Alexander Benites (Líder de Diseño & UX) — Introducción (60 segundos)</div>
-        <p style="color: var(--text-main); font-size: 0.95rem; line-height: 1.7;">
-          "Buenos días profesor. Nuestro proyecto se titula <strong>KAIROS: Sombras en Altamar</strong>. Es un videojuego de investigación 3D y sigilo táctico no violento desarrollado en Unity 6.  
-          Nos inspiramos en investigaciones periodísticas reales como <em>The Outlaw Ocean Project</em> y reportes de <em>Global Fishing Watch</em>, donde se documenta que más del 70% de la flota industrial en altamar apaga sus sistemas de rastreo para ocultar trata laboral y pesca ilegal.  
-          En KAIROS, el jugador no utiliza armas de fuego: encarna a un <strong>Inspector Civil de Derechos Humanos</strong> cuya misión es recolectar evidencias físicas con valor judicial, selladas digitalmente con criptografía SHA-256 para cerrar puertos a las flotas ilegales."
-        </p>
-      </div>
+      <div class="teleprompter-container">
+        
+        <!-- SELECTOR DE ORADOR -->
+        <div class="speaker-selector-bar">
+          <button class="speaker-nav-btn active-ab" id="sbtn-0" onclick="setSpeaker(0)">
+            <span style="font-size: 1.2rem;">🎙️</span> 1. Alexander (Intro & Idea)
+          </button>
+          <button class="speaker-nav-btn" id="sbtn-1" onclick="setSpeaker(1)">
+            <span style="font-size: 1.2rem;">⚙️</span> 2. Diego (Mecánicas & IA)
+          </button>
+          <button class="speaker-nav-btn" id="sbtn-2" onclick="setSpeaker(2)">
+            <span style="font-size: 1.2rem;">🌊</span> 3. Christopher (Arte & Mar)
+          </button>
+          <button class="speaker-nav-btn" id="sbtn-3" onclick="setSpeaker(3)">
+            <span style="font-size: 1.2rem;">🎯</span> 4. Alexander (Cierre & Demo)
+          </button>
+        </div>
 
-      <!-- ALEXANDER DETALLE -->
-      <div class="speech-box" style="border-left-color: var(--sonar-cyan);">
-        <div class="speaker-name">🎨 Alexander Benites — Diseño, UI/UX y Sistema de Confianza</div>
-        <p style="color: var(--text-main); font-size: 0.95rem; line-height: 1.7;">
-          "Desde la dirección de diseño estructuré el bucle en 4 fases híbridas: desde la pantalla satelital hasta el juicio penal.  
-          En la interfaz diseñé el HUD del sonar, el panel de rastreo orbital y el sistema de diálogos con las víctimas basado en un <strong>Medidor Dinámico de Confianza (0 a 100%)</strong> y consentimiento informado, garantizando que el juego no revictimice a los pescadores rescatados."
-        </p>
-      </div>
+        <!-- BARRA DE CRONÓMETRO -->
+        <div class="timer-bar-wrap">
+          <button class="control-btn" id="timer-toggle-btn" onclick="toggleTimer()">
+            ▶ Iniciar Cronómetro
+          </button>
+          <button class="control-btn" onclick="resetTimer()" style="padding: 9px 12px;">
+            ↺ Reset
+          </button>
+          <span class="timer-display" id="timer-text">01:00</span>
+          <div class="timer-progress">
+            <div class="timer-fill" id="timer-bar"></div>
+          </div>
+          <button class="control-btn" onclick="copyCurrentSpeech()" style="background: rgba(63,224,208,0.15); color: var(--sonar-cyan); border-color: var(--border-bright);">
+            📋 Copiar Guion
+          </button>
+        </div>
 
-      <!-- DIEGO DETALLE -->
-      <div class="speech-box" style="border-left-color: var(--radar-amber);">
-        <div class="speaker-name">⚙️ Diego Tornero — Programación, Físicas e Inteligencia Artificial</div>
-        <p style="color: var(--text-main); font-size: 0.95rem; line-height: 1.7;">
-          "En la parte técnica de Unity y C#, implementé el CharacterController en tercera persona con modo sigilo y detección de escaleras, la física de flotabilidad y propulsión de la lancha de intercepción, y la máquina de estados de la Inteligencia Artificial de los guardias (Patrulla, Sospecha y Alerta) con conos de visión afectados por clima nocturno y lluvia."
-        </p>
-      </div>
+        <!-- SLIDE 1: ALEXANDER INTRO -->
+        <div class="speaker-slide active" id="sslide-0">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+              <span class="card-tag" style="color: var(--sonar-cyan);">TURNO 1 · PRESENTACIÓN Y CONCEPTO GENERAL</span>
+              <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; color: #FFF;">Alexander Benites Fierro</h3>
+            </div>
+            <span class="member-badge badge-cyan">⏱ 60 SEGUNDOS</span>
+          </div>
 
-      <!-- CHRISTOPHER DETALLE -->
-      <div class="speech-box" style="border-left-color: var(--sealed-green);">
-        <div class="speaker-name">🌊 Christopher Veliz — Arte 3D, Entorno Marítimo y Audio</div>
-        <p style="color: var(--text-main); font-size: 0.95rem; line-height: 1.7;">
-          "En la dirección de arte construí la estructura modular 3D del buque pesquero <em>Hai Feng 77</em>, los materiales PBR de óxido ferroso y acero salino, el shader de oleaje nocturno y la vista térmica en Shader Graph. Además integré el paisaje sonoro inmersivo con crujidos de cuadernas, ecos de hidrófono y viento de tormenta marina."
-        </p>
-      </div>
+          <div class="unity-cue-card">
+            <span class="unity-cue-icon">🎬</span>
+            <div>
+              <strong style="color: var(--radar-amber); font-size: 0.92rem; display: block; margin-bottom: 2px;">QUÉ MOSTRAR EN PANTALLA EN UNITY MIENTRAS HABLAS:</strong>
+              <span style="color: var(--text-dim); font-size: 0.88rem;">
+                Ten abierta la pantalla de inicio o el mapa del centro de control con el título de KAIROS en grande. Muestra el diseño visual limpio.
+              </span>
+            </div>
+          </div>
 
-      <div class="card" style="margin-top: 1.5rem; background: rgba(63, 224, 208, 0.05); border-color: var(--border-bright);">
-        <h4 style="color: var(--sonar-cyan); margin-bottom: 0.5rem; font-family: 'Space Grotesk', sans-serif;">💡 Consejo de Oro para la Presentación:</h4>
-        <p style="font-size: 0.92rem; color: var(--text-dim);">
-          Muestren el repositorio de GitHub con las <strong>18 Issues asignadas</strong> y abran Unity mostrando cómo el proyecto compila limpio a 60 FPS con sus ramas activas. Eso demuestra profesionalismo de estudio antes de empezar a jugar.
-        </p>
+          <div class="speech-bubble" id="speech-text-0">
+            "Buenos días profesor. Nuestro juego se llama <mark>KAIROS: Sombras en Altamar</mark>.<br><br>
+            La idea del juego está basada en una realidad que ocurre en aguas internacionales: muchos barcos pesqueros grandes apagan sus señales satelitales para pescar ilegalmente y mantener tripulaciones en trabajo forzado durante meses sin tocar tierra firme.<br><br>
+            En nuestro juego, tú no eres un soldado ni tienes armas letales. Eres un <mark>inspector civil</mark>. Tu objetivo es rastrear el barco, subirte de noche en medio de una tormenta y reunir pruebas reales para llevar a la empresa a un juicio marítimo y rescatar a las personas.<br><br>
+            Mi rol en el equipo fue la <strong>Dirección de Diseño, la Interfaz y la Narrativa</strong>: diseñé los paneles en pantalla, el sistema de diálogos basado en el consentimiento de las víctimas, y la estructura de las 4 fases de juego.<br><br>
+            Ahora le doy el pase a mi compañero Diego, que se encargó de la programación en Unity."
+          </div>
+        </div>
+
+        <!-- SLIDE 2: DIEGO PROGRAMACIÓN -->
+        <div class="speaker-slide" id="sslide-1">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+              <span class="card-tag" style="color: var(--radar-amber);">TURNO 2 · MECÁNICAS, SONAR E INTELIGENCIA ARTIFICIAL</span>
+              <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; color: #FFF;">Diego Tornero Bermudez</h3>
+            </div>
+            <span class="member-badge badge-amber">⏱ 60 SEGUNDOS</span>
+          </div>
+
+          <div class="unity-cue-card" style="border-color: var(--radar-amber);">
+            <span class="unity-cue-icon">🎬</span>
+            <div>
+              <strong style="color: var(--radar-amber); font-size: 0.92rem; display: block; margin-bottom: 2px;">QUÉ MOSTRAR EN PANTALLA EN UNITY MIENTRAS HABLAS:</strong>
+              <span style="color: var(--text-dim); font-size: 0.88rem;">
+                Dale al botón Play (▶). Mueve la lancha sobre el oleaje hacia el barco, muestra el personaje en tercera persona agachándose y los conos de visión de los guardias.
+              </span>
+            </div>
+          </div>
+
+          <div class="speech-bubble" id="speech-text-1">
+            "Buenos días profesor. Mi rol en el equipo fue la <strong>Programación Principal en Unity con C#</strong>.<br><br>
+            En mi parte me encargué de que todas las mecánicas funcionen fluidas:<br>
+            1. <strong>El personaje:</strong> Programé el movimiento en tercera persona, la cámara orbital, el modo sigilo agachado y cómo trepar escaleras.<br>
+            2. <strong>La lancha y el sonar:</strong> Programé la física de flotación sobre las olas y el disparo del sonar para escanear las bodegas del barco y detectar dónde hay personas.<br>
+            3. <strong>La Inteligencia Artificial de los guardias:</strong> Los guardias patrullan con NavMesh. Tienen conos de visión dinámicos y detectan el ruido si corres. Si te descubren, entran en alerta y ocultan las evidencias.<br>
+            4. Todo corre optimizado a 60 cuadros por segundo sin caídas de framerate.<br><br>
+            Ahora mi compañero Christopher les explicará el arte 3D y el audio."
+          </div>
+        </div>
+
+        <!-- SLIDE 3: CHRISTOPHER ARTE Y AUDIO -->
+        <div class="speaker-slide" id="sslide-2">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+              <span class="card-tag" style="color: var(--sealed-green);">TURNO 3 · MODELADO 3D, ENTORNO MARÍTIMO Y SONIDO</span>
+              <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; color: #FFF;">Christopher Veliz Cochachi</h3>
+            </div>
+            <span class="member-badge badge-green">⏱ 60 SEGUNDOS</span>
+          </div>
+
+          <div class="unity-cue-card" style="border-color: var(--sealed-green);">
+            <span class="unity-cue-icon">🎬</span>
+            <div>
+              <strong style="color: var(--sealed-green); font-size: 0.92rem; display: block; margin-bottom: 2px;">QUÉ MOSTRAR EN PANTALLA EN UNITY MIENTRAS HABLAS:</strong>
+              <span style="color: var(--text-dim); font-size: 0.88rem;">
+                Acerca la cámara al barco pesquero Hai Feng 77: enfoca los focos amarillos halógenos, la niebla nocturna, el agua marina y las texturas de óxido.
+              </span>
+            </div>
+          </div>
+
+          <div class="speech-bubble" id="speech-text-2">
+            "Buenos días profesor. Mi rol en el equipo fue la <strong>Dirección de Arte 3D, el Entorno Marítimo y el Sonido</strong>.<br><br>
+            Para darle al juego una atmósfera realista y de tensión nocturna:<br>
+            1. <strong>El barco en 3D:</strong> Modele la estructura modular del barco pesquero <em>Hai Feng 77</em>, aplicando materiales de acero oxidado por la sal marina.<br>
+            2. <strong>El océano y el clima:</strong> Creé el shader de oleaje nocturno, la lluvia y la niebla volumétrica con luces halógenas amarillas en cubierta.<br>
+            3. <strong>Objetos coleccionables:</strong> Diseñé las pruebas físicas que debes fotografiar: la radio VHF, la bitácora de navegación y los pasaportes retenidos.<br>
+            4. <strong>Diseño sonoro:</strong> Configuré el audio inmersivo con el sonido de las olas, el viento de tormenta, los crujidos del casco y los pasos sobre metal.<br><br>
+            Le regreso la palabra a Alexander para el cierre."
+          </div>
+        </div>
+
+        <!-- SLIDE 4: ALEXANDER CIERRE -->
+        <div class="speaker-slide" id="sslide-3">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+              <span class="card-tag" style="color: var(--sonar-cyan);">TURNO 4 · ORGANIZACIÓN PROFESIONAL Y CONCLUSIÓN</span>
+              <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; color: #FFF;">Alexander Benites Fierro</h3>
+            </div>
+            <span class="member-badge badge-cyan">⏱ 30 SEGUNDOS</span>
+          </div>
+
+          <div class="unity-cue-card">
+            <span class="unity-cue-icon">🎬</span>
+            <div>
+              <strong style="color: var(--radar-amber); font-size: 0.92rem; display: block; margin-bottom: 2px;">QUÉ MOSTRAR EN PANTALLA MIENTRAS HABLAS:</strong>
+              <span style="color: var(--text-dim); font-size: 0.88rem;">
+                Abre en el navegador la pestaña de GitHub con las 18 Issues organizadas por integrante y muestra la consola de Unity compilando 100% limpia sin errores.
+              </span>
+            </div>
+          </div>
+
+          <div class="speech-bubble" id="speech-text-3">
+            "Para trabajar de forma profesional como en un estudio real, utilizamos <strong>GitHub</strong>:<br><br>
+            Cada uno de nosotros trabajó en su propia rama dedicada para no generar conflictos en Unity, configuramos Git LFS para los modelos 3D y tenemos un tablero con las <mark>18 tareas oficiales asignadas</mark> semana a semana.<br><br>
+            Ahora pasamos a demostrarles el proyecto en vivo directamente en Unity. Muchas gracias."
+          </div>
+        </div>
+
+        <!-- BOTONES DE NAVEGACIÓN INFERIORES -->
+        <div class="teleprompter-controls">
+          <button class="control-btn" id="prev-speaker-btn" onclick="prevSpeaker()">
+            ◀ Anterior
+          </button>
+          <span style="color: var(--text-muted); font-size: 0.88rem; font-family: 'Fira Code', monospace;" id="step-counter">
+            Paso 1 de 4
+          </span>
+          <button class="control-btn" id="next-speaker-btn" onclick="nextSpeaker()" style="background: var(--sonar-cyan); color: #070e14; border-color: var(--sonar-cyan);">
+            Siguiente Integrante ▶
+          </button>
+        </div>
+
       </div>
 
     </div>
@@ -804,12 +1091,13 @@
     <!-- FOOTER -->
     <footer>
       <p>KAIROS: Sombras en Altamar · Proyecto de Videojuego en Unity 6 LTS</p>
-      <p style="margin-top: 4px; font-size: 0.78rem;">Alexander Benites · Diego Tornero · Christopher Veliz</p>
+      <p style="margin-top: 4px; font-size: 0.78rem;">Alexander Benites (@Alexander5642) · Diego Tornero (@Efustion23) · Christopher Veliz (@christopher-26)</p>
     </footer>
 
   </div>
 
   <script>
+    // Tab Navigation
     function openTab(evt, tabId) {
       const panes = document.querySelectorAll('.tab-pane');
       panes.forEach(pane => pane.classList.remove('active'));
@@ -820,6 +1108,105 @@
       document.getElementById(tabId).classList.add('active');
       evt.currentTarget.classList.add('active');
     }
+
+    // Teleprompter Speaker Navigation
+    let currentSpeaker = 0;
+    const totalSpeakers = 4;
+
+    function setSpeaker(idx) {
+      currentSpeaker = idx;
+      for (let i = 0; i < totalSpeakers; i++) {
+        const slide = document.getElementById(`sslide-${i}`);
+        const btn = document.getElementById(`sbtn-${i}`);
+        if (slide) slide.classList.remove('active');
+        if (btn) {
+          btn.className = 'speaker-nav-btn';
+        }
+      }
+
+      const activeSlide = document.getElementById(`sslide-${idx}`);
+      const activeBtn = document.getElementById(`sbtn-${idx}`);
+      if (activeSlide) activeSlide.classList.add('active');
+      if (activeBtn) {
+        if (idx === 0 || idx === 3) activeBtn.classList.add('active-ab');
+        else if (idx === 1) activeBtn.classList.add('active-dt');
+        else if (idx === 2) activeBtn.classList.add('active-cv');
+      }
+
+      document.getElementById('step-counter').innerText = `Paso ${idx + 1} de ${totalSpeakers}`;
+      resetTimer();
+    }
+
+    function nextSpeaker() {
+      if (currentSpeaker < totalSpeakers - 1) {
+        setSpeaker(currentSpeaker + 1);
+      } else {
+        setSpeaker(0);
+      }
+    }
+
+    function prevSpeaker() {
+      if (currentSpeaker > 0) {
+        setSpeaker(currentSpeaker - 1);
+      }
+    }
+
+    // Interactive Timer
+    let timerInterval = null;
+    let timeLeft = 60;
+    const maxTime = 60;
+
+    function toggleTimer() {
+      const btn = document.getElementById('timer-toggle-btn');
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        btn.innerText = '▶ Reanudar Cronómetro';
+      } else {
+        btn.innerText = '⏸ Pausar';
+        timerInterval = setInterval(() => {
+          if (timeLeft > 0) {
+            timeLeft--;
+            updateTimerDisplay();
+          } else {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            btn.innerText = '✔ ¡Tiempo cumplido!';
+          }
+        }, 1000);
+      }
+    }
+
+    function resetTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      timeLeft = 60;
+      document.getElementById('timer-toggle-btn').innerText = '▶ Iniciar Cronómetro';
+      updateTimerDisplay();
+    }
+
+    function updateTimerDisplay() {
+      const mins = Math.floor(timeLeft / 60);
+      const secs = timeLeft % 60;
+      document.getElementById('timer-text').innerText = 
+        `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      
+      const pct = ((maxTime - timeLeft) / maxTime) * 100;
+      document.getElementById('timer-bar').style.width = `${pct}%`;
+    }
+
+    // Copy Speech to Clipboard
+    function copyCurrentSpeech() {
+      const bubble = document.getElementById(`speech-text-${currentSpeaker}`);
+      if (!bubble) return;
+      const textToCopy = bubble.innerText;
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        alert("¡Guion copiado al portapapeles! Listo para pegar en WhatsApp o notas.");
+      });
+    }
   </script>
 </body>
 </html>
+
