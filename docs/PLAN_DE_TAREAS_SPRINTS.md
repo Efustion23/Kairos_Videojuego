@@ -21,6 +21,27 @@
 
 ---
 
+## ✅ Estado real de las tarjetas abiertas (revisado el 6 de noviembre de 2026)
+
+Comparación entre estas tarjetas y el juego actual. Se comprobó con el código, los tests y recorridos automatizados; todavía falta una partida completa con teclado y ratón. Cada responsable decide si cierra su tarjeta o la ajusta.
+
+| Tarjeta | Issue | Estado en el juego | Qué falta o cambió |
+| :--- | :--- | :--- | :--- |
+| `[S12-1]` Visor de sonar y barra de sospecha | #7 | Hecho | Validar la legibilidad con el equipo |
+| `[S12-2]` Pulso de sonar y compartimentos | #8 | Hecho | Nada en el juego |
+| `[S12-3]` Onda cian, térmica y sonidos | #9 | Hecho | Se hizo por código, sin Shader Graph ni bancos de sonido |
+| `[S13-1]` Diálogos y rutas de patrulla | #10 | Hecho | Revisar los textos |
+| `[S13-2]` IA de guardias y conos | #11 | Hecho | Sin postura agachada: se retiró del juego |
+| `[S13-3]` Camarotes, personajes y pasos | #12 | Parcial | Guardias y personas son figuras propias, sin linterna |
+| `[S14-1]` Maletín y tablero final | #13 | Hecho | El maletín es una lista, no una cuadrícula |
+| `[S14-2]` Cámara y bucle de 4 fases | #14 | Hecho | Nada en el juego |
+| `[S14-3]` Objetos coleccionables y música | #15 | Parcial | Faltan la radio y el plotter GPS; la marca de las pruebas es una luz, sin shader |
+| `[S15-1]` Usabilidad, textos y menús | #16 | Parcial | Título y créditos hechos. Falta el playtesting. No hay selector de casos: hay 1 caso |
+| `[S15-2]` Bugs, rendimiento y build | #17 | Pendiente | Medir a 1440p, Pull Request a `main` y ejecutable final |
+| `[S15-3]` Pulido, mezcla y tráiler | #18 | Pendiente | Mezcla de audio y video |
+
+---
+
 ## 📂 LISTA 1: Completado (Semanas 10–11) — 6 Tarjetas (100% Finalizadas)
 
 ### 1. `[S10-1]` Diseño del nivel del buque «Hai Feng 77» y bocetos de interfaz
@@ -41,7 +62,7 @@
 * **Horario:** Mar y Jue · 18:00 – 21:00
 * **Rama:** `feature/diego-gameplay-ia`
 * **Commit:** `feat(player): implementar movimiento en tercera persona y modo sigilo`
-* **Descripción:** Crear proyecto en Unity, configurar cámara en tercera persona, desplazamiento sigiloso agachado y subida por escaleras.
+* **Descripción:** Crear proyecto en Unity, configurar cámara en tercera persona y movimiento por rampas. La postura agachada se retiró después para simplificar los controles.
 * **Checklist (Subtareas):**
   - [x] Inicializar repositorio Git con .gitignore de Unity y Git LFS *(Completado por Diego Tornero)*
   - [x] Programar CharacterController en tercera persona y cámara orbital *(Completado por Diego Tornero)*
