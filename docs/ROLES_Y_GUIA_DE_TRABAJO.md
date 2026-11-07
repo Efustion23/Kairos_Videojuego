@@ -7,11 +7,11 @@
 
 ## 1. Integrantes del Equipo y Asignación de Roles
 
-| Código | Integrante | Rol Principal | Rama de Trabajo en GitHub | Etiqueta en Trello | Horario de Trabajo |
-| :---: | :--- | :--- | :--- | :--- | :--- |
-| **AB** | **Benites Fierro Alexander Aiken** | **Dirección de Diseño, UI/UX, Narrativa y Gestión de Escenas** | [`feature/alexander-ui-narrativa`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/alexander-ui-narrativa) | 🟦 Azul Cian (`Diseño y UI`) | Lun, Mié y Vie / Sáb<br>`18:00 – 21:00` |
-| **DT** | **Tornero Bermudez Diego Ali Gadiel** | **Programación Principal en Unity, Mecánicas, Sonar e IA** | [`feature/diego-gameplay-ia`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/diego-gameplay-ia) | 🟧 Ámbar/Naranja (`Programación Unity`) | Mar, Jue y Vie / Sáb<br>`18:00 – 21:00` |
-| **CV** | **Veliz Cochachi Christopher Jesus** | **Dirección de Arte 3D, Entorno Marítimo, Iluminación y Audio** | [`feature/christopher-arte-audio`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/christopher-arte-audio) | 🟩 Verde Esmeralda (`Arte 3D y Audio`) | Lun, Mié, Jue / Sáb<br>`18:00 – 21:00` |
+| Código | Integrante | Cuenta GitHub | Rol Principal | Rama de Trabajo en GitHub | Etiqueta en Trello | Horario de Trabajo |
+| :---: | :--- | :--- | :--- | :--- | :--- | :--- |
+| **AB** | **Benites Fierro Alexander Aiken** | [`@Alexander5642`](https://github.com/Alexander5642) | **Dirección de Diseño, UI/UX, Narrativa y Gestión de Escenas** | [`feature/alexander-ui-narrativa`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/alexander-ui-narrativa) | 🟦 Azul Cian (`Diseño y UI`) | Lun, Mié y Vie / Sáb<br>`18:00 – 21:00` |
+| **DT** | **Tornero Bermudez Diego Ali Gadiel** | [`@Efustion23`](https://github.com/Efustion23) | **Programación Principal en Unity, Mecánicas, Sonar e IA** | [`feature/diego-gameplay-ia`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/diego-gameplay-ia) | 🟧 Ámbar/Naranja (`Programación Unity`) | Mar, Jue y Vie / Sáb<br>`18:00 – 21:00` |
+| **CV** | **Veliz Cochachi Christopher Jesus** | [`@christopher-26`](https://github.com/christopher-26) | **Dirección de Arte 3D, Entorno Marítimo, Iluminación y Audio** | [`feature/christopher-arte-audio`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/christopher-arte-audio) | 🟩 Verde Esmeralda (`Arte 3D y Audio`) | Lun, Mié, Jue / Sáb<br>`18:00 – 21:00` |
 
 ---
 

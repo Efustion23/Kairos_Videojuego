@@ -21,11 +21,11 @@
 
 ## 👥 Equipo de Desarrollo y Asignación de Roles (Semanas 10–15)
 
-| Código | Integrante | Rol Principal | Rama Oficial en GitHub | Etiqueta Trello |
-| :---: | :--- | :--- | :--- | :--- |
-| **AB** | **Benites Fierro Alexander Aiken** | **Dirección de Diseño, UI/UX, Narrativa y Gestión de Escenas** | [`feature/alexander-ui-narrativa`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/alexander-ui-narrativa) | 🟦 Azul Cian (`Diseño y UI`) |
-| **DT** | **Tornero Bermudez Diego Ali Gadiel** | **Programación Principal en Unity, Mecánicas, Sonar e IA** | [`feature/diego-gameplay-ia`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/diego-gameplay-ia) | 🟧 Ámbar/Naranja (`Programación Unity`) |
-| **CV** | **Veliz Cochachi Christopher Jesus** | **Dirección de Arte 3D, Entorno Marítimo, Iluminación y Audio** | [`feature/christopher-arte-audio`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/christopher-arte-audio) | 🟩 Verde Esmeralda (`Arte 3D y Audio`) |
+| Código | Integrante | Cuenta GitHub | Rol Principal | Rama Oficial en GitHub | Etiqueta Trello |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| **AB** | **Benites Fierro Alexander Aiken** | [`@Alexander5642`](https://github.com/Alexander5642) | **Dirección de Diseño, UI/UX, Narrativa y Gestión de Escenas** | [`feature/alexander-ui-narrativa`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/alexander-ui-narrativa) | 🟦 Azul Cian (`Diseño y UI`) |
+| **DT** | **Tornero Bermudez Diego Ali Gadiel** | [`@Efustion23`](https://github.com/Efustion23) | **Programación Principal en Unity, Mecánicas, Sonar e IA** | [`feature/diego-gameplay-ia`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/diego-gameplay-ia) | 🟧 Ámbar/Naranja (`Programación Unity`) |
+| **CV** | **Veliz Cochachi Christopher Jesus** | [`@christopher-26`](https://github.com/christopher-26) | **Dirección de Arte 3D, Entorno Marítimo, Iluminación y Audio** | [`feature/christopher-arte-audio`](https://github.com/Efustion23/Kairos_Videojuego/tree/feature/christopher-arte-audio) | 🟩 Verde Esmeralda (`Arte 3D y Audio`) |
 
 👉 **Consulta la guía completa de trabajo y protocolos en:** [`docs/ROLES_Y_GUIA_DE_TRABAJO.md`](docs/ROLES_Y_GUIA_DE_TRABAJO.md)  
 👉 **Consulta el desglose de las 18 tarjetas del Tablero de Trello en:** [`docs/PLAN_DE_TAREAS_SPRINTS.md`](docs/PLAN_DE_TAREAS_SPRINTS.md)
