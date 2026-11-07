@@ -34,7 +34,7 @@ namespace Kairos
         public static AudioClip Radio => radio ??= Make("radio", .45f, (t, u) => (N() * .5f + Sin(1100, t) * .25f * (u > .25f && u < .75f ? Mathf.Sign(Sin(35, t)) : 0)) * (u < .06f || u > .9f ? 1f : .55f) * .55f);
         public static AudioClip StepWet => stepWet ??= Make("stepWet", .16f, (t, u) => (Sin(75, t) * .6f + N() * .55f) * Mathf.Exp(-u * 6) * .65f);
 
-        static AudioClip click, shutter, step, creak, grapple, plasma, alarm, sealedTone, knock, slip, stun, pingDense, pingHollow, hum, wind, voices, breath, rain, engine, seal;
+        static AudioClip click, shutter, step, creak, grapple, plasma, alarm, sealedTone, knock, slip, stun, pingDense, pingHollow, pingAcoustic, ecoMetallic, hum, wind, voices, breath, rain, engine, seal;
 
         public static AudioClip Click => click ??= Make("click", .05f, (t, u) => Sin(1400, t) * (1 - u) * .5f);
         public static AudioClip Shutter => shutter ??= Make("shutter", .14f, (t, u) => N() * Mathf.Exp(-u * 9) * (u < .4f || u > .6f ? 1 : .1f) * .6f);
@@ -50,6 +50,31 @@ namespace Kairos
         /// Tono grave: masa densa. Tono hueco: espacio vacío o habitable.
         public static AudioClip PingDense => pingDense ??= Make("pingDense", 1.1f, (t, u) => Sin(320, t) * Mathf.Exp(-u * 6) * .8f);
         public static AudioClip PingHollow => pingHollow ??= Make("pingHollow", 1.3f, (t, u) => (Sin(980, t) * .7f + Sin(1960, t) * .25f) * Mathf.Exp(-u * 3.5f) * .8f);
+
+        /// Ping acústico submarino activo en cian (#3FE0D0): modulación chirp y reverberación en agua.
+        public static AudioClip PingAcoustic => pingAcoustic ??= Make("pingAcoustic", 1.25f, (t, u) =>
+        {
+            float freq = Mathf.Lerp(1220f, 720f, Mathf.Pow(u, 0.42f));
+            float carrier = Sin(freq, t);
+            float subCarrier = Sin(freq * 0.5f, t) * 0.32f;
+            float env = u < 0.02f ? (u / 0.02f) : Mathf.Exp(-u * 4.9f);
+            float dispersion = 1f + 0.12f * Sin(36f, t);
+            return (carrier + subCarrier) * env * dispersion * 0.85f;
+        });
+
+        /// Eco metálico: resonancia acústica multicapa de los mamparos de acero del buque pesquero.
+        public static AudioClip EcoMetallic => ecoMetallic ??= Make("ecoMetallic", 1.75f, (t, u) =>
+        {
+            float m1 = Sin(440f, t) * 0.45f;
+            float m2 = Sin(880f, t) * 0.35f;
+            float m3 = Sin(1320f, t) * 0.22f;
+            float m4 = Sin(2180f, t) * 0.14f;
+            float flutter = Sin(16f, t) * 0.2f + 0.8f;
+            float hullNoise = N() * 0.08f * Mathf.Exp(-u * 11f);
+            float env = Mathf.Exp(-u * 3.3f);
+            float bounce = u > 0.22f ? Mathf.Exp(-(u - 0.22f) * 4.6f) * 0.42f : 0f;
+            return ((m1 + m2 + m3 + m4) * flutter + hullNoise) * (env + bounce) * 0.8f;
+        });
 
         public static AudioClip Hum => hum ??= Make("hum", 4f, (t, u) => (Sin(50, t) * .5f + Sin(100, t) * .3f + Sin(150, t) * .15f + N() * .05f), true);
         public static AudioClip Engine => engine ??= Make("engine", 3f, (t, u) => Sin(62, t) * .4f + Sin(124, t) * .2f + N() * .15f, true);

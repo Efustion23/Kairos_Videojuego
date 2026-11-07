@@ -2,10 +2,31 @@ using UnityEngine;
 
 namespace Kairos
 {
-    /// Materiales en tiempo de ejecución a partir de Resources/KGlow (shader Kairos/Glow).
+    /// Materiales en tiempo de ejecución a partir de Resources/KGlow (shader Kairos/Glow) y shaders de efectos.
     public static class Mats
     {
         static Material baseMat;
+        static Material sonarSweepMat;
+
+        public static Material SonarSweep(Color c, float radius = 0f, float width = 14f)
+        {
+            if (sonarSweepMat == null)
+            {
+                var s = Shader.Find("Kairos/SonarSweep");
+                if (s != null) sonarSweepMat = new Material(s);
+            }
+            if (sonarSweepMat != null)
+            {
+                var m = new Material(sonarSweepMat);
+                m.SetColor("_SweepColor", c);
+                m.SetVector("_Center", Vector4.zero);
+                m.SetFloat("_Radius", radius);
+                m.SetFloat("_Width", width);
+                return m;
+            }
+            return Glow(c, true, true);
+        }
+
         public static Material Glow(Color c, bool additive = true, bool overlay = false, bool round = false, Texture tex = null, bool opaque = false)
         {
             if (baseMat == null) baseMat = Resources.Load<Material>("KGlow");

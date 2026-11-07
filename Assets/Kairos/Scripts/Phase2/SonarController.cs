@@ -298,6 +298,13 @@ namespace Kairos
             }
             StartCoroutine(Ring());
 
+            // Ping acústico del sonar submarino en sincronía con la onda cian
+            Sfx.Play(Sfx.PingAcoustic, crest ? .95f : .65f);
+
+            // Eco metálico retrasado por propagación acústica en agua de mar (~1500 m/s)
+            float acousticDelay = Mathf.Clamp(d / 450f, 0.15f, 1.25f);
+            StartCoroutine(DelayedEco(acousticDelay, crest));
+
             // El casco se reconstruye con impactos reales; las bodegas, según el lado desde el que disparas.
             var from = boat.position + Vector3.up * 1.5f;
             for (int i = 0; i < (crest ? 260 : 90); i++)
@@ -327,23 +334,50 @@ namespace Kairos
             RefreshPanel();
         }
 
+        IEnumerator DelayedEco(float delay, bool crest)
+        {
+            yield return new WaitForSeconds(delay);
+            Sfx.Play(Sfx.EcoMetallic, crest ? .85f : .55f);
+        }
+
         IEnumerator Ring()
         {
             var go = new GameObject("PulsoRing");
             var lr = go.AddComponent<LineRenderer>();
-            lr.material = Mats.Glow(Pal.Sonar);
-            lr.loop = true; lr.positionCount = 64; lr.widthMultiplier = 1f;
+            lr.material = Mats.SonarSweep(Pal.Sonar);
+            lr.loop = true; lr.positionCount = 80; lr.widthMultiplier = 2.4f;
+
+            var goEcho = new GameObject("PulsoRingSecondary");
+            goEcho.transform.SetParent(go.transform, false);
+            var lrEcho = goEcho.AddComponent<LineRenderer>();
+            lrEcho.material = Mats.SonarSweep(new Color(Pal.Sonar.r * 0.75f, Pal.Sonar.g, Pal.Sonar.b, 0.55f));
+            lrEcho.loop = true; lrEcho.positionCount = 80; lrEcho.widthMultiplier = 1.3f;
+
             var c = boat.position;
             for (float t = 0; t < 1.6f; t += Time.deltaTime)
             {
                 float r = t * 300f;
-                for (int i = 0; i < 64; i++)
+                float r2 = Mathf.Max(0, r - 15f);
+                for (int i = 0; i < 80; i++)
                 {
-                    float a = i * Mathf.PI * 2 / 64;
-                    float x = c.x + Mathf.Cos(a) * r, z = c.z + Mathf.Sin(a) * r;
-                    lr.SetPosition(i, new Vector3(x, Ocean.Height(x, z) + .4f, z));
+                    float a = i * Mathf.PI * 2 / 80;
+                    float cosA = Mathf.Cos(a);
+                    float sinA = Mathf.Sin(a);
+
+                    float x = c.x + cosA * r, z = c.z + sinA * r;
+                    lr.SetPosition(i, new Vector3(x, Ocean.Height(x, z) + .45f, z));
+
+                    float x2 = c.x + cosA * r2, z2 = c.z + sinA * r2;
+                    lrEcho.SetPosition(i, new Vector3(x2, Ocean.Height(x2, z2) + .35f, z2));
                 }
-                lr.material.SetColor("_Color", new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, 1 - t / 1.6f));
+                float alpha = 1 - t / 1.6f;
+                lr.material.SetColor("_SweepColor", new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, alpha));
+                lr.material.SetVector("_Center", new Vector4(c.x, c.y, c.z, 0));
+                lr.material.SetFloat("_Radius", r);
+
+                lrEcho.material.SetColor("_SweepColor", new Color(Pal.Sonar.r * 0.8f, Pal.Sonar.g, Pal.Sonar.b, alpha * 0.6f));
+                lrEcho.material.SetVector("_Center", new Vector4(c.x, c.y, c.z, 0));
+                lrEcho.material.SetFloat("_Radius", r2);
                 yield return null;
             }
             Destroy(go);
