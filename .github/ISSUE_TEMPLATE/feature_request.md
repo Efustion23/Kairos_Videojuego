@@ -8,7 +8,7 @@ assignees: ''
 
 **Módulo / Fase Asociada:**
 - [ ] Fase 1: Rastreo Satelital
-- [ ] Fase 2: Sonar y Reconstrucción Volumétrica
+- [ ] Fase 2: Sonar y Termografía
 - [ ] Fase 3: Infiltración y Documentación
 - [ ] Fase 4: Juicio y Grafo Financiero
 - [ ] Gráficos / Shaders / Modelado 3D

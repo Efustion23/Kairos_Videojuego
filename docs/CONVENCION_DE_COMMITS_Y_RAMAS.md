@@ -46,7 +46,7 @@ Cada tarea se desarrolla en una rama propia que se elimina una vez fusionada:
 | `feature/` | Nueva funcionalidad de código o gameplay. | `feature/fase1-globo-3d`, `feature/sha256-maletin` |
 | `art/` | Modelos 3D, escenarios, texturas, shaders o iluminación. | `art/buque-potero-modular`, `art/shader-oceano` |
 | `ui/` | Menús, HUDs, pantallas y elementos visuales de interfaz. | `ui/hud-sonar`, `ui/pantalla-juicio` |
-| `audio/` | Sonido ambiente, FMOD, pistas musicales o efectos. | `audio/tormenta-hidrofono` |
+| `audio/` | Sonido ambiente, pistas musicales o efectos. | `audio/tormenta-hidrofono` |
 | `fix/` | Corrección de un error o bug encontrado. | `fix/resbalon-cubierta-bug`, `fix/camara-rotacion` |
 | `docs/` | Actualizaciones al GDD, README o guías técnicas. | `docs/actualizar-plan-sprint1` |
 
@@ -77,7 +77,7 @@ Cada commit debe explicar claramente qué se hizo y a qué módulo pertenece:
 * **`fix`**: Reparación de un bug o comportamiento anómalo.
   * *Ejemplo:* `fix(fase3): corregir cono de vision que atravesaba mamparos`
 * **`refactor`**: Reorganización de código sin cambiar su funcionalidad.
-  * *Ejemplo:* `refactor(ocean): desacoplar muestreo de altura a interfaz IOceanSampler`
+  * *Ejemplo:* `refactor(fase3): separar el hud del controlador de infiltracion`
 * **`docs`**: Documentación técnica, GDD o guías.
   * *Ejemplo:* `docs(workflow): redactar roles y guia de fusion de unity`
 * **`chore`**: Tareas de configuración, Git LFS, paquetes o limpieza.
