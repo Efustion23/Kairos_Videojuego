@@ -243,13 +243,14 @@ namespace Kairos.EditorTools
 
         static PersonNpc Person(Transform parent, string id, Vector3 pos, float yaw, Material skin)
         {
-            var go = Humanoid("Persona " + id, worker, skin);
+            var go = PersonFigure(id, skin, out var motion);
             go.transform.SetParent(parent, false);
             go.transform.position = pos;
             go.transform.rotation = Quaternion.Euler(0, yaw, 0);
             Agent(go);
             var n = go.AddComponent<PersonNpc>();
             n.personId = id;
+            n.motion = motion;
             Trigger(go.transform, Vector3.up, new Vector3(1.2f, 2f, 1.2f));
             return n;
         }

@@ -8,8 +8,12 @@ namespace Kairos
     {
         static string TrustWord(int t) => t < 40 ? "Desconfía" : t < 60 ? "Escucha" : t < 80 ? "Quiere hablar" : "Confía en ti";
 
+        /// Con quién habla el jugador: esa persona usa la animación de hablar.
+        public PersonNpc DialogWith { get; private set; }
+
         public void OpenDialog(PersonNpc npc)
         {
+            DialogWith = npc;
             SetOverlay(Mode.Dialog);
             player.FaceTo(npc.transform.position);
             var toPlayer = player.transform.position - npc.transform.position; toPlayer.y = 0;
