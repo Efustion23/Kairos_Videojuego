@@ -34,27 +34,27 @@ graph TD
     * Panel interactivo de rastreo satelital de la Fase 1 (capas AIS, VIIRS y SAR).
     * Retícula cian del visor acústico del sonar y medidor de sospecha (0 a 100).
     * HUD de sigilo, brújula táctica y alertas visuales de proximidad de guardias.
-    * Interfaz del maletín estanco de 12 evidencias con sello criptográfico.
+    * Interfaz del maletín de 13 pruebas con sello criptográfico.
     * Menú principal de inicio, créditos y pantalla de sentencia judicial.
   * **Diseño Narrativo & Códice:**
     * Redacción de árboles de diálogo con los pescadores y sobrevivientes.
     * Fichas de los 11 Indicadores de Trabajo Forzado de la OIT.
-    * Trazado de mapas 2D de cubiertas y colocación estratégica de las 5 evidencias documentales clave.
+    * Trazado de mapas 2D de cubiertas y colocación de las pruebas.
 
 ### 🟧 Diego Tornero (DT) — Programación Principal en Unity, Mecánicas e IA
 * **Rama oficial:** `feature/diego-gameplay-ia`
 * **Etiqueta Trello:** Ámbar / Naranja (`Programación Unity · feature/diego-gameplay-ia`)
 * **Módulos bajo su responsabilidad:**
   * **Control del Jugador y Físicas:**
-    * CharacterController en tercera persona, cámara orbital, postura agachado de sigilo y detección de escaleras.
-    * Propulsión, giro y flotabilidad de la lancha RHIB de intercepción.
-    * Sincronización de la ventana de abordaje con la cresta de la ola en popa.
+    * CharacterController en tercera persona, cámara orbital y movimiento por rampas.
+    * Propulsión, giro y flotación de la lancha.
+    * Sincronización de la ventana de abordaje con el seno de la ola en popa.
   * **Mecánica del Sonar Acústico (Fase 2):**
-    * Programación del emisor de pulso esférico y detección por capas (`LayerMask`).
-    * Marcado 3D de bodegas ocultas y motores detrás del casco de metal.
+    * Pulso de sonar, lecturas por compartimento y detección del casco por capas (`LayerMask`).
+    * Marcado del compartimento con personas y cálculo de la Confianza.
   * **Inteligencia Artificial de Vigilancia:**
     * Máquina de estados en NavMesh (`Patrulla`, `Sospecha`, `Alerta`).
-    * Conos de visión dinámicos afectados por lluvia, postura y luz.
+    * Conos de visión dinámicos afectados por la noche, la lluvia y la luz.
     * Reacción de guardias ante escora del buque (>15°) y ruidos de pasos.
   * **Cámara de Pruebas y Cierre de Bucle:**
     * Validación de encuadre y enfoque fotográfico para la recolección de pistas.
@@ -68,10 +68,10 @@ graph TD
   * **Escenarios 3D y Modelado Modular:**
     * Greybox modular del casco, puente de mando, bodegas y cubiertas del pesquero *Hai Feng 77*.
     * Texturizado PBR con materiales de acero corroído, óxido ferroso y salitre.
-    * Modelado de props coleccionables de evidencia: bitácora real, pasaportes, radio VHF y plotter GPS.
+    * Aspecto de las pruebas y de los objetos del buque.
   * **Shaders, Iluminación y Post-Processing:**
     * Shader de oleaje oceánico nocturno y superficie marina.
-    * Shader Graph de barrido volumétrico cian (`#3FE0D0`) y filtro de visión térmica fría/caliente.
+    * Pulso cian de sonar (`#3FE0D0`) y vista térmica fría/caliente.
     * Posicionamiento de reflectores halógenos amarillos en cubierta, niebla volumétrica y lluvia.
     * Calibración de color grading y bloom en perfiles de Post-Processing.
   * **Diseño y Mezcla de Audio:**
@@ -115,13 +115,15 @@ gitGraph
 
 ---
 
-## 4. Las 4 Reglas de Oro de Unity en Equipo
+## 4. Las 5 Reglas de Oro de Unity en Equipo
 
-1. **Trabajar con Prefabs (Prohibido editar la misma escena):**  
-   Cada integrante trabaja en su propia escena de pruebas local (`Sandbox_Alexander.unity`, `Sandbox_Diego.unity`, `Sandbox_Christopher.unity`). Todo elemento final se guarda como **Prefab** en `Assets/Kairos/Prefabs/`.
+1. **No editar a mano lo que crea el generador:**  
+   `Kairos > Generar juego` rehace las 5 escenas, `HaiFeng77.prefab`, `Lancha.prefab` y `Assets/Kairos/Generated/`. Todo lo editado a mano en esos archivos se pierde. Para cambiarlos, edita `Assets/Kairos/Scripts/Editor/` y vuelve a generar. Para probar algo aparte, usa una escena propia sin subirla (`Sandbox_Alexander.unity`, `Sandbox_Diego.unity`, `Sandbox_Christopher.unity`).
 2. **Archivos `.meta` Obligatorios:**  
    Todo archivo nuevo añadido a Unity (`.cs`, `.png`, `.fbx`, `.prefab`, `.asset`) **debe comitearse junto con su correspondiente archivo `.meta`**.
 3. **Guardado Antes de Commitear:**  
    En Unity: presionar `Ctrl + S` y luego `File -> Save Project` antes de hacer `git add`.
 4. **Git LFS:**  
-   Todos los binarios pesados (modelos 3D, texturas, audios) ya están protegidos y rastreados por Git LFS a través del archivo [`.gitattributes`](file:///d:/Kairos_Videojuego/.gitattributes).
+   Los modelos 3D, las texturas y los audios se guardan con Git LFS según [`.gitattributes`](../.gitattributes). Ejecuta `git lfs install` una vez y `git lfs pull` después de clonar.
+5. **Generar sin pisarse:**  
+   Genera siempre fuera de Play Mode y pasa los tests de `Assets/Kairos/Tests` antes del Pull Request. Las escenas generadas no se fusionan a mano: si chocan, fusiona el código del generador y vuelve a generar.
