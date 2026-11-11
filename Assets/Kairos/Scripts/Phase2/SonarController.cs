@@ -36,7 +36,7 @@ namespace Kairos
         Color savedBg; CameraClearFlags savedClear; int savedMask;
 
         // UI
-        TextMeshProUGUI status, confidenceText, crestText, hintText;
+        TextMeshProUGUI status, confidenceText, crestText, hintText, compassText;
         UI.Bar suspBar, crestBar, confBar, listenBar;
         readonly TextMeshProUGUI[] cardText = new TextMeshProUGUI[5];
         readonly Button[] classBtn = new Button[5], selectBtn = new Button[5];
@@ -205,11 +205,22 @@ namespace Kairos
             // HUD
             hintText.text = CurrentHint(d);
             suspBar.Set(C.suspicion / 100f);
+            suspBar.img.color = C.suspicion > 65f ? Pal.Danger : C.suspicion > 30f ? Pal.DeckLight : Pal.Sonar;
             float sw = Ocean.Swell(boat.position.x, boat.position.z);
             crestBar.Set((sw + 1) * .5f);
             bool onCrest = Ocean.SecondsFromCrest(boat.position.x, boat.position.z) <= CrestWindow;
             crestBar.img.color = onCrest ? Pal.Sealed : Pal.Sonar;
             crestText.text = onCrest ? "<color=#6CFF8A>¡AHORA! Pulsa Espacio</color>" : "Ola: el pulso rinde más en verde";
+
+            // Brújula táctica náutica (Alexander - Tarea S12-1)
+            if (compassText != null && boat != null && ship != null)
+            {
+                float boatHeading = (boat.eulerAngles.y % 360f + 360f) % 360f;
+                Vector3 toShip = (new Vector3(ship.position.x, 0, ship.position.z) - new Vector3(boat.position.x, 0, boat.position.z)).normalized;
+                float bearingToShip = Vector3.SignedAngle(boat.forward, toShip, Vector3.up);
+                string side = bearingToShip >= 0 ? "Estribor" : "Babor";
+                compassText.text = $"<color=#3FE0D0>RUMBO</color> {boatHeading:000}°  |  <color=#FFD27A>BLANCO</color> {Mathf.Abs(bearingToShip):000}° {side} ({d:0} m)";
+            }
             status.text = $"Distancia al buque: <b>{d:0} m</b>\nMarcha: {Mathf.Abs(speed):0} m/s\nCombustible: {Game.S.fuel:0} L\nRepuestos de dron: {Game.S.droneParts}\nDouglas: {Ocean.Douglas:0.0}{(droneActive ? $"\n<color=#FFD27A>Batería del dron: {droneBattery:0} s. T: volver</color>" : "")}";
         }
 
