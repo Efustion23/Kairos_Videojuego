@@ -28,7 +28,8 @@ namespace Kairos
             walker = GetComponent<Walker>();
         }
 
-        public float EffectiveRange => viewRange * .7f * (Game.S.networkReorganized ? 1.15f : 1f); // la lluvia reduce 30 % el alcance
+        // Alcance efectivo condicionado por lluvia nocturna y mar de fondo Douglas (Diego - S13-2)
+        public float EffectiveRange => viewRange * (Ocean.Douglas >= 5f ? .6f : .7f) * (Game.S.networkReorganized ? 1.15f : 1f);
 
         bool See(Vector3 target, out float dist)
         {
