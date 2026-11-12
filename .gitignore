@@ -54,3 +54,7 @@ desktop.ini
 # FBX de Mixamo con modelo crudo completo (se usan los clips extraídos en Clips/)
 /Assets/Kairos/Models/Protagonista/Animaciones/
 /Assets/Kairos/Models/Protagonista/Animaciones.meta
+
+# Materiales locales de exposicion / guion (no subir a GitHub)
+/docs/*.html
+

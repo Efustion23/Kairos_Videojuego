@@ -19,7 +19,17 @@ namespace Kairos
             var d = npc.Def; var st = npc.State;
             UI.Line(s, d.name, 34, Pal.Sonar, true);
             UI.Line(s, $"{d.origin}. {d.voice}", 20, Pal.Dim);
-            UI.Line(s, "Actitud: " + TrustWord(st.trust), 20, Pal.ThermHot);
+
+            // Módulo 03: Indicador de Traductor Neuronal (Alexander - S13-1)
+            if (Game.Has(2, 4))
+                UI.Line(s, "🌐 <color=#3FE0D0>TRADUCTOR NEURONAL EN CASCO: ACTIVO</color>", 16, Pal.Sonar, true);
+
+            // Medidor interactivo de confianza y empatía (Alexander - S13-1)
+            var trustColor = st.trust >= 60 ? Pal.Sealed : st.trust >= 40 ? Pal.ThermHot : Pal.Danger;
+            UI.Line(s, $"Confianza: <b>{Mathf.Clamp(st.trust, 0, 100)}%</b> · {TrustWord(st.trust)}", 20, trustColor);
+            var trustBar = UI.NewBar(s, trustColor, 8);
+            trustBar.Set(Mathf.Clamp01(st.trust / 100f));
+
             var said = UI.Line(s, st.talked ? "" : d.intro, 24);
 
             void Say(string line) { CloseOverlayKeep(); OpenDialog(npc); lastSaid.text = line; }
@@ -61,9 +71,9 @@ namespace Kairos
             if (st.trust >= 60 && st.explained && d.willTestify && !planHeard.Contains(st.id))
                 UI.Btn(s, "«¿Hay algo que deba saber?»", () => { planHeard.Add(st.id); RevealPlan(st); Say(d.plan); });
             if (st.talked && !st.medkit && C.kits > 0)
-                UI.Btn(s, $"Ofrecer botiquín ({C.kits})", () => { st.medkit = true; C.kits--; st.trust += 25; player.motion.PlayKneel(); Say("Acepta. Por primera vez respira con calma."); });
+                UI.Btn(s, $"Ofrecer botiquín de auxilio ({C.kits})", () => { st.medkit = true; C.kits--; st.trust += 25; player.motion.PlayKneel(); Toast("Atención médica brindada. Confianza +25.", Pal.Sealed, 4); Say("Acepta el auxilio. Por primera vez respira con calma."); });
             if (st.talked && !st.ration && C.rations > 0)
-                UI.Btn(s, $"Ofrecer raciones ({C.rations})", () => { st.ration = true; C.rations--; st.trust += 15; player.motion.PlayKneel(); Say("Come despacio. Comparte la mitad con quien tiene al lado."); });
+                UI.Btn(s, $"Ofrecer agua y raciones ({C.rations})", () => { st.ration = true; C.rations--; st.trust += 15; player.motion.PlayKneel(); Toast("Ración entregada. Confianza +15.", Pal.Sealed, 4); Say("Come y bebe despacio. Comparte la mitad con quien tiene al lado."); });
             if (st.trust >= 80 && !st.helped)
                 UI.Btn(s, "«¿Quieres ayudarme?» (siempre puede decir que no)", () =>
                 {

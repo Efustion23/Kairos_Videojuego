@@ -10,6 +10,11 @@ namespace Kairos
         {
             var canvas = UI.NewCanvas();
             canvasRoot = canvas.transform;
+
+            // Brújula táctica náutica superior (Alexander - Tarea S12-1)
+            var compassP = UI.Panel(canvas.transform, new Vector2(.30f, .93f), new Vector2(.70f, .99f));
+            compassText = UI.Text(compassP.transform, "RUMBO: 000°  |  BLANCO: 000°", 17, Pal.Sonar, TextAlignmentOptions.Center);
+            compassText.margin = new Vector4(6, 2, 6, 2);
             var left = UI.Panel(canvas.transform, new Vector2(0, .62f), new Vector2(.27f, 1));
             var ls = UI.VStack(left.transform, 14, 7);
             UI.Line(ls, "FASE 2 · ESCANEO", 26, Pal.Sonar, true);
