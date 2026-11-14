@@ -27,21 +27,35 @@ namespace Kairos
         void OpenBriefcase()
         {
             SetOverlay(Mode.Menu);
-            var p = UI.Panel(overlay, new Vector2(.2f, .1f), new Vector2(.8f, .9f));
+            var p = UI.Panel(overlay, new Vector2(.18f, .08f), new Vector2(.82f, .92f));
             var s = UI.Scroll(p.transform, Vector2.zero, Vector2.one);
-            UI.Line(s, $"Maletín sellado: {C.evidence.Count}/{CaseData.MaxEvidence}", 32, Pal.Sealed, true);
-            UI.Line(s, "Expediente de " + Game.Inspector, 19, Pal.Dim);
-            if (C.evidence.Count == 0) UI.Line(s, "Vacío. Acércate a una prueba y mantén pulsado E para fotografiarla.", 22, Pal.Dim);
-            foreach (var ev in C.evidence)
+
+            // Cabecera de Maletín Forense (Alexander - S14-1)
+            UI.Line(s, $"MALETÍN FORENSE KAIROS · {C.evidence.Count}/{CaseData.MaxEvidence}", 30, Pal.Sealed, true);
+            UI.Line(s, $"Expediente Oficial: {Game.Inspector}  |  Cadena de Custodia: <color=#3FE0D0>VERIFICADA</color>", 18, Pal.Dim);
+
+            var evBar = UI.NewBar(s, Pal.Sealed, 8);
+            evBar.Set((float)C.evidence.Count / CaseData.MaxEvidence);
+            UI.Line(s, $"Índice de Carga Probatoria: <b>{(float)C.evidence.Count / CaseData.MaxEvidence * 100:0}%</b> para el Tribunal de la Fase 4", 17, Pal.Sonar);
+
+            if (C.evidence.Count == 0)
+                UI.Line(s, "\nMaletín vacío. Explora el buque, acércate a documentos o bitácoras y mantén pulsado E para fotografiar y sellar digitalmente.", 21, Pal.Dim);
+            else
             {
-                var d = CaseData.Evidence(ev.id);
-                UI.Line(s, $"<color=#6CFF8A>[{d.cat}]</color> <b>{d.title}</b>\n{(Game.S.omitSensitive ? d.descSafe : d.desc)}\n<size=16><color=#6F828A>{ev.stamp}  ·  SHA-256 {ev.sha.Substring(0, 24)}…</color></size>", 20);
+                UI.Line(s, "\n<b>Pruebas Forenses Aseguradas:</b>", 21, Pal.Text);
+                foreach (var ev in C.evidence)
+                {
+                    var d = CaseData.Evidence(ev.id);
+                    string catTag = d.cat == 'C' ? "CONTRATO" : d.cat == 'L' ? "BITÁCORA" : d.cat == 'T' ? "TESTIMONIO" : "FORENSE";
+                    UI.Line(s, $"<color=#3FE0D0>◄ {catTag} ►</color> <b>{d.title}</b>\n{(Game.S.omitSensitive ? d.descSafe : d.desc)}\n<size=15><color=#6CFF8A>✔ SELLO SHA-256: {ev.sha.Substring(0, 20)}…</color>  ·  <color=#8DA2AB>{ev.stamp}</color></size>", 19);
+                }
             }
-            UI.Line(s, "Otras salidas", 26, Pal.DeckLight, true);
-            UI.Line(s, "Lo normal es salir por popa con la lancha. Si te ves en apuros, la patrullera te saca en 60 s, pero alerta al capitán. Si tomas el puente (Q para aturdir al capitán y E en la consola) llevas la mejor baza al tribunal.", 20);
+
+            UI.Line(s, "\nOpciones de Extracción y Salida", 24, Pal.DeckLight, true);
+            UI.Line(s, "• Vía Popa: Regresar a la lancha semirrígida (sigilo total y cero sospecha).\n• Vía Puente: Neutralizar al capitán y tomar la consola de navegación para incautación completa.\n• Vía Patrullera: Extracción de emergencia en 60 s (alerta al buque).", 18, Pal.Dim);
             if (patrolT < 0)
-                UI.Btn(s, "Llamar a la patrullera aliada", () => { CloseOverlay(); CallPatrol(); }, Pal.DeckLight, 21, 48);
-            UI.Btn(s, "Cerrar (Tab)", CloseOverlay, Pal.Dim);
+                UI.Btn(s, "Llamar a la patrullera aliada de apoyo", () => { CloseOverlay(); CallPatrol(); }, Pal.DeckLight, 20, 44);
+            UI.Btn(s, "Cerrar Maletín (Tab o Esc)", CloseOverlay, Pal.Dim, 18, 40);
         }
 
         void OpenPause()
