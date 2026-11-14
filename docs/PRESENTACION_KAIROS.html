@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KAIROS: Sombras en Altamar — Presentación Oficial & Manual Operativo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #070e14;
+      --bg-card: rgba(11, 26, 36, 0.75);
+      --bg-card-hover: rgba(16, 37, 51, 0.9);
+      --border: rgba(63, 224, 208, 0.18);
+      --border-bright: rgba(63, 224, 208, 0.45);
+      
+      --sonar-cyan: #3FE0D0;
+      --sonar-glow: rgba(63, 224, 208, 0.35);
+      --radar-amber: #FFD27A;
+      --sealed-green: #6CFF8A;
+      --danger-red: #FF4D4D;
+      --ocean-blue: #0B1A24;
+      --rust: #8A3B12;
+      
+      --text-main: #E2ECEF;
+      --text-dim: #8B9FA8;
+      --text-muted: #5B707B;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(63, 224, 208, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 90% 40%, rgba(32, 80, 255, 0.05) 0%, transparent 50%),
+        linear-gradient(to bottom, #070e14, #050b10);
+      min-height: 100vh;
+    }
+
+    /* Scanline effect */
+    body::before {
+      content: " ";
+      display: block;
+      position: fixed;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+      background-size: 100% 4px;
+      z-index: 999;
+      pointer-events: none;
+      opacity: 0.35;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem;
+    }
+
+    /* HEADER & HERO */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 2rem;
+      margin-bottom: 2.5rem;
+      position: relative;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(63, 224, 208, 0.1);
+      border: 1px solid var(--border-bright);
+      color: var(--sonar-cyan);
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--sealed-green);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--sealed-green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #FFFFFF 30%, var(--sonar-cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.8rem;
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--text-dim);
+      max-width: 780px;
+      font-weight: 300;
+      margin-bottom: 1.5rem;
+    }
+
+    .tagline-quote {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.1rem;
+      color: var(--radar-amber);
+      font-style: italic;
+      border-left: 3px solid var(--radar-amber);
+      padding-left: 1rem;
+      margin: 1.2rem 0;
+    }
+
+    /* NAV TABS */
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      margin-bottom: 2rem;
+      position: sticky;
+      top: 10px;
+      background: rgba(7, 14, 20, 0.95);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+      padding: 8px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      background: transparent;
+      color: var(--text-dim);
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn:hover {
+      color: var(--sonar-cyan);
+      background: rgba(63, 224, 208, 0.08);
+    }
+
+    .tab-btn.active {
+      color: #070e14;
+      background: var(--sonar-cyan);
+      box-shadow: 0 0 16px var(--sonar-glow);
+    }
+
+    /* TAB CONTENT PANELS */
+    .tab-pane {
+      display: none;
+      animation: fadeIn 0.35s ease;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* CARDS & GRIDS */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.6rem;
+      backdrop-filter: blur(10px);
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: var(--border-bright);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 0 18px rgba(63, 224, 208, 0.1);
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--sonar-cyan), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card-tag {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      color: var(--sonar-cyan);
+      text-transform: uppercase;
+      margin-bottom: 0.6rem;
+      display: block;
+    }
+
+    .card-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.35rem;
+      color: #FFF;
+      margin-bottom: 0.8rem;
+    }
+
+    /* TEAM MEMBERS STYLING */
+    .member-card {
+      border-top: 3px solid transparent;
+    }
+    .member-card.ab { border-top-color: var(--sonar-cyan); }
+    .member-card.dt { border-top-color: var(--radar-amber); }
+    .member-card.cv { border-top-color: var(--sealed-green); }
+
+    .member-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .member-badge {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .badge-cyan { background: rgba(63, 224, 208, 0.15); color: var(--sonar-cyan); border: 1px solid var(--border-bright); }
+    .badge-amber { background: rgba(255, 210, 122, 0.15); color: var(--radar-amber); border: 1px solid rgba(255, 210, 122, 0.4); }
+    .badge-green { background: rgba(108, 255, 138, 0.15); color: var(--sealed-green); border: 1px solid rgba(108, 255, 138, 0.4); }
+
+    .git-branch-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.45);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      color: var(--sonar-cyan);
+      border: 1px solid rgba(63, 224, 208, 0.2);
+      margin: 0.8rem 0;
+      text-decoration: none;
+      word-break: break-all;
+    }
+    .git-branch-pill:hover {
+      background: rgba(63, 224, 208, 0.15);
+      border-color: var(--sonar-cyan);
+    }
+
+    /* CODE TERMINAL BLOCKS */
+    .terminal-box {
+      background: #04090d;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      position: relative;
+      margin: 1.2rem 0;
+      overflow-x: auto;
+    }
+
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 0.8rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+    }
+
+    .terminal-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+    }
+    .td-red { background: #ff5f56; }
+    .td-yellow { background: #ffbd2e; }
+    .td-green { background: #27c93f; }
+
+    .cmd-line {
+      display: block;
+      color: #9cdcfe;
+      margin-bottom: 0.5rem;
+    }
+    .cmd-line span.prompt { color: var(--sonar-cyan); user-select: none; }
+    .cmd-line span.comment { color: var(--text-muted); font-style: italic; }
+
+    /* CORE LOOP FLOWCHART */
+    .phase-timeline {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.2rem;
+      margin: 2rem 0;
+      position: relative;
+    }
+
+    .phase-step {
+      background: rgba(11, 26, 36, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.4rem;
+      position: relative;
+    }
+
+    .phase-number {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--sonar-cyan);
+      opacity: 0.35;
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+
+    .phase-step.p1 .phase-number { color: var(--sonar-cyan); }
+    .phase-step.p2 .phase-number { color: #60a5fa; }
+    .phase-step.p3 .phase-number { color: var(--radar-amber); }
+    .phase-step.p4 .phase-number { color: var(--sealed-green); }
+
+    /* SCRIPT SPEECH GUIDE */
+    /* SCRIPT SPEECH GUIDE & TELEPROMPTER DINÁMICO */
+    .teleprompter-container {
+      background: rgba(11, 26, 36, 0.95);
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-top: 1.5rem;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.5), 0 0 25px rgba(63, 224, 208, 0.1);
+      position: relative;
+    }
+
+    .speaker-selector-bar {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      margin-bottom: 1.8rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .speaker-nav-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+
+    .speaker-nav-btn:hover {
+      background: rgba(63, 224, 208, 0.12);
+      border-color: var(--sonar-cyan);
+      color: #FFF;
+    }
+
+    .speaker-nav-btn.active-ab {
+      background: rgba(63, 224, 208, 0.2);
+      border-color: var(--sonar-cyan);
+      color: var(--sonar-cyan);
+      box-shadow: 0 0 16px var(--sonar-glow);
+    }
+
+    .speaker-nav-btn.active-dt {
+      background: rgba(255, 210, 122, 0.2);
+      border-color: var(--radar-amber);
+      color: var(--radar-amber);
+      box-shadow: 0 0 16px rgba(255, 210, 122, 0.3);
+    }
+
+    .speaker-nav-btn.active-cv {
+      background: rgba(108, 255, 138, 0.2);
+      border-color: var(--sealed-green);
+      color: var(--sealed-green);
+      box-shadow: 0 0 16px rgba(108, 255, 138, 0.3);
+    }
+
+    .speaker-slide {
+      display: none;
+      animation: slideIn 0.3s ease;
+    }
+
+    .speaker-slide.active {
+      display: block;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .speech-bubble {
+      background: #040d13;
+      border: 1px solid var(--border-bright);
+      border-radius: 14px;
+      padding: 1.8rem;
+      font-size: 1.15rem;
+      line-height: 1.8;
+      color: #F0F6F8;
+      position: relative;
+      margin-bottom: 1.5rem;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.4);
+    }
+
+    .speech-bubble mark {
+      background: rgba(63, 224, 208, 0.2);
+      color: var(--sonar-cyan);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .unity-cue-card {
+      background: rgba(255, 210, 122, 0.08);
+      border: 1px dashed var(--radar-amber);
+      border-radius: 12px;
+      padding: 1.2rem 1.4rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 1.5rem;
+    }
+
+    .unity-cue-icon {
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .timer-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      background: rgba(0,0,0,0.3);
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 1.5rem;
+    }
+
+    .timer-display {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--sonar-cyan);
+      min-width: 60px;
+    }
+
+    .timer-progress {
+      flex: 1;
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .timer-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--sonar-cyan), var(--radar-amber));
+      transition: width 1s linear;
+    }
+
+    .teleprompter-controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .control-btn {
+      background: rgba(255, 255, 255, 0.08);
+      color: #FFF;
+      border: 1px solid var(--border);
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .control-btn:hover {
+      background: var(--sonar-cyan);
+      color: #070e14;
+      border-color: var(--sonar-cyan);
+    }
+
+    /* CHECKLIST LISTS */
+    .checklist {
+      list-style: none;
+      margin: 1rem 0;
+    }
+    .checklist li {
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-dim);
+      font-size: 0.92rem;
+    }
+    .checklist li.done { color: var(--text-main); }
+    .checklist li.done::before {
+      content: "✔";
+      color: var(--sealed-green);
+      font-weight: bold;
+    }
+    .checklist li.pending::before {
+      content: "○";
+      color: var(--radar-amber);
+      font-weight: bold;
+    }
+
+    /* FOOTER */
+    footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    /* UTILS */
+    .pill {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .btn-github {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #24292e;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 10px 18px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    .btn-github:hover {
+      background: #2f363d;
+      border-color: var(--sonar-cyan);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- HEADER -->
+    <header>
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        Unity 6.3 LTS · HDRP/URP · Git LFS · Repositorio Oficial
+      </div>
+      <h1>KAIROS: Sombras en Altamar</h1>
+      <p class="subtitle">
+        Aventura de investigación 3D, navegación táctica, inspección logística y sigilo de contrainteligencia no violento en aguas internacionales.
+      </p>
+      <div class="tagline-quote">
+        "En el mar abierto, la ley no llega; la verdad es la única arma."
+      </div>
+      <div style="display: flex; gap: 12px; margin-top: 1.5rem; flex-wrap: wrap;">
+        <a href="https://github.com/Efustion23/Kairos_Videojuego" target="_blank" class="btn-github">
+          <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+          Repositorio en GitHub
+        </a>
+        <a href="https://github.com/Efustion23/Kairos_Videojuego/issues" target="_blank" class="btn-github" style="background: rgba(63, 224, 208, 0.12); color: var(--sonar-cyan); border-color: var(--border-bright);">
+          Tablero de 18 Issues Activas
+        </a>
+      </div>
+    </header>
+
+    <!-- NAVIGATION TABS -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" onclick="openTab(event, 'tab-equipo')">
+        👥 1. El Equipo & Ramas Git
+      </button>
+      <button class="tab-btn" onclick="openTab(event, 'tab-bucle')">
+        🔄 2. Concepto & Bucle 4 Fases
+      </button>
+      <button class="tab-btn" onclick="openTab(event, 'tab-git')">
+        🌿 3. Manual de Ramas & Unity
+      </button>
+      <button class="tab-btn" onclick="openTab(event, 'tab-exposicion')">
+        🎙️ 4. Guion para Exposición
+      </button>
+    </nav>
+
+    <!-- ==================== TAB 1: EL EQUIPO Y ROLES ==================== -->
+    <div id="tab-equipo" class="tab-pane active">
+      <div style="margin-bottom: 1.5rem;">
+        <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; margin-bottom: 0.4rem;">Integrantes y Asignación de Tareas</h2>
+        <p style="color: var(--text-dim);">Cada integrante tiene una rama dedicada, cuenta oficial en GitHub y horarios definidos para no generar conflictos de escenas en Unity.</p>
+      </div>
+
+      <div class="grid-3">
+        
+        <!-- ALEXANDER BENITES -->
+        <div class="card member-card ab">
+          <div class="member-header">
+            <div>
+              <span class="card-tag">LÍDER DE DISEÑO & UX</span>
+              <h3 class="card-title" style="margin-bottom: 0.2rem;">Alexander Benites</h3>
+              <a href="https://github.com/Alexander5642" target="_blank" style="color: var(--sonar-cyan); font-family: 'Fira Code', monospace; font-size: 0.85rem; text-decoration: none;">@Alexander5642</a>
+            </div>
+            <span class="member-badge badge-cyan">AB</span>
+          </div>
+          <p style="font-size: 0.92rem; color: var(--text-dim); margin-bottom: 0.8rem;">
+            Dirección de Diseño de Juego, UI/UX (Canvas/TMP), Narrativa, Códice de la OIT y Gestión de Escenas.
+          </p>
+          <a href="https://github.com/Efustion23/Kairos_Videojuego/tree/feature/alexander-ui-narrativa" target="_blank" class="git-branch-pill">
+            🌿 feature/alexander-ui-narrativa
+          </a>
+          <div style="font-size: 0.82rem; color: var(--text-muted); margin: 0.4rem 0;">
+            ⏰ Lun, Mié y Vie / Sáb · 18:00 – 21:00
+          </div>
+          <div style="margin-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 0.8rem;">
+            <strong style="font-size: 0.85rem; color: var(--text-main);">Tareas Clave (Semanas 10–15):</strong>
+            <ul class="checklist">
+              <li class="done">[S10-1] Diseño nivel buque y radar</li>
+              <li class="done">[S11-1] Interfaz satelital Fase 1</li>
+              <li class="pending">[S12-1] Visor de sonar y sospecha</li>
+              <li class="pending">[S13-1] Diálogos y confianza víctimas</li>
+              <li class="pending">[S14-1] Maletín de pruebas SHA-256</li>
+              <li class="pending">[S15-1] Usabilidad y menú de inicio</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- DIEGO TORNERO -->
+        <div class="card member-card dt">
+          <div class="member-header">
+            <div>
+              <span class="card-tag">PROGRAMACIÓN PRINCIPAL</span>
+              <h3 class="card-title" style="margin-bottom: 0.2rem;">Diego Tornero</h3>
+              <a href="https://github.com/Efustion23" target="_blank" style="color: var(--radar-amber); font-family: 'Fira Code', monospace; font-size: 0.85rem; text-decoration: none;">@Efustion23</a>
+            </div>
+            <span class="member-badge badge-amber">DT</span>
+          </div>
+          <p style="font-size: 0.92rem; color: var(--text-dim); margin-bottom: 0.8rem;">
+            Programación de Mecánicas en C#, CharacterController, Flotabilidad de lancha, Sonar Raycast e IA de Guardias.
+          </p>
+          <a href="https://github.com/Efustion23/Kairos_Videojuego/tree/feature/diego-gameplay-ia" target="_blank" class="git-branch-pill" style="color: var(--radar-amber); border-color: rgba(255, 210, 122, 0.3);">
+            🌿 feature/diego-gameplay-ia
+          </a>
+          <div style="font-size: 0.82rem; color: var(--text-muted); margin: 0.4rem 0;">
+            ⏰ Mar, Jue y Vie / Sáb · 18:00 – 21:00
+          </div>
+          <div style="margin-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 0.8rem;">
+            <strong style="font-size: 0.85rem; color: var(--text-main);">Tareas Clave (Semanas 10–15):</strong>
+            <ul class="checklist">
+              <li class="done">[S10-2] Setup Git y movimiento sigilo</li>
+              <li class="done">[S11-2] Conducción lancha y olas</li>
+              <li class="pending">[S12-2] Pulso de sonar en casco</li>
+              <li class="pending">[S13-2] IA de guardias y NavMesh</li>
+              <li class="pending">[S14-2] Cámara fotográfica de pruebas</li>
+              <li class="pending">[S15-2] 60 FPS y Build Final (.exe)</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- CHRISTOPHER VELIZ -->
+        <div class="card member-card cv">
+          <div class="member-header">
+            <div>
+              <span class="card-tag">ARTE 3D & AUDIO</span>
+              <h3 class="card-title" style="margin-bottom: 0.2rem;">Christopher Veliz</h3>
+              <a href="https://github.com/christopher-26" target="_blank" style="color: var(--sealed-green); font-family: 'Fira Code', monospace; font-size: 0.85rem; text-decoration: none;">@christopher-26</a>
+            </div>
+            <span class="member-badge badge-green">CV</span>
+          </div>
+          <p style="font-size: 0.92rem; color: var(--text-dim); margin-bottom: 0.8rem;">
+            Modelado 3D Modular, Shaders de Océano y Térmica, Iluminación Volumétrica, Audio FMOD y Post-Processing.
+          </p>
+          <a href="https://github.com/Efustion23/Kairos_Videojuego/tree/feature/christopher-arte-audio" target="_blank" class="git-branch-pill" style="color: var(--sealed-green); border-color: rgba(108, 255, 138, 0.3);">
+            🌿 feature/christopher-arte-audio
+          </a>
+          <div style="font-size: 0.82rem; color: var(--text-muted); margin: 0.4rem 0;">
+            ⏰ Lun, Mié, Jue / Sáb · 18:00 – 21:00
+          </div>
+          <div style="margin-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 0.8rem;">
+            <strong style="font-size: 0.85rem; color: var(--text-main);">Tareas Clave (Semanas 10–15):</strong>
+            <ul class="checklist">
+              <li class="done">[S10-3] Barco 3D modular y mar</li>
+              <li class="done">[S11-3] Óxido e iluminación cubierta</li>
+              <li class="pending">[S12-3] Shader barrido cian y sonar</li>
+              <li class="pending">[S13-3] Camarotes, personajes y audio</li>
+              <li class="pending">[S14-3] Props coleccionables 3D</li>
+              <li class="pending">[S15-3] Post-Processing y video tráiler</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ==================== TAB 2: CONCEPTO Y BUCLE 4 FASES ==================== -->
+    <div id="tab-bucle" class="tab-pane">
+      <div style="margin-bottom: 2rem;">
+        <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; margin-bottom: 0.4rem;">El Bucle de Juego de 4 Fases (Core Loop)</h2>
+        <p style="color: var(--text-dim);">Un bucle sistémico e híbrido que evoluciona desde la estrategia orbital hasta la infiltración táctica en cubierta y el juicio judicial.</p>
+      </div>
+
+      <div class="phase-timeline">
+        
+        <div class="phase-step p1">
+          <div class="phase-number">01</div>
+          <span class="card-tag">MACRO-GAMEPLAY</span>
+          <h4 style="font-size: 1.15rem; color: #FFF; margin-bottom: 0.5rem;">Rastreo Satelital & AIS</h4>
+          <p style="font-size: 0.88rem; color: var(--text-dim); margin-bottom: 0.8rem;">
+            Monitoreo en el Centro de Operaciones sobre globo 3D. Cruce de capas de radar SAR, luces nocturnas (VIIRS) y apagados de AIS.
+          </p>
+          <div style="background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.78rem; color: var(--sonar-cyan);">
+            Condición: IR ≥ 60 puntos
+          </div>
+        </div>
+
+        <div class="phase-step p2">
+          <div class="phase-number">02</div>
+          <span class="card-tag">MID-GAMEPLAY</span>
+          <h4 style="font-size: 1.15rem; color: #FFF; margin-bottom: 0.5rem;">Sonar, Vóxeles & Dron</h4>
+          <p style="font-size: 0.88rem; color: var(--text-dim); margin-bottom: 0.8rem;">
+            Aproximación en lancha RHIB. Pulsos acústicos en cresta de ola, reconstrucción en vóxeles (0.5m) del casco y cálculo de habitabilidad.
+          </p>
+          <div style="background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.78rem; color: #60a5fa;">
+            Condición: Confianza ≥ 70%
+          </div>
+        </div>
+
+        <div class="phase-step p3">
+          <div class="phase-number">03</div>
+          <span class="card-tag">MICRO-GAMEPLAY</span>
+          <h4 style="font-size: 1.15rem; color: #FFF; margin-bottom: 0.5rem;">Infiltración No Violenta</h4>
+          <p style="font-size: 0.88rem; color: var(--text-dim); margin-bottom: 0.8rem;">
+            Abordaje en tormenta nocturna. Sigilo ambiental sin armas, recolección de los 11 Indicadores OIT y maletín con hash SHA-256.
+          </p>
+          <div style="background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.78rem; color: var(--radar-amber);">
+            Condición: Prueba Cat A Sellada
+          </div>
+        </div>
+
+        <div class="phase-step p4">
+          <div class="phase-number">04</div>
+          <span class="card-tag">META-GAMEPLAY</span>
+          <h4 style="font-size: 1.15rem; color: #FFF; margin-bottom: 0.5rem;">Juicio & Grafo Financiero</h4>
+          <p style="font-size: 0.88rem; color: var(--text-dim); margin-bottom: 0.8rem;">
+            Sala de Situación Judicial. Conexión de pruebas contra empresas fachada y Tidewater Holdings. Cierre de puertos (PSMA) y decomiso.
+          </p>
+          <div style="background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.78rem; color: var(--sealed-green);">
+            Recompensa: 15% Fondo Decomiso
+          </div>
+        </div>
+
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <span class="card-tag">FUNDAMENTOS DOCUMENTALES</span>
+          <h3 class="card-title">Inspiración en el Mundo Real</h3>
+          <ul style="color: var(--text-dim); font-size: 0.92rem; padding-left: 1.2rem; line-height: 1.8;">
+            <li><strong>The Outlaw Ocean Project (Ian Urbina):</strong> Reportajes de abusos en altamar e impunidad jurídica fuera de las ZEE.</li>
+            <li><strong>Global Fishing Watch & Nature (2024):</strong> El 72% a 76% de la flota pesquera industrial opera sin AIS público (flota oscura).</li>
+            <li><strong>Convenio 188 de la OIT:</strong> Normas obligatorias sobre trabajo en la pesca, listas de tripulantes y descanso.</li>
+            <li><strong>Acuerdo PSMA (FAO):</strong> Bloqueo y denegación de entrada a puertos para buques infractores.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <span class="card-tag">TÉCNICA DE DESARROLLO CLAVE</span>
+          <h3 class="card-title">"Barco Estático, Mar que se Mueve"</h3>
+          <p style="color: var(--text-dim); font-size: 0.92rem; line-height: 1.7; margin-bottom: 1rem;">
+            Para que la Fase 3 de infiltración tenga <strong>físicas estables al 100%</strong>, el buque pesquero permanece quieto en coordenadas locales de Unity.
+          </p>
+          <p style="color: var(--text-dim); font-size: 0.92rem; line-height: 1.7;">
+            El NavMesh, los raycasts de los conos de visión y el CharacterController no sufren descalibración por cabeceo. El efecto de marea se logra desplazando el plano del océano y las coordenadas globales del shader.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 3: MANUAL DE RAMAS Y UNITY ==================== -->
+    <div id="tab-git" class="tab-pane">
+      <div style="margin-bottom: 2rem;">
+        <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; margin-bottom: 0.4rem;">Manual de Git y Reglas de Unity</h2>
+        <p style="color: var(--text-dim);">Protocolo estricto para que los 3 desarrolladores trabajen en paralelo sin corromper escenas ni generar conflictos de fusión.</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <span class="card-tag" style="color: var(--danger-red);">REGLAS DE ORO EN UNITY</span>
+          <h3 class="card-title">Para Evitar Conflictos de Escena</h3>
+          <ol style="color: var(--text-dim); font-size: 0.92rem; padding-left: 1.2rem; line-height: 1.8;">
+            <li><strong style="color: #FFF;">Nunca abran ni editen la misma escena a la vez:</strong> Cada integrante trabaja en su escena sandbox o mediante Prefabs modulares.</li>
+            <li><strong style="color: #FFF;">Archivos .meta obligatorios:</strong> Todo nuevo script, audio o modelo debe comitearse junto a su archivo <code class="pill">.meta</code> correspondiente.</li>
+            <li><strong style="color: #FFF;">Guardar antes de Git:</strong> En Unity presionar <code class="pill">Ctrl + S</code> y luego <code class="pill">File -> Save Project</code>.</li>
+            <li><strong style="color: #FFF;">Git LFS activo:</strong> Modelos 3D (.fbx), texturas (.png, .psd) y audios pesados pasan por LFS automáticamente mediante <code class="pill">.gitattributes</code>.</li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <span class="card-tag">CONVENCIÓN DE COMMITS</span>
+          <h3 class="card-title">Formato de Mensajes</h3>
+          <p style="color: var(--text-dim); font-size: 0.92rem; margin-bottom: 0.8rem;">
+            Utilizamos el estándar de <strong>Conventional Commits</strong> para que el historial sea claro:
+          </p>
+          <div style="font-family: 'Fira Code', monospace; font-size: 0.82rem; color: var(--text-main); line-height: 1.8;">
+            <div><span style="color: var(--sonar-cyan);">feat(...)</span>: Nuevas mecánicas o scripts</div>
+            <div><span style="color: var(--sealed-green);">art(...)</span>: Modelos 3D, shaders, texturas</div>
+            <div><span style="color: var(--radar-amber);">ui(...)</span>: HUD, Canvas o menús</div>
+            <div><span style="color: #60a5fa;">audio(...)</span>: Efectos de sonido y música</div>
+            <div><span style="color: var(--danger-red);">fix(...)</span>: Corrección de errores</div>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; margin: 1.8rem 0 0.8rem 0;">Comandos de Terminal para Cada Integrante</h3>
+
+      <div class="terminal-box">
+        <div class="terminal-header">
+          <span class="terminal-dot td-red"></span>
+          <span class="terminal-dot td-yellow"></span>
+          <span class="terminal-dot td-green"></span>
+          <span>bash · Flujo diario de trabajo</span>
+        </div>
+        <span class="cmd-line"><span class="comment"># 1. Cambiarse a su rama oficial al iniciar</span></span>
+        <span class="cmd-line"><span class="prompt">$</span> git checkout feature/alexander-ui-narrativa <span class="comment"># (o diego-gameplay-ia / christopher-arte-audio)</span></span>
+        <span class="cmd-line"><span class="prompt">$</span> git pull origin develop <span class="comment"># Traer lo nuevo integrado por los compañeros</span></span>
+        <br>
+        <span class="cmd-line"><span class="comment"># 2. Tras avanzar en Unity y guardar escena (Ctrl+S)</span></span>
+        <span class="cmd-line"><span class="prompt">$</span> git status <span class="comment"># Revisar archivos cambiados</span></span>
+        <span class="cmd-line"><span class="prompt">$</span> git add . <span class="comment"># Incluye scripts, prefabs y .meta</span></span>
+        <span class="cmd-line"><span class="prompt">$</span> git commit -m "feat(modulo): descripcion clara de lo realizado"</span>
+        <span class="cmd-line"><span class="prompt">$</span> git push origin feature/alexander-ui-narrativa</span>
+        <br>
+        <span class="cmd-line"><span class="comment"># 3. En GitHub.com abrir Pull Request hacia 'develop' para revisión</span></span>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 4: GUION PARA EXPOSICIÓN ==================== -->
+    <div id="tab-exposicion" class="tab-pane">
+      <div style="margin-bottom: 1.5rem;">
+        <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; margin-bottom: 0.4rem;">Guion Interactivo de Exposición (Teleprompter)</h2>
+        <p style="color: var(--text-dim);">Haz clic en cada integrante para ver exactamente qué decir con palabras simples, qué acción mostrar en Unity y cronometrar los 60 segundos.</p>
+      </div>
+
+      <div class="teleprompter-container">
+        
+        <!-- SELECTOR DE ORADOR -->
+        <div class="speaker-selector-bar">
+          <button class="speaker-nav-btn active-ab" id="sbtn-0" onclick="setSpeaker(0)">
+            <span style="font-size: 1.2rem;">🎙️</span> 1. Alexander (Intro & Idea)
+          </button>
+          <button class="speaker-nav-btn" id="sbtn-1" onclick="setSpeaker(1)">
+            <span style="font-size: 1.2rem;">⚙️</span> 2. Diego (Mecánicas & IA)
+          </button>
+          <button class="speaker-nav-btn" id="sbtn-2" onclick="setSpeaker(2)">
+            <span style="font-size: 1.2rem;">🌊</span> 3. Christopher (Arte & Mar)
+          </button>
+          <button class="speaker-nav-btn" id="sbtn-3" onclick="setSpeaker(3)">
+            <span style="font-size: 1.2rem;">🎯</span> 4. Alexander (Cierre & Demo)
+          </button>
+        </div>
+
+        <!-- BARRA DE CRONÓMETRO -->
+        <div class="timer-bar-wrap">
+          <button class="control-btn" id="timer-toggle-btn" onclick="toggleTimer()">
+            ▶ Iniciar Cronómetro
+          </button>
+          <button class="control-btn" onclick="resetTimer()" style="padding: 9px 12px;">
+            ↺ Reset
+          </button>
+          <span class="timer-display" id="timer-text">01:00</span>
+          <div class="timer-progress">
+            <div class="timer-fill" id="timer-bar"></div>
+          </div>
+          <button class="control-btn" onclick="copyCurrentSpeech()" style="background: rgba(63,224,208,0.15); color: var(--sonar-cyan); border-color: var(--border-bright);">
+            📋 Copiar Guion
+          </button>
+        </div>
+
+        <!-- SLIDE 1: ALEXANDER INTRO -->
+        <div class="speaker-slide active" id="sslide-0">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+              <span class="card-tag" style="color: var(--sonar-cyan);">TURNO 1 · PRESENTACIÓN Y CONCEPTO GENERAL</span>
+              <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; color: #FFF;">Alexander Benites Fierro</h3>
+            </div>
+            <span class="member-badge badge-cyan">⏱ 60 SEGUNDOS</span>
+          </div>
+
+          <div class="unity-cue-card">
+            <span class="unity-cue-icon">🎬</span>
+            <div>
+              <strong style="color: var(--radar-amber); font-size: 0.92rem; display: block; margin-bottom: 2px;">QUÉ MOSTRAR EN PANTALLA EN UNITY MIENTRAS HABLAS:</strong>
+              <span style="color: var(--text-dim); font-size: 0.88rem;">
+                Ten abierta la pantalla de inicio o el mapa del centro de control con el título de KAIROS en grande. Muestra el diseño visual limpio.
+              </span>
+            </div>
+          </div>
+
+          <div class="speech-bubble" id="speech-text-0">
+            "Buenos días profesor. Nuestro juego se llama <mark>KAIROS: Sombras en Altamar</mark>.<br><br>
+            La idea del juego está basada en una realidad que ocurre en aguas internacionales: muchos barcos pesqueros grandes apagan sus señales satelitales para pescar ilegalmente y mantener tripulaciones en trabajo forzado durante meses sin tocar tierra firme.<br><br>
+            En nuestro juego, tú no eres un soldado ni tienes armas letales. Eres un <mark>inspector civil</mark>. Tu objetivo es rastrear el barco, subirte de noche en medio de una tormenta y reunir pruebas reales para llevar a la empresa a un juicio marítimo y rescatar a las personas.<br><br>
+            Mi rol en el equipo fue la <strong>Dirección de Diseño, la Interfaz y la Narrativa</strong>: diseñé los paneles en pantalla, el sistema de diálogos basado en el consentimiento de las víctimas, y la estructura de las 4 fases de juego.<br><br>
+            Ahora le doy el pase a mi compañero Diego, que se encargó de la programación en Unity."
+          </div>
+        </div>
+
+        <!-- SLIDE 2: DIEGO PROGRAMACIÓN -->
+        <div class="speaker-slide" id="sslide-1">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+              <span class="card-tag" style="color: var(--radar-amber);">TURNO 2 · MECÁNICAS, SONAR E INTELIGENCIA ARTIFICIAL</span>
+              <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; color: #FFF;">Diego Tornero Bermudez</h3>
+            </div>
+            <span class="member-badge badge-amber">⏱ 60 SEGUNDOS</span>
+          </div>
+
+          <div class="unity-cue-card" style="border-color: var(--radar-amber);">
+            <span class="unity-cue-icon">🎬</span>
+            <div>
+              <strong style="color: var(--radar-amber); font-size: 0.92rem; display: block; margin-bottom: 2px;">QUÉ MOSTRAR EN PANTALLA EN UNITY MIENTRAS HABLAS:</strong>
+              <span style="color: var(--text-dim); font-size: 0.88rem;">
+                Dale al botón Play (▶). Mueve la lancha sobre el oleaje hacia el barco, muestra el personaje en tercera persona agachándose y los conos de visión de los guardias.
+              </span>
+            </div>
+          </div>
+
+          <div class="speech-bubble" id="speech-text-1">
+            "Buenos días profesor. Mi rol en el equipo fue la <strong>Programación Principal en Unity con C#</strong>.<br><br>
+            En mi parte me encargué de que todas las mecánicas funcionen fluidas:<br>
+            1. <strong>El personaje:</strong> Programé el movimiento en tercera persona, la cámara orbital, el modo sigilo agachado y cómo trepar escaleras.<br>
+            2. <strong>La lancha y el sonar:</strong> Programé la física de flotación sobre las olas y el disparo del sonar para escanear las bodegas del barco y detectar dónde hay personas.<br>
+            3. <strong>La Inteligencia Artificial de los guardias:</strong> Los guardias patrullan con NavMesh. Tienen conos de visión dinámicos y detectan el ruido si corres. Si te descubren, entran en alerta y ocultan las evidencias.<br>
+            4. Todo corre optimizado a 60 cuadros por segundo sin caídas de framerate.<br><br>
+            Ahora mi compañero Christopher les explicará el arte 3D y el audio."
+          </div>
+        </div>
+
+        <!-- SLIDE 3: CHRISTOPHER ARTE Y AUDIO -->
+        <div class="speaker-slide" id="sslide-2">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+              <span class="card-tag" style="color: var(--sealed-green);">TURNO 3 · MODELADO 3D, ENTORNO MARÍTIMO Y SONIDO</span>
+              <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; color: #FFF;">Christopher Veliz Cochachi</h3>
+            </div>
+            <span class="member-badge badge-green">⏱ 60 SEGUNDOS</span>
+          </div>
+
+          <div class="unity-cue-card" style="border-color: var(--sealed-green);">
+            <span class="unity-cue-icon">🎬</span>
+            <div>
+              <strong style="color: var(--sealed-green); font-size: 0.92rem; display: block; margin-bottom: 2px;">QUÉ MOSTRAR EN PANTALLA EN UNITY MIENTRAS HABLAS:</strong>
+              <span style="color: var(--text-dim); font-size: 0.88rem;">
+                Acerca la cámara al barco pesquero Hai Feng 77: enfoca los focos amarillos halógenos, la niebla nocturna, el agua marina y las texturas de óxido.
+              </span>
+            </div>
+          </div>
+
+          <div class="speech-bubble" id="speech-text-2">
+            "Buenos días profesor. Mi rol en el equipo fue la <strong>Dirección de Arte 3D, el Entorno Marítimo y el Sonido</strong>.<br><br>
+            Para darle al juego una atmósfera realista y de tensión nocturna:<br>
+            1. <strong>El barco en 3D:</strong> Modele la estructura modular del barco pesquero <em>Hai Feng 77</em>, aplicando materiales de acero oxidado por la sal marina.<br>
+            2. <strong>El océano y el clima:</strong> Creé el shader de oleaje nocturno, la lluvia y la niebla volumétrica con luces halógenas amarillas en cubierta.<br>
+            3. <strong>Objetos coleccionables:</strong> Diseñé las pruebas físicas que debes fotografiar: la radio VHF, la bitácora de navegación y los pasaportes retenidos.<br>
+            4. <strong>Diseño sonoro:</strong> Configuré el audio inmersivo con el sonido de las olas, el viento de tormenta, los crujidos del casco y los pasos sobre metal.<br><br>
+            Le regreso la palabra a Alexander para el cierre."
+          </div>
+        </div>
+
+        <!-- SLIDE 4: ALEXANDER CIERRE -->
+        <div class="speaker-slide" id="sslide-3">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+              <span class="card-tag" style="color: var(--sonar-cyan);">TURNO 4 · ORGANIZACIÓN PROFESIONAL Y CONCLUSIÓN</span>
+              <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; color: #FFF;">Alexander Benites Fierro</h3>
+            </div>
+            <span class="member-badge badge-cyan">⏱ 30 SEGUNDOS</span>
+          </div>
+
+          <div class="unity-cue-card">
+            <span class="unity-cue-icon">🎬</span>
+            <div>
+              <strong style="color: var(--radar-amber); font-size: 0.92rem; display: block; margin-bottom: 2px;">QUÉ MOSTRAR EN PANTALLA MIENTRAS HABLAS:</strong>
+              <span style="color: var(--text-dim); font-size: 0.88rem;">
+                Abre en el navegador la pestaña de GitHub con las 18 Issues organizadas por integrante y muestra la consola de Unity compilando 100% limpia sin errores.
+              </span>
+            </div>
+          </div>
+
+          <div class="speech-bubble" id="speech-text-3">
+            "Para trabajar de forma profesional como en un estudio real, utilizamos <strong>GitHub</strong>:<br><br>
+            Cada uno de nosotros trabajó en su propia rama dedicada para no generar conflictos en Unity, configuramos Git LFS para los modelos 3D y tenemos un tablero con las <mark>18 tareas oficiales asignadas</mark> semana a semana.<br><br>
+            Ahora pasamos a demostrarles el proyecto en vivo directamente en Unity. Muchas gracias."
+          </div>
+        </div>
+
+        <!-- BOTONES DE NAVEGACIÓN INFERIORES -->
+        <div class="teleprompter-controls">
+          <button class="control-btn" id="prev-speaker-btn" onclick="prevSpeaker()">
+            ◀ Anterior
+          </button>
+          <span style="color: var(--text-muted); font-size: 0.88rem; font-family: 'Fira Code', monospace;" id="step-counter">
+            Paso 1 de 4
+          </span>
+          <button class="control-btn" id="next-speaker-btn" onclick="nextSpeaker()" style="background: var(--sonar-cyan); color: #070e14; border-color: var(--sonar-cyan);">
+            Siguiente Integrante ▶
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+      <p>KAIROS: Sombras en Altamar · Proyecto de Videojuego en Unity 6 LTS</p>
+      <p style="margin-top: 4px; font-size: 0.78rem;">Alexander Benites (@Alexander5642) · Diego Tornero (@Efustion23) · Christopher Veliz (@christopher-26)</p>
+    </footer>
+
+  </div>
+
+  <script>
+    // Tab Navigation
+    function openTab(evt, tabId) {
+      const panes = document.querySelectorAll('.tab-pane');
+      panes.forEach(pane => pane.classList.remove('active'));
+
+      const buttons = document.querySelectorAll('.tab-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+
+      document.getElementById(tabId).classList.add('active');
+      evt.currentTarget.classList.add('active');
+    }
+
+    // Teleprompter Speaker Navigation
+    let currentSpeaker = 0;
+    const totalSpeakers = 4;
+
+    function setSpeaker(idx) {
+      currentSpeaker = idx;
+      for (let i = 0; i < totalSpeakers; i++) {
+        const slide = document.getElementById(`sslide-${i}`);
+        const btn = document.getElementById(`sbtn-${i}`);
+        if (slide) slide.classList.remove('active');
+        if (btn) {
+          btn.className = 'speaker-nav-btn';
+        }
+      }
+
+      const activeSlide = document.getElementById(`sslide-${idx}`);
+      const activeBtn = document.getElementById(`sbtn-${idx}`);
+      if (activeSlide) activeSlide.classList.add('active');
+      if (activeBtn) {
+        if (idx === 0 || idx === 3) activeBtn.classList.add('active-ab');
+        else if (idx === 1) activeBtn.classList.add('active-dt');
+        else if (idx === 2) activeBtn.classList.add('active-cv');
+      }
+
+      document.getElementById('step-counter').innerText = `Paso ${idx + 1} de ${totalSpeakers}`;
+      resetTimer();
+    }
+
+    function nextSpeaker() {
+      if (currentSpeaker < totalSpeakers - 1) {
+        setSpeaker(currentSpeaker + 1);
+      } else {
+        setSpeaker(0);
+      }
+    }
+
+    function prevSpeaker() {
+      if (currentSpeaker > 0) {
+        setSpeaker(currentSpeaker - 1);
+      }
+    }
+
+    // Interactive Timer
+    let timerInterval = null;
+    let timeLeft = 60;
+    const maxTime = 60;
+
+    function toggleTimer() {
+      const btn = document.getElementById('timer-toggle-btn');
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        btn.innerText = '▶ Reanudar Cronómetro';
+      } else {
+        btn.innerText = '⏸ Pausar';
+        timerInterval = setInterval(() => {
+          if (timeLeft > 0) {
+            timeLeft--;
+            updateTimerDisplay();
+          } else {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            btn.innerText = '✔ ¡Tiempo cumplido!';
+          }
+        }, 1000);
+      }
+    }
+
+    function resetTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      timeLeft = 60;
+      document.getElementById('timer-toggle-btn').innerText = '▶ Iniciar Cronómetro';
+      updateTimerDisplay();
+    }
+
+    function updateTimerDisplay() {
+      const mins = Math.floor(timeLeft / 60);
+      const secs = timeLeft % 60;
+      document.getElementById('timer-text').innerText = 
+        `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      
+      const pct = ((maxTime - timeLeft) / maxTime) * 100;
+      document.getElementById('timer-bar').style.width = `${pct}%`;
+    }
+
+    // Copy Speech to Clipboard
+    function copyCurrentSpeech() {
+      const bubble = document.getElementById(`speech-text-${currentSpeaker}`);
+      if (!bubble) return;
+      const textToCopy = bubble.innerText;
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        alert("¡Guion copiado al portapapeles! Listo para pegar en WhatsApp o notas.");
+      });
+    }
+  </script>
+</body>
+</html>
+
