@@ -61,12 +61,23 @@ namespace Kairos
         void OpenPause()
         {
             SetOverlay(Mode.Menu);
-            var p = UI.Panel(overlay, new Vector2(.34f, .25f), new Vector2(.66f, .75f));
-            var s = UI.VStack(p.transform, 26, 10);
-            UI.Line(s, "Pausa", 34, Pal.Sonar, true);
-            UI.Line(s, "WASD mover · Shift correr · Ratón mirar\nE usar lo que tienes delante\nF visor · Q herramienta · Tab maletín\nClic derecho: fotografiar de lejos", 20, Pal.Dim);
-            UI.Btn(s, "Continuar", CloseOverlay, Pal.Sealed);
-            UI.Btn(s, "Volver a la base (tu avance queda guardado)", Game.GoToMenu, Pal.Dim);
+            var p = UI.Panel(overlay, new Vector2(.28f, .16f), new Vector2(.72f, .84f));
+            var s = UI.VStack(p.transform, 24, 8);
+
+            // Cabecera estilizada de Pausa (Alexander - S15-1)
+            UI.Line(s, "KAIROS · OPERACIÓN EN PAUSA", 32, Pal.Sonar, true);
+            UI.Line(s, $"Misión en Curso: <b>Hai Feng 77</b>  |  Agente: {Game.Inspector}", 18, Pal.Dim);
+
+            // Resumen de estado de misión
+            UI.Line(s, $"\n<b>Estado Táctico:</b> Pruebas selladas: <color=#6CFF8A>{C.evidence.Count}/{CaseData.MaxEvidence}</color>  ·  Clima: <color=#3FE0D0>Douglas {Ocean.Douglas:0.0}</color>", 19, Pal.Text);
+
+            // Guía de Controles y Usabilidad
+            UI.Line(s, "\n<b>Controles de Operación:</b>", 19, Pal.DeckLight);
+            UI.Line(s, "• <color=#3FE0D0>WASD</color>: Desplazamiento táctico  |  <color=#3FE0D0>Shift</color>: Correr (alerta acústica)\n• <color=#3FE0D0>[E]</color>: Interactuar / Fotografiar prueba  |  <color=#3FE0D0>[F]</color>: Visor térmico-acústico\n• <color=#3FE0D0>[Q]</color>: Dispositivo táctico (Aturdir/Bloqueador)  |  <color=#3FE0D0>[Tab]</color>: Maletín forense\n• <color=#3FE0D0>Clic Derecho</color>: Teleobjetivo de cámara forense", 17, Pal.Dim);
+
+            UI.Line(s, " ", 8);
+            UI.Btn(s, "Reanudar Misión", CloseOverlay, Pal.Sealed, 22, 48);
+            UI.Btn(s, "Regresar a la Base (Progreso guardado)", Game.GoToMenu, Pal.Dim, 19, 44);
         }
 
         public void OpenExitMenu()

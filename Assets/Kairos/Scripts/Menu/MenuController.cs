@@ -49,6 +49,9 @@ namespace Kairos
             if (Game.HasSave) UI.Btn(col, "Continuar", ShowBase, Pal.Sealed, 26, 56);
             UI.Btn(col, "Nueva partida", () => { Game.NewGame(); ShowWarning(); }, Pal.Sonar, 26, 56);
             UI.Btn(col, "Salir", Application.Quit, Pal.Dim, 22, 46);
+            UI.Line(col, " ", 14);
+            UI.Line(col, "Desarrollado por: Alexander Benites · Diego Tornero · Christopher Veliz", 15, Pal.Dim);
+            UI.Line(col, "KAIROS Studio · Unity 6 LTS (URP)", 13, Pal.Sonar);
         }
 
         void ShowWarning()
