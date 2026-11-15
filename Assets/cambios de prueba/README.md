@@ -28,11 +28,13 @@ Esta carpeta aislada contiene todos los recursos, artefactos, shaders, audio y c
 
 ---
 
-## 🔍 Semana 14: `[S14-3]` Objetos Coleccionables 3D y Shader de Resaltado Interactivo
+## 🔍 Semana 14: `[S14-3]` Objetos Coleccionables 3D, Shader de Resaltado y Música Adaptativa
 - **`Shaders/InspectableOutlineGlow.shader`**: Shader URP de resplandor silueta y efecto Fresnel interactivo con pulsación senoidal ajustable para guiar visualmente al jugador hacia evidencias críticas.
 - **`Scripts/InspectableEvidenceProps.cs`**: Modelado procedural, jerarquía física y metadatos OIT para las 4 evidencias del caso:
   - *Bitácora Real de Navegación* (OIT C188 - Art. 8: Falsificación de registros náuticos y jornadas abusivas).
   - *Lote de Pasaportes Retenidos* (OIT C029: Retención de documentos de identidad en trabajo forzoso).
   - *Radio VHF Satelital Clandestina* (Directrices OMI/OIT: Frecuencia no declarada para transbordos).
   - *Terminal Plotter GPS Náutico* (Normativa INDNR: Registro de coordenadas con apagado intencional de AIS).
+- **`Scripts/AdaptiveTensionMusic.cs`**: Motor de música adaptativa por stems (Calma/Sigilo, Sospecha/Tensión y Alerta Máxima) reactivo en tiempo real al porcentaje de sospecha (0 a 100%).
 - **`Tests/Semana14PropsAndShaderTests.cs`**: Suite de tests automatizados EditMode para verificar la inicialización de colisionadores, renderers, metadatos jurídicos y activación dinámica del resplandor de proximidad.
+- **`Tests/Semana14AdaptiveMusicTests.cs`**: Suite de pruebas EditMode para verificar la síntesis de stems, ponderaciones dinámicas de volumen y crossfade por sospecha.
