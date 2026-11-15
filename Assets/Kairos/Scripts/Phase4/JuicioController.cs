@@ -51,8 +51,9 @@ namespace Kairos
             {
                 var n = CaseData.Nodes[i];
                 var col = i == 5 ? Pal.Danger : i == 0 ? Pal.DeckLight : Pal.Sonar;
-                var node = UI.Panel(board, n.pos, n.pos, new Vector2(-95, -44), new Vector2(95, 44), new Color(col.r * .18f, col.g * .18f, col.b * .18f, 1));
-                var t = UI.Text(node.transform, $"<b>{n.name}</b>\n<size=16>{n.role}</size>", 18, col, TextAlignmentOptions.Center);
+                string tag = i == 0 ? "BUQUE OBJETIVO" : i == 1 ? "FRIGORÍFICO" : i == 2 ? "RECLUTADORA" : i == 3 ? "ARMADOR" : i == 4 ? "EMPRESA FACHADA" : "BENEFICIARIO FINAL";
+                var node = UI.Panel(board, n.pos, n.pos, new Vector2(-105, -46), new Vector2(105, 46), new Color(col.r * .16f, col.g * .16f, col.b * .16f, .95f));
+                var t = UI.Text(node.transform, $"<size=13><color=#8DA2AB>[{tag}]</color></size>\n<b>{n.name}</b>\n<size=15>{n.role}</size>", 17, col, TextAlignmentOptions.Center);
                 t.margin = new Vector4(6, 2, 6, 2);
             }
 
@@ -158,16 +159,17 @@ namespace Kairos
         void Refresh()
         {
             UI.Clear(cards);
-            UI.Line(cards, $"Maletín sellado ({C.evidence.Count})", 24, Pal.Sealed, true);
+            UI.Line(cards, $"MALETÍN FORENSE ({C.evidence.Count}/{CaseData.MaxEvidence})", 22, Pal.Sealed, true);
+            UI.Line(cards, "Inventario de Pruebas Selladas:", 16, Pal.Dim);
             foreach (var e in C.evidence)
             {
                 var d = CaseData.Evidence(e.id);
-                string mark = selected == e.id ? "> " : "";
-                string pres = NoActionsLeft(e.id) ? " (usada)" : "";
+                string mark = selected == e.id ? "► " : "  ";
+                string pres = NoActionsLeft(e.id) ? " <color=#7F9098>[USADA]</color>" : " <color=#3FE0D0>[ACTIVA]</color>";
                 var col = NoActionsLeft(e.id) ? Pal.Dim : d.cat == 'A' ? Pal.Sealed : Pal.Sonar;
-                UI.Btn(cards, $"{mark}[{d.cat}] {d.title}{pres}", () => { selected = e.id; Refresh(); }, col, 17, 44);
+                UI.Btn(cards, $"{mark}[{d.cat}] {d.title}{pres}", () => { selected = e.id; Refresh(); }, col, 16, 42);
             }
-            if (C.evidence.Count == 0) UI.Line(cards, "No hay pruebas.", 18, Pal.Dim);
+            if (C.evidence.Count == 0) UI.Line(cards, "No hay pruebas en el maletín.", 18, Pal.Dim);
 
             int inds = CaseData.CountIndicators(C.presented);
             bool chain = CaseData.ChainComplete(C.links);
@@ -180,7 +182,8 @@ namespace Kairos
                 var seal = C.evidence.Find(x => x.id == selected);
                 var indNames = new List<string>();
                 foreach (var i in d.indicators) indNames.Add(CaseData.Indicators[i]);
-                detail.text = $"<b>{d.title}</b>  [{d.cat}]  {(Game.S.omitSensitive ? d.descSafe : d.desc)}\nPrueba: {(indNames.Count > 0 ? string.Join(", ", indNames) : "ningún indicador, pero conecta empresas")}\n<size=16><color=#6F828A>{seal.stamp} · SHA-256 {seal.sha.Substring(0, 32)}…</color></size>";
+                string shaDisplay = (seal != null && seal.sha.Length >= 24) ? seal.sha.Substring(0, 24) : (seal?.sha ?? "N/A");
+                detail.text = $"<b>{d.title}</b>  <color=#3FE0D0>[Categoría {d.cat}]</color>\n{(Game.S.omitSensitive ? d.descSafe : d.desc)}\n<b>Indicadores OIT:</b> {(indNames.Count > 0 ? string.Join(", ", indNames) : "<color=#8DA2AB>Sin indicadores directos (vínculo societario estratégico)</color>")}\n<size=15><color=#6CFF8A>✔ Sello Forense:</color> SHA-256 <color=#3FE0D0>{shaDisplay}…</color>  |  Fecha: <color=#8DA2AB>{seal?.stamp}</color></size>";
                 bool any = false;
                 foreach (var key in d.edges)
                 {
@@ -232,23 +235,25 @@ namespace Kairos
             int inds = CaseData.CountIndicators(C.presented);
             C.verdict = CaseData.VerdictFor(inds);
             C.embargo = Mathf.RoundToInt(CaseData.VerdictEmbargo[C.verdict] * CaseData.ExitEmbargoMul[C.exitUsed]);
-            Game.AddBudget(Mathf.RoundToInt(C.embargo * .15f));
+            int fund15 = Mathf.RoundToInt(C.embargo * .15f);
+            Game.AddBudget(fund15);
             Game.AddReputation(5 + C.verdict * 3);
             Game.S.sentences++;
             Sfx.Play(Sfx.Seal, 1f);
             Music.Stinger("victory");
 
             UI.Clear(root);
-            UI.Summary(root, "Sentencia ejecutada", Pal.Sealed, new[]
+            UI.Summary(root, "SENTENCIA JUDICIAL EJECUTADA", Pal.Sealed, new[]
             {
-                $"<b>{CaseData.VerdictNames[C.verdict]}</b>",
-                $"Expediente de {Game.Inspector}.",
-                $"{inds} de 11 indicadores de la OIT probados. Salida: {CaseData.ExitNames[C.exitUsed]}.",
-                $"<color=#FFD27A>Embargo: {C.embargo:N0} ¢. Al Fondo de Decomiso: {Mathf.RoundToInt(C.embargo * .15f):N0} ¢ (15 %).</color>",
+                $"<b>Veredicto del Tribunal: {CaseData.VerdictNames[C.verdict]}</b>",
+                $"Expediente Fiscal Oficial: <b>KAIROS-JUD-2026</b>  |  Investigador: {Game.Inspector}",
+                $"Carga probatoria: <b>{inds} de 11 indicadores de la OIT</b> debidamente acreditados con cadena de custodia.",
+                $"<color=#6CFF8A>✔ Embargo Económico Decretado:</color> <b>{C.embargo:N0} ¢</b>.",
+                $"<color=#FFD27A>★ Fondo de Decomiso Legal (15%):</color> <b>+{fund15:N0} ¢</b> transferidos para rescate y repatriación digna.",
                 C.verdict == 3
-                    ? "El beneficiario final de Tidewater Austral es condenado. Es la primera grieta en Tidewater Holdings: la cúpula sigue en el Índico."
-                    : "La red pierde al Hai Feng 77, pero Tidewater Holdings sigue operando. Con más indicadores habrías llegado más lejos.",
-            }, "Qué sigue: decidir cómo vuelve a casa cada persona rescatada.", "Atender a las personas rescatadas", () => Game.GoToPhase(5));
+                    ? "<b>Condena Histórica:</b> El beneficiario final de Tidewater Austral ha sido sentenciado y sus activos marítimos confiscados. Primera grieta en el conglomerado internacional."
+                    : "<b>Retención Preventiva:</b> La red pierde el buque Hai Feng 77 y su cargamento. Tidewater Holdings evade cargos mayores por falta de pruebas vinculantes.",
+            }, "Fase 5: Administrar los fondos de decomiso para la atención de sobrevivientes.", "Atender a las personas rescatadas", () => Game.GoToPhase(5));
             Game.Write();
         }
 
