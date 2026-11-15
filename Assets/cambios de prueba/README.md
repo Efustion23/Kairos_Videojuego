@@ -38,3 +38,13 @@ Esta carpeta aislada contiene todos los recursos, artefactos, shaders, audio y c
 - **`Scripts/AdaptiveTensionMusic.cs`**: Motor de música adaptativa por stems (Calma/Sigilo, Sospecha/Tensión y Alerta Máxima) reactivo en tiempo real al porcentaje de sospecha (0 a 100%).
 - **`Tests/Semana14PropsAndShaderTests.cs`**: Suite de tests automatizados EditMode para verificar la inicialización de colisionadores, renderers, metadatos jurídicos y activación dinámica del resplandor de proximidad.
 - **`Tests/Semana14AdaptiveMusicTests.cs`**: Suite de pruebas EditMode para verificar la síntesis de stems, ponderaciones dinámicas de volumen y crossfade por sospecha.
+
+---
+
+## 💡 Semana 15: `[S15-3]` Iluminación Nocturna, Niebla Volumétrica y Perfil de Post-Procesado
+- **`Profiles/NightMaritimePostProcessProfile.asset`**: Volume Profile URP para ambientación nocturna marítima (Tonemapping ACES, corrección de color cinemática con tinte azul marino, bloom cálido para focos de cubierta y grano analógico sutil).
+- **`Scripts/MaritimeFogAtmosphereController.cs`**: Controlador integral de atmósfera oceánica:
+  - Niebla marina volumétrica y densidad atmosférica nocturna.
+  - Reflectores halógenos de cubierta con simulación de parpadeo eléctrico por corrosión salina.
+  - Baliza estroboscópica de peligro en el mástil del pesquero.
+- **`Tests/Semana15LightingProfileTests.cs`**: Pruebas unitarias EditMode para verificar la inicialización de luces, configuración de niebla marítima y carga de componentes del perfil de post-procesado.
