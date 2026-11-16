@@ -31,7 +31,7 @@ namespace Kairos.Pruebas
         public SonarWaveRadialSweep sonarComponent;
         public ThermalVisorBoatController thermalComponent;
         public BridgeAndCabinInterior bridgeComponent;
-        public InspectableEvidenceProps evidenceComponent;
+        public InspectablePropItem evidenceComponent;
         public MaritimeRainParticlesController rainComponent;
         public TacticalRadioCommsAudio radioComponent;
         public TrailerCinematicSequencer cinematicComponent;
@@ -56,7 +56,7 @@ namespace Kairos.Pruebas
             sonarComponent = sonarComponent ?? FindFirstObjectByType<SonarWaveRadialSweep>();
             thermalComponent = thermalComponent ?? FindFirstObjectByType<ThermalVisorBoatController>();
             bridgeComponent = bridgeComponent ?? FindFirstObjectByType<BridgeAndCabinInterior>();
-            evidenceComponent = evidenceComponent ?? FindFirstObjectByType<InspectableEvidenceProps>();
+            evidenceComponent = evidenceComponent ?? FindFirstObjectByType<InspectablePropItem>();
             rainComponent = rainComponent ?? FindFirstObjectByType<MaritimeRainParticlesController>();
             radioComponent = radioComponent ?? FindFirstObjectByType<TacticalRadioCommsAudio>();
             cinematicComponent = cinematicComponent ?? FindFirstObjectByType<TrailerCinematicSequencer>();
@@ -108,6 +108,9 @@ namespace Kairos.Pruebas
                     break;
                 case ShowcaseMode.ThermalVisor:
                     if (thermalComponent != null) thermalComponent.ToggleThermalVisor();
+                    break;
+                case ShowcaseMode.EvidenceOutline:
+                    if (evidenceComponent != null) evidenceComponent.SetHighlight(true);
                     break;
                 case ShowcaseMode.TacticalRadio:
                     if (radioComponent != null) radioComponent.PlayRadioTransmission(null);
