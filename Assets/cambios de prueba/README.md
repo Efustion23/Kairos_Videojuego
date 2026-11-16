@@ -61,3 +61,13 @@ Esta carpeta aislada contiene todos los recursos, artefactos, shaders, audio y c
   - *Toma 3:* Enfoque vertical a la escala de gato y reflectores de popa.
   - *Toma 4:* Travelling interior en el puente de mando frente al radar y evidencias OIT.
 - **`Tests/Semana15MasterDeliveryTests.cs`**: Suite de integración y verificación final EditMode que valida todos los componentes desarrollados por Christopher Veliz (Semanas 12 a 15).
+
+---
+
+## 🌧️ Sistema de Lluvia Torrencial Marina y Estela de Lancha
+- **Shaders/BoatWakeFoam.shader**: Shader URP en espacio de superficie para la estela de espuma en V y agua batida que deja la lancha RHIB al navegar a toda velocidad.
+- **Scripts/MaritimeRainParticlesController.cs**: Controlador integral de lluvia marina torrencial:
+  - Emisor procedural de 600 gotas con inclinación por viento oceánico.
+  - Generación de salpicaduras sobre la cubierta metálica del pesquero.
+  - Audio acústico procedural sintetizado de impacto de gotas sobre chapa metálica.
+- **Tests/MaritimeRainAndWakeVfxTests.cs**: Suite de tests automatizados EditMode para validación de partículas, shaders y síntesis acústica de tormenta.
