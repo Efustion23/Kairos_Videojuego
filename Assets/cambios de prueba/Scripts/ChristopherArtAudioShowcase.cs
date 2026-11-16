@@ -104,7 +104,7 @@ namespace Kairos.Pruebas
             switch (newMode)
             {
                 case ShowcaseMode.SonarSweep:
-                    if (sonarComponent != null) sonarComponent.TriggerSonarSweep();
+                    if (sonarComponent != null) sonarComponent.FireSonarPulse(sonarComponent.transform.position);
                     break;
                 case ShowcaseMode.ThermalVisor:
                     if (thermalComponent != null) thermalComponent.ToggleThermalVisor();
@@ -116,7 +116,7 @@ namespace Kairos.Pruebas
                     if (radioComponent != null) radioComponent.PlayRadioTransmission(null);
                     break;
                 case ShowcaseMode.CinematicTrailer:
-                    if (cinematicComponent != null) cinematicComponent.PlayCinematicSequence();
+                    if (cinematicComponent != null) cinematicComponent.PlaySequence();
                     break;
             }
         }

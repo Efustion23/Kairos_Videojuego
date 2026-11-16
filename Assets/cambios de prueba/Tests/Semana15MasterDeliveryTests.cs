@@ -24,7 +24,7 @@ namespace Kairos.Pruebas.Tests
             {
                 if (spawnedObjects[i] != null)
                 {
-                    Object.DestroyImmediate(spawnedObjects[i]);
+                    UnityEngine.Object.DestroyImmediate(spawnedObjects[i]);
                 }
             }
             spawnedObjects.Clear();

@@ -3,6 +3,7 @@
     "rootNamespace": "Kairos.Pruebas.Tests",
     "references": [
         "Kairos",
+        "Kairos.Pruebas",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Unity.RenderPipelines.Core.Runtime",
