@@ -71,3 +71,13 @@ Esta carpeta aislada contiene todos los recursos, artefactos, shaders, audio y c
   - Generación de salpicaduras sobre la cubierta metálica del pesquero.
   - Audio acústico procedural sintetizado de impacto de gotas sobre chapa metálica.
 - **Tests/MaritimeRainAndWakeVfxTests.cs**: Suite de tests automatizados EditMode para validación de partículas, shaders y síntesis acústica de tormenta.
+
+---
+
+## 📻 Sistema de Radiofonía Táctica UHF/VHF y Filtro Pasa-Banda
+- **Scripts/TacticalRadioCommsAudio.cs**: Simulador acústico diegético de comunicaciones por radio para la patrulla guardacostas:
+  - Apertura mecánica y ráfaga de squelch (PttOpenBurst).
+  - Tono militar doble de cierre de canal (Roger Beep: 1040 Hz y 880 Hz).
+  - Emulación analógica de canal walkie-talkie con filtros en cascada AudioHighPassFilter (350 Hz) y AudioLowPassFilter (3200 Hz).
+  - Loop de estática continua de frecuencia marítima VHF Canal 16.
+- **Tests/TacticalRadioCommsTests.cs**: Suite de pruebas EditMode que valida filtros de audio, síntesis de tonos duales y decaimiento de energía en squelch.
