@@ -78,6 +78,52 @@ namespace Kairos.EditorTools
             return root;
         }
 
+        /// Guardia o Capitán: modelo humanoid 3D con rig Mixamo, Animator y linterna halógena de patrulla.
+        static GameObject GuardFigure(string name, Material uniformMat, Material skinTone, Material hatMat, out HumanoidMotion motion)
+        {
+            motion = null;
+            const string fbx = Root + "/Models/Protagonista/Protagonista_v2.fbx";
+            var modelAsset = AssetDatabase.LoadAssetAtPath<GameObject>(fbx);
+            if (modelAsset == null) return Humanoid(name, uniformMat, skinTone, darkMetal, hatMat);
+
+            PrepareCharacter(fbx);
+
+            var root = new GameObject(name) { layer = Layers.Actor };
+            var model = (GameObject)PrefabUtility.InstantiatePrefab(modelAsset);
+            model.transform.SetParent(root.transform, false);
+            foreach (var t in model.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = Layers.Actor;
+
+            var skin = model.GetComponentInChildren<SkinnedMeshRenderer>();
+            bool isCaptain = name.ToLower().Contains("capitán") || name.ToLower().Contains("capitan");
+            Color guardColor = isCaptain ? new Color(0.08f, 0.11f, 0.16f) : new Color(0.14f, 0.18f, 0.24f);
+            string matName = isCaptain ? "M_Uniforme_Capitan" : ("M_Uniforme_" + name.Replace(" ", ""));
+            var mat = Lit(matName, guardColor, 0.35f, 0.15f);
+            skin.sharedMaterial = mat;
+            skin.gameObject.name = "Cuerpo";
+            skin.updateWhenOffscreen = true;
+            skin.forceMeshLod = 4;
+
+            float targetHeight = isCaptain ? 1.86f : 1.82f;
+            model.transform.localScale = Vector3.one * (targetHeight / skin.bounds.size.y);
+
+            var animator = model.GetComponent<Animator>();
+            animator.applyRootMotion = false;
+            animator.runtimeAnimatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(KairosAnimBuilder.ControllerPath);
+            motion = model.AddComponent<HumanoidMotion>();
+            motion.animator = animator;
+
+            // Linterna halógena con rig de patrulla
+            var rig = root.AddComponent<Kairos.Pruebas.GuardLanternPatrolRig>();
+            rig.halogenColor = new Color(1.0f, 0.88f, 0.65f);
+            rig.patrolIntensity = 3.0f;
+            rig.alertIntensity = 4.8f;
+            rig.beamRange = isCaptain ? 14f : 16f;
+            rig.spotAngle = 44f;
+            rig.EnsureLantern();
+
+            return root;
+        }
+
         /// El protagonista: modelo de Models/Protagonista, a 1,80 m y con los pies en el origen.
         static GameObject Inspector(out HumanoidMotion motion)
         {

@@ -14,6 +14,7 @@ namespace Kairos
         NavMeshAgent agent;
         VisionFan fan;
         Walker walker;
+        HumanoidMotion motion;
         float stepDistance;
         int wp; float wait, stunned, radio, lostFor;
         Vector3 lastKnown;
@@ -26,15 +27,19 @@ namespace Kairos
             agent.autoBraking = true;
             fan = VisionFan.Create(transform, .08f, viewRange, viewAngle);
             walker = GetComponent<Walker>();
+            motion = GetComponentInChildren<HumanoidMotion>();
 
-            // Linterna de patrulla sin sombras extra para no saturar el atlas de URP.
-            var lamp = new GameObject("Linterna");
-            lamp.transform.SetParent(transform, false);
-            lamp.transform.localPosition = new Vector3(0, 1.35f, .25f);
-            lamp.transform.localRotation = Quaternion.Euler(10, 0, 0);
-            var l = lamp.AddComponent<Light>();
-            l.type = LightType.Spot; l.color = new Color(1f, .88f, .68f); l.range = 10f; l.spotAngle = 46f; l.intensity = 3.5f;
-            l.shadows = LightShadows.None;
+            var lamp = transform.Find("LinternaHalogena") ?? transform.Find("Linterna");
+            if (lamp == null)
+            {
+                var lGo = new GameObject("Linterna");
+                lGo.transform.SetParent(transform, false);
+                lGo.transform.localPosition = new Vector3(0, 1.35f, .25f);
+                lGo.transform.localRotation = Quaternion.Euler(10, 0, 0);
+                var l = lGo.AddComponent<Light>();
+                l.type = LightType.Spot; l.color = new Color(1f, .88f, .68f); l.range = 10f; l.spotAngle = 46f; l.intensity = 3.5f;
+                l.shadows = LightShadows.None;
+            }
         }
 
         // Alcance efectivo condicionado por lluvia nocturna, mar de fondo Douglas y sector
@@ -76,7 +81,8 @@ namespace Kairos
         {
             stunned = seconds; suspicion = 0; radio = 0;
             if (agent.isOnNavMesh) agent.ResetPath();
-            walker.crouched = true;
+            if (walker != null) walker.crouched = true;
+            if (motion != null) motion.PlayStun();
         }
         public bool IsStunned => stunned > 0;
 
@@ -93,7 +99,7 @@ namespace Kairos
                 return;
             }
             agent.isStopped = false;
-            walker.crouched = false;
+            if (walker != null) walker.crouched = false;
             Footsteps();
 
             var p = I.player;
@@ -154,6 +160,8 @@ namespace Kairos
             }
 
             fan.SetColor(state == GuardState.Tranquilo ? Pal.Sonar : state == GuardState.Sospecha ? Pal.DeckLight : Pal.Danger);
+            bool alert = state == GuardState.Alerta || state == GuardState.Busqueda;
+            SendMessage("SetAlert", alert, SendMessageOptions.DontRequireReceiver);
         }
 
         /// Sus pasos se oyen: ayudan a saber por dónde viene.
