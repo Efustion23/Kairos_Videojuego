@@ -83,7 +83,7 @@ namespace Kairos.Pruebas
             for (int i = 0; i < targetRenderers.Count; i++)
             {
                 if (targetRenderers[i] == null) continue;
-                var mats = targetRenderers[i].materials;
+                var mats = Application.isPlaying ? targetRenderers[i].materials : targetRenderers[i].sharedMaterials;
                 for (int m = 0; m < mats.Length; m++)
                 {
                     var mat = mats[m];

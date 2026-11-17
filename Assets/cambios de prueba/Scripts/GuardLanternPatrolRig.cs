@@ -10,7 +10,17 @@ namespace Kairos.Pruebas
     {
         [Header("Configuración de Linterna")]
         public Transform rightHandSlot;
-        public Light lanternLight;
+        [SerializeField] private Light _lanternLight;
+        public Light lanternLight
+        {
+            get
+            {
+                if (_lanternLight == null) EnsureLantern();
+                return _lanternLight;
+            }
+            set => _lanternLight = value;
+        }
+
         public Color halogenColor = new Color(1.0f, 0.88f, 0.65f); // Halógeno cálido
         public float patrolIntensity = 2.8f;
         public float alertIntensity = 4.5f;
@@ -25,27 +35,34 @@ namespace Kairos.Pruebas
         float swingTime;
         Quaternion baseLocalRot;
 
-        void Awake()
+        public void EnsureLantern()
         {
-            if (lanternLight == null)
+            if (_lanternLight != null) return;
+
+            var child = transform.Find("LinternaHalogena");
+            GameObject lGo = child != null ? child.gameObject : null;
+            if (lGo == null)
             {
-                var lGo = new GameObject("LinternaHalogena");
+                lGo = new GameObject("LinternaHalogena");
                 lGo.transform.SetParent(rightHandSlot != null ? rightHandSlot : transform, false);
                 lGo.transform.localPosition = new Vector3(0.25f, 1.1f, 0.35f);
-                baseLocalRot = lGo.transform.localRotation;
+            }
+            baseLocalRot = lGo.transform.localRotation;
 
-                lanternLight = lGo.AddComponent<Light>();
-                lanternLight.type = LightType.Spot;
-                lanternLight.color = halogenColor;
-                lanternLight.intensity = patrolIntensity;
-                lanternLight.range = beamRange;
-                lanternLight.spotAngle = spotAngle;
-                lanternLight.shadows = LightShadows.Soft;
-            }
-            else
-            {
-                baseLocalRot = lanternLight.transform.localRotation;
-            }
+            _lanternLight = lGo.GetComponent<Light>();
+            if (_lanternLight == null) _lanternLight = lGo.AddComponent<Light>();
+
+            _lanternLight.type = LightType.Spot;
+            _lanternLight.color = halogenColor;
+            _lanternLight.intensity = patrolIntensity;
+            _lanternLight.range = beamRange;
+            _lanternLight.spotAngle = spotAngle;
+            _lanternLight.shadows = LightShadows.Soft;
+        }
+
+        void Awake()
+        {
+            EnsureLantern();
         }
 
         void Update()
@@ -61,6 +78,7 @@ namespace Kairos.Pruebas
 
         public void SetAlert(bool alert)
         {
+            EnsureLantern();
             if (lanternLight == null) return;
             lanternLight.intensity = alert ? alertIntensity : patrolIntensity;
             lanternLight.color = alert ? new Color(1.0f, 0.45f, 0.25f) : halogenColor;

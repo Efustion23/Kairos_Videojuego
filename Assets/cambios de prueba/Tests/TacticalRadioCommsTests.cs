@@ -23,7 +23,7 @@ namespace Kairos.Pruebas.Tests
             {
                 if (spawnedObjects[i] != null)
                 {
-                    Object.DestroyImmediate(spawnedObjects[i]);
+                    UnityEngine.Object.DestroyImmediate(spawnedObjects[i]);
                 }
             }
             spawnedObjects.Clear();
@@ -68,7 +68,7 @@ namespace Kairos.Pruebas.Tests
                 if (Mathf.Abs(samples[i]) > maxAmp) maxAmp = Mathf.Abs(samples[i]);
             }
             Assert.Greater(maxAmp, 0.1f, "El tono Roger Beep debe tener amplitud audible.");
-            Object.DestroyImmediate(beep);
+            UnityEngine.Object.DestroyImmediate(beep);
         }
 
         [Test]
@@ -90,7 +90,7 @@ namespace Kairos.Pruebas.Tests
             for (int i = half; i < samples.Length; i++) endEnergy += Mathf.Abs(samples[i]);
 
             Assert.Greater(startEnergy, endEnergy, "La ráfaga de squelch PTT debe decaer en energía.");
-            Object.DestroyImmediate(ptt);
+            UnityEngine.Object.DestroyImmediate(ptt);
         }
     }
 }
