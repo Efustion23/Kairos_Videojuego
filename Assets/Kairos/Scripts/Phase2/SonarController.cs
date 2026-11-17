@@ -122,7 +122,18 @@ namespace Kairos
             var sh = wakeFx.shape; sh.shapeType = ParticleSystemShapeType.Cone; sh.angle = 22f; sh.radius = .45f;
             var size = wakeFx.sizeOverLifetime; size.enabled = true; size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0, .6f, 1, 2.4f));
             var r = go.GetComponent<ParticleSystemRenderer>();
-            r.sharedMaterial = Mats.Glow(Color.white, true, true, true);
+            var wakeShader = Shader.Find("Kairos/Pruebas/BoatWakeFoam");
+            if (wakeShader != null)
+            {
+                var wakeMat = new Material(wakeShader);
+                wakeMat.SetColor("_FoamColor", new Color(0.85f, 0.95f, 1.0f, 0.8f));
+                wakeMat.SetColor("_DeepColor", new Color(0.05f, 0.15f, 0.25f, 0.3f));
+                r.sharedMaterial = wakeMat;
+            }
+            else
+            {
+                r.sharedMaterial = Mats.Glow(Color.white, true, true, true);
+            }
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
@@ -355,6 +366,7 @@ namespace Kairos
                 toast.Show("Pulso a menos de 150 m: el buque lo nota.", Pal.Danger);
             }
             StartCoroutine(Ring());
+            SendMessage("FireSonarPulse", boat.position, SendMessageOptions.DontRequireReceiver);
 
             // El casco se reconstruye con impactos reales; las bodegas, según el lado desde el que disparas.
             var from = boat.position + Vector3.up * 1.5f;
@@ -391,7 +403,17 @@ namespace Kairos
             {
                 var go = new GameObject("PulsoRing");
                 var lr = go.AddComponent<LineRenderer>();
-                lr.material = Mats.Glow(Pal.Sonar);
+                var sweepShader = Shader.Find("Kairos/Pruebas/SonarRadialSweep");
+                if (sweepShader != null)
+                {
+                    var m = new Material(sweepShader);
+                    m.SetColor("_SweepColor", Pal.Sonar);
+                    lr.material = m;
+                }
+                else
+                {
+                    lr.material = Mats.Glow(Pal.Sonar);
+                }
                 lr.loop = true; lr.positionCount = 64; lr.widthMultiplier = width;
                 return lr;
             }

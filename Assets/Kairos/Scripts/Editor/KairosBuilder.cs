@@ -217,6 +217,11 @@ namespace Kairos.EditorTools
             var go = new GameObject("Sonar");
             var c = go.AddComponent<SonarController>();
             c.cam = cam; c.ship = sh.transform; c.boat = boat.transform;
+
+            go.AddComponent<Kairos.Pruebas.MaritimeRainParticlesController>();
+            go.AddComponent<Kairos.Pruebas.TacticalRadioCommsAudio>();
+            go.AddComponent<Kairos.Pruebas.SonarWaveRadialSweep>();
+
             SaveScene(s, "02_Sonar", list);
         }
 
@@ -229,7 +234,7 @@ namespace Kairos.EditorTools
 
         static GuardAI Guard(Transform parent, string name, Vector3 start, Material hat, Vector3[] route)
         {
-            var go = Humanoid(name, coat, skinD, darkMetal, hat);
+            var go = GuardFigure(name, coat, skinD, hat, out var motion);
             go.transform.SetParent(parent, false);
             go.transform.position = start;
             Agent(go);
@@ -408,6 +413,16 @@ namespace Kairos.EditorTools
 
             var compressor = new GameObject("Compresores").transform;
             compressor.position = new Vector3(3.9f, 4.2f, -21f);
+
+            // Sistemas ambientales, lluvia, radio táctica, audio espacial y música adaptativa
+            var sysGo = new GameObject("SistemasAmbientales");
+            sysGo.transform.SetParent(gameplay, false);
+            sysGo.AddComponent<Kairos.Pruebas.MaritimeRainParticlesController>();
+            sysGo.AddComponent<Kairos.Pruebas.TacticalRadioCommsAudio>();
+            sysGo.AddComponent<Kairos.Pruebas.InteriorSpatialAudio>();
+            Kairos.Pruebas.AdaptiveTensionMusic.CreateAdaptiveMusicSystem(sysGo.transform);
+            if (compressor != null)
+                Kairos.Pruebas.InteriorSpatialAudio.CreateSpatialLoop(compressor.gameObject, Kairos.Pruebas.InteriorSpatialAudio.CompressorHumLoop, 0.45f, 25f);
 
             // Controlador
             var ctrl = new GameObject("Infiltracion").AddComponent<InfiltrationController>();

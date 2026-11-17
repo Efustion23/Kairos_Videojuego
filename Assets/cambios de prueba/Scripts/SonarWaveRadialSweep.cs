@@ -14,6 +14,11 @@ namespace Kairos.Pruebas
         public Camera mainCamera;
         public Canvas targetCanvas;
 
+        public void FireSonarPulse(Vector3 originWorld)
+        {
+            FireSonarPulse(originWorld, true, 180f);
+        }
+
         public void FireSonarPulse(Vector3 originWorld, bool isCrest = true, float targetDistance = 180f)
         {
             if (mainCamera == null) mainCamera = Camera.main;
