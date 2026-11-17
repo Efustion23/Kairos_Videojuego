@@ -30,6 +30,22 @@ namespace Kairos.Pruebas
 
         private void Update()
         {
+            if (InfiltrationController.I != null && InfiltrationController.I.Running)
+            {
+                float maxSusp = 0f;
+                var guards = InfiltrationController.I.guards;
+                if (guards != null)
+                {
+                    for (int i = 0; i < guards.Length; i++)
+                    {
+                        if (guards[i] != null && guards[i].suspicion > maxSusp)
+                            maxSusp = guards[i].suspicion;
+                    }
+                }
+                if (InfiltrationController.I.Lockdown) maxSusp = 1f;
+                suspicionLevel = maxSusp * 100f;
+            }
+
             UpdateWeights(suspicionLevel);
             ApplyVolumes(Time.deltaTime * crossfadeSpeed);
         }

@@ -8,7 +8,7 @@ namespace Kairos.Pruebas
     /// Sistema de audio espacial 3D para interiores del pesquero (Semana 13 / S13-3):
     /// Pasos metálicos sobre chapa húmeda, zumbido de compresores industriales y tormenta en ductos.
     /// </summary>
-    public static class InteriorSpatialAudio
+    public class InteriorSpatialAudio : MonoBehaviour
     {
         const int SampleRate = 44100;
         static readonly System.Random Rng = new System.Random(99);

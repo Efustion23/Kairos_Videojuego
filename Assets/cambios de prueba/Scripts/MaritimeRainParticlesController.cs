@@ -174,9 +174,9 @@ namespace Kairos.Pruebas
 
         private void OnDestroy()
         {
-            if (generatedRainClip != null)
+            if (Application.isPlaying && generatedRainClip != null)
             {
-                DestroyImmediate(generatedRainClip);
+                Destroy(generatedRainClip);
             }
         }
     }

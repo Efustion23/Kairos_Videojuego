@@ -7,6 +7,8 @@ namespace Kairos
     public class PersonNpc : Interactable
     {
         public string personId;
+        /// Solo con modelo animado; la figura simple no tiene.
+        public HumanoidMotion motion;
         NavMeshAgent agent;
         public PersonState State => Game.Person(personId);
         public PersonDef Def => CaseData.PersonDefOf(personId);
@@ -23,6 +25,7 @@ namespace Kairos
         void Update()
         {
             var I = InfiltrationController.I;
+            if (motion != null) motion.talking = I != null && I.mode == InfiltrationController.Mode.Dialog && I.DialogWith == this;
             if (I == null || agent == null || !agent.isOnNavMesh) return;
             if (State.following)
             {

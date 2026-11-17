@@ -97,7 +97,7 @@ namespace Kairos
         void UpdateMarks()
         {
             bool visor = visorT > 0 && mode == Mode.Play;
-            var tint = visorTint.color; tint.a = visor ? .02f : 0; visorTint.color = tint;
+            var tint = visorTint.color; tint.a = visor ? .10f : 0; visorTint.color = tint;
             foreach (var m in marks)
             {
                 bool show = m.t.gameObject.activeInHierarchy && mode == Mode.Play;
@@ -171,7 +171,10 @@ namespace Kairos
             stateText.color = worst == GuardState.Tranquilo ? Pal.Sonar : worst == GuardState.Sospecha ? Pal.DeckLight : Pal.Danger;
             suspBar.Set(susp);
             suspBar.img.color = stateText.color;
-            envText.text = StepsMasked ? "<color=#3FE0D0>Crujido del casco: pasos tapados</color>" : Distracted ? "<color=#3FE0D0>Tripulación distraída</color>" : $"Douglas {Ocean.Douglas:0.0} · Viento {WindKnots:0} kn";
+            envText.text = StepsMasked ? "<color=#3FE0D0>Crujido del casco: pasos tapados</color>"
+                : Distracted ? "<color=#3FE0D0>Tripulación distraída</color>"
+                : WindKnots > 30f ? $"<color=#3FE0D0>Viento {WindKnots:0} kn: pasos -50 %</color>"
+                : $"Douglas {Ocean.Douglas:0.0} · Viento {WindKnots:0} kn";
             staminaBar.Set(player.Stamina);
             staminaBar.img.color = player.Stamina < .25f ? Pal.Danger : Pal.Sonar;
             breathText.text = player.Stamina < .25f ? "<color=#FF5940>Respiración alta: descansa</color>" : "Aliento";

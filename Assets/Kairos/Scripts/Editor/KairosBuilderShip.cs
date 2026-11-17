@@ -367,7 +367,7 @@ namespace Kairos.EditorTools
             for (float z = -18; z <= 36; z += 9)
             {
                 if (z < 3) continue;
-                b.Box(darkMetal, new Vector3(0, 8.2f, z), new Vector3(.22f, 4.4f, .22f), null, false);
+                b.Box(darkMetal, new Vector3(0, 8.2f, z), new Vector3(.22f, 4.4f, .22f));
                 b.Box(darkMetal, new Vector3(0, 10.3f, z), new Vector3(Mathf.Min(9, Beam(z) * 1.6f), .14f, .14f), null, false);
                 for (float x = -3.6f; x <= 3.61f; x += 1.2f)
                     if (Mathf.Abs(x) < Beam(z) * .78f) b.Box(bulb, new Vector3(x, 10.15f, z), new Vector3(.3f, .18f, .3f), null, false);

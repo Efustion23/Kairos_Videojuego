@@ -78,6 +78,52 @@ namespace Kairos.EditorTools
             return root;
         }
 
+        /// Guardia o Capitán: modelo humanoid 3D con rig Mixamo, Animator y linterna halógena de patrulla.
+        static GameObject GuardFigure(string name, Material uniformMat, Material skinTone, Material hatMat, out HumanoidMotion motion)
+        {
+            motion = null;
+            const string fbx = Root + "/Models/Protagonista/Protagonista_v2.fbx";
+            var modelAsset = AssetDatabase.LoadAssetAtPath<GameObject>(fbx);
+            if (modelAsset == null) return Humanoid(name, uniformMat, skinTone, darkMetal, hatMat);
+
+            PrepareCharacter(fbx);
+
+            var root = new GameObject(name) { layer = Layers.Actor };
+            var model = (GameObject)PrefabUtility.InstantiatePrefab(modelAsset);
+            model.transform.SetParent(root.transform, false);
+            foreach (var t in model.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = Layers.Actor;
+
+            var skin = model.GetComponentInChildren<SkinnedMeshRenderer>();
+            bool isCaptain = name.ToLower().Contains("capitán") || name.ToLower().Contains("capitan");
+            Color guardColor = isCaptain ? new Color(0.08f, 0.11f, 0.16f) : new Color(0.14f, 0.18f, 0.24f);
+            string matName = isCaptain ? "M_Uniforme_Capitan" : ("M_Uniforme_" + name.Replace(" ", ""));
+            var mat = Lit(matName, guardColor, 0.35f, 0.15f);
+            skin.sharedMaterial = mat;
+            skin.gameObject.name = "Cuerpo";
+            skin.updateWhenOffscreen = true;
+            skin.forceMeshLod = 4;
+
+            float targetHeight = isCaptain ? 1.86f : 1.82f;
+            model.transform.localScale = Vector3.one * (targetHeight / skin.bounds.size.y);
+
+            var animator = model.GetComponent<Animator>();
+            animator.applyRootMotion = false;
+            animator.runtimeAnimatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(KairosAnimBuilder.ControllerPath);
+            motion = model.AddComponent<HumanoidMotion>();
+            motion.animator = animator;
+
+            // Linterna halógena con rig de patrulla
+            var rig = root.AddComponent<Kairos.Pruebas.GuardLanternPatrolRig>();
+            rig.halogenColor = new Color(1.0f, 0.88f, 0.65f);
+            rig.patrolIntensity = 3.0f;
+            rig.alertIntensity = 4.8f;
+            rig.beamRange = isCaptain ? 14f : 16f;
+            rig.spotAngle = 44f;
+            rig.EnsureLantern();
+
+            return root;
+        }
+
         /// El protagonista: modelo de Models/Protagonista, a 1,80 m y con los pies en el origen.
         static GameObject Inspector(out HumanoidMotion motion)
         {
@@ -112,8 +158,82 @@ namespace Kairos.EditorTools
             return root;
         }
 
+        // Estatura de cada pescador, en metros.
+        static readonly Dictionary<string, float> PersonHeight = new Dictionary<string, float>
+        {
+            { "rodel", 1.68f }, { "ari", 1.70f }, { "moussa", 1.85f }, { "thant", 1.65f },
+        };
+
+        /// Pescador con su modelo de Models/<Nombre>/, animado con los clips del protagonista.
+        /// Si la carpeta no tiene modelo, vuelve a la figura simple.
+        static GameObject PersonFigure(string id, Material skinTone, out HumanoidMotion motion)
+        {
+            motion = null;
+            string name = "Persona " + id, dir = Root + "/Models/" + CaseData.PersonDefOf(id).name;
+            var files = AssetDatabase.IsValidFolder(dir) ? System.IO.Directory.GetFiles(dir, "*.fbx") : new string[0];
+            if (files.Length == 0) return Humanoid(name, worker, skinTone);
+            string fbx = files[0].Replace('\\', '/');
+            PrepareCharacter(fbx);
+
+            var root = new GameObject(name) { layer = Layers.Actor };
+            var model = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(fbx));
+            model.transform.SetParent(root.transform, false);
+            foreach (var t in model.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = Layers.Actor;
+
+            var skin = model.GetComponentInChildren<SkinnedMeshRenderer>();
+            skin.sharedMaterial = CharacterMaterial(id, dir);
+            skin.gameObject.name = "Cuerpo";
+            skin.updateWhenOffscreen = true; // igual que el protagonista: el FBX trae límites diminutos
+            skin.forceMeshLod = 4;           // unos 780 mil triángulos bajan a una fracción
+            model.transform.localScale = Vector3.one * (PersonHeight[id] / skin.bounds.size.y);
+
+            var animator = model.GetComponent<Animator>();
+            animator.applyRootMotion = false;
+            animator.runtimeAnimatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(KairosAnimBuilder.ControllerPath);
+            motion = model.AddComponent<HumanoidMotion>();
+            motion.animator = animator;
+            return root;
+        }
+
+        /// Ajustes de importación de un personaje de Mixamo: avatar humano, sin cámara ni luz del archivo y con LOD de malla.
+        static void PrepareCharacter(string fbx)
+        {
+            var imp = (ModelImporter)AssetImporter.GetAtPath(fbx);
+            if (imp.animationType == ModelImporterAnimationType.Human && imp.avatarSetup == ModelImporterAvatarSetup.CreateFromThisModel
+                && !imp.importCameras && !imp.importLights && !imp.importAnimation && imp.generateMeshLods) return;
+            imp.animationType = ModelImporterAnimationType.Human;
+            imp.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+            imp.importCameras = false; imp.importLights = false; imp.importAnimation = false;
+            imp.generateMeshLods = true;
+            imp.SaveAndReimport();
+        }
+
+        /// Texturas/<Id>_Color.jpg y <Id>_Normal.png a 1024 px. Sin texturas, un tono de ropa neutro.
+        static Material CharacterMaterial(string id, string dir)
+        {
+            string prefix = dir + "/Texturas/" + char.ToUpper(id[0]) + id.Substring(1);
+            var color = CharacterTexture(prefix + "_Color.jpg", false);
+            var normal = CharacterTexture(prefix + "_Normal.png", true);
+            return Lit("M_Persona_" + id, color ? Color.white : new Color(.45f, .47f, .5f), .35f, .05f, color, null, normal);
+        }
+
+        static Texture2D CharacterTexture(string path, bool normal)
+        {
+            if (!(AssetImporter.GetAtPath(path) is TextureImporter ti)) return null;
+            var type = normal ? TextureImporterType.NormalMap : TextureImporterType.Default;
+            // Las texturas que se extraen del FBX llegan como cubemap: aquí se fuerza una imagen 2D.
+            if (ti.textureType != type || ti.textureShape != TextureImporterShape.Texture2D || ti.maxTextureSize != 1024)
+            {
+                ti.textureType = type; ti.textureShape = TextureImporterShape.Texture2D; ti.maxTextureSize = 1024;
+                ti.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
         static NavMeshAgent Agent(GameObject go)
         {
+            var col = go.AddComponent<CapsuleCollider>();
+            col.radius = .3f; col.height = 1.8f; col.center = new Vector3(0, .9f, 0);
             var a = go.AddComponent<NavMeshAgent>();
             a.radius = .35f; a.height = 1.8f; a.angularSpeed = 300; a.acceleration = 10; a.stoppingDistance = .2f;
             a.obstacleAvoidanceType = ObstacleAvoidanceType.LowQualityObstacleAvoidance;

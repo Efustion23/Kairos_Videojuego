@@ -1,7 +1,14 @@
 {
     "name": "Kairos.Pruebas.Tests",
     "rootNamespace": "Kairos.Pruebas.Tests",
-    "references": ["Kairos", "UnityEngine.TestRunner", "UnityEditor.TestRunner"],
+    "references": [
+        "Kairos",
+        "Kairos.Pruebas",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
+    ],
     "includePlatforms": ["Editor"],
     "overrideReferences": true,
     "precompiledReferences": ["nunit.framework.dll"],

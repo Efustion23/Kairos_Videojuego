@@ -29,6 +29,8 @@ namespace Kairos
             UI.Fullscreen(root, new Color(.02f, .05f, .07f, .9f));
             Music.Play(C.phase >= 5 ? "airy" : "pulse");
             if (C.trialDays < 0) C.trialDays = StartDays;
+            if (C.phase < 5 && Game.Has(3, 4) && !C.links.Contains("3-4"))
+                C.links.Add("3-4");
             if (C.phase >= 5) ShowRepatriation(); else BuildBoard();
             if (C.phase >= 5) UI.SceneIntro(canvas.transform, "", "");
             else UI.SceneIntro(canvas.transform, "FASE 4", "Juicio financiero");
@@ -47,12 +49,14 @@ namespace Kairos
             var center = UI.Panel(root, new Vector2(.25f, .36f), new Vector2(.75f, .93f), default, default, new Color(.02f, .06f, .09f, .95f));
             board = (RectTransform)center.transform;
 
-            for (int i = 0; i < CaseData.Nodes.Length; i++)
+            var nodes = CaseData.NodesFor(C.sector);
+            for (int i = 0; i < nodes.Length; i++)
             {
-                var n = CaseData.Nodes[i];
+                var n = nodes[i];
                 var col = i == 5 ? Pal.Danger : i == 0 ? Pal.DeckLight : Pal.Sonar;
-                var node = UI.Panel(board, n.pos, n.pos, new Vector2(-95, -44), new Vector2(95, 44), new Color(col.r * .18f, col.g * .18f, col.b * .18f, 1));
-                var t = UI.Text(node.transform, $"<b>{n.name}</b>\n<size=16>{n.role}</size>", 18, col, TextAlignmentOptions.Center);
+                string tag = i == 0 ? "BUQUE OBJETIVO" : i == 1 ? "FRIGORÍFICO" : i == 2 ? "RECLUTADORA" : i == 3 ? "ARMADOR" : i == 4 ? "EMPRESA FACHADA" : "BENEFICIARIO FINAL";
+                var node = UI.Panel(board, n.pos, n.pos, new Vector2(-105, -46), new Vector2(105, 46), new Color(col.r * .16f, col.g * .16f, col.b * .16f, .95f));
+                var t = UI.Text(node.transform, $"<size=13><color=#8DA2AB>[{tag}]</color></size>\n<b>{n.name}</b>\n<size=15>{n.role}</size>", 17, col, TextAlignmentOptions.Center);
                 t.margin = new Vector4(6, 2, 6, 2);
             }
 
@@ -88,7 +92,7 @@ namespace Kairos
         Vector2 NodeLocal(int i)
         {
             var r = board.rect;
-            return new Vector2((CaseData.Nodes[i].pos.x - .5f) * r.width, (CaseData.Nodes[i].pos.y - .5f) * r.height);
+            return new Vector2((CaseData.NodesFor(C.sector)[i].pos.x - .5f) * r.width, (CaseData.NodesFor(C.sector)[i].pos.y - .5f) * r.height);
         }
 
         void DrawEdge(string key, Color c, float width)
@@ -112,7 +116,8 @@ namespace Kairos
         static string EdgeName(string key)
         {
             var p = key.Split('-');
-            return CaseData.Nodes[int.Parse(p[0])].name + " - " + CaseData.Nodes[int.Parse(p[1])].name;
+            var nodes = CaseData.NodesFor(C.sector);
+            return nodes[int.Parse(p[0])].name + " - " + nodes[int.Parse(p[1])].name;
         }
 
         /// Una sola acción: enlaza (si procede) y cuenta para los indicadores.
@@ -158,16 +163,17 @@ namespace Kairos
         void Refresh()
         {
             UI.Clear(cards);
-            UI.Line(cards, $"Maletín sellado ({C.evidence.Count})", 24, Pal.Sealed, true);
+            UI.Line(cards, $"MALETÍN FORENSE ({C.evidence.Count}/{CaseData.MaxEvidence})", 22, Pal.Sealed, true);
+            UI.Line(cards, "Inventario de Pruebas Selladas:", 16, Pal.Dim);
             foreach (var e in C.evidence)
             {
                 var d = CaseData.Evidence(e.id);
-                string mark = selected == e.id ? "> " : "";
-                string pres = NoActionsLeft(e.id) ? " (usada)" : "";
+                string mark = selected == e.id ? "► " : "  ";
+                string pres = NoActionsLeft(e.id) ? " <color=#7F9098>[USADA]</color>" : " <color=#3FE0D0>[ACTIVA]</color>";
                 var col = NoActionsLeft(e.id) ? Pal.Dim : d.cat == 'A' ? Pal.Sealed : Pal.Sonar;
-                UI.Btn(cards, $"{mark}[{d.cat}] {d.title}{pres}", () => { selected = e.id; Refresh(); }, col, 17, 44);
+                UI.Btn(cards, $"{mark}[{d.cat}] {d.title}{pres}", () => { selected = e.id; Refresh(); }, col, 16, 42);
             }
-            if (C.evidence.Count == 0) UI.Line(cards, "No hay pruebas.", 18, Pal.Dim);
+            if (C.evidence.Count == 0) UI.Line(cards, "No hay pruebas en el maletín.", 18, Pal.Dim);
 
             int inds = CaseData.CountIndicators(C.presented);
             bool chain = CaseData.ChainComplete(C.links);
@@ -180,7 +186,8 @@ namespace Kairos
                 var seal = C.evidence.Find(x => x.id == selected);
                 var indNames = new List<string>();
                 foreach (var i in d.indicators) indNames.Add(CaseData.Indicators[i]);
-                detail.text = $"<b>{d.title}</b>  [{d.cat}]  {(Game.S.omitSensitive ? d.descSafe : d.desc)}\nPrueba: {(indNames.Count > 0 ? string.Join(", ", indNames) : "ningún indicador, pero conecta empresas")}\n<size=16><color=#6F828A>{seal.stamp} · SHA-256 {seal.sha.Substring(0, 32)}…</color></size>";
+                string shaDisplay = (seal != null && seal.sha.Length >= 24) ? seal.sha.Substring(0, 24) : (seal?.sha ?? "N/A");
+                detail.text = $"<b>{d.title}</b>  <color=#3FE0D0>[Categoría {d.cat}]</color>\n{(Game.S.omitSensitive ? d.descSafe : d.desc)}\n<b>Indicadores OIT:</b> {(indNames.Count > 0 ? string.Join(", ", indNames) : "<color=#8DA2AB>Sin indicadores directos (vínculo societario estratégico)</color>")}\n<size=15><color=#6CFF8A>✔ Sello Forense:</color> SHA-256 <color=#3FE0D0>{shaDisplay}…</color>  |  Fecha: <color=#8DA2AB>{seal?.stamp}</color></size>";
                 bool any = false;
                 foreach (var key in d.edges)
                 {
@@ -232,23 +239,25 @@ namespace Kairos
             int inds = CaseData.CountIndicators(C.presented);
             C.verdict = CaseData.VerdictFor(inds);
             C.embargo = Mathf.RoundToInt(CaseData.VerdictEmbargo[C.verdict] * CaseData.ExitEmbargoMul[C.exitUsed]);
-            Game.AddBudget(Mathf.RoundToInt(C.embargo * .15f));
+            int fund15 = Mathf.RoundToInt(C.embargo * .15f);
+            Game.AddBudget(fund15);
             Game.AddReputation(5 + C.verdict * 3);
             Game.S.sentences++;
             Sfx.Play(Sfx.Seal, 1f);
             Music.Stinger("victory");
 
             UI.Clear(root);
-            UI.Summary(root, "Sentencia ejecutada", Pal.Sealed, new[]
+            UI.Summary(root, "SENTENCIA JUDICIAL EJECUTADA", Pal.Sealed, new[]
             {
-                $"<b>{CaseData.VerdictNames[C.verdict]}</b>",
-                $"Expediente de {Game.Inspector}.",
-                $"{inds} de 11 indicadores de la OIT probados. Salida: {CaseData.ExitNames[C.exitUsed]}.",
-                $"<color=#FFD27A>Embargo: {C.embargo:N0} ¢. Al Fondo de Decomiso: {Mathf.RoundToInt(C.embargo * .15f):N0} ¢ (15 %).</color>",
+                $"<b>Veredicto del Tribunal: {CaseData.VerdictNames[C.verdict]}</b>",
+                $"Expediente Fiscal Oficial: <b>KAIROS-JUD-2026</b>  |  Investigador: {Game.Inspector}",
+                $"Carga probatoria: <b>{inds} de 11 indicadores de la OIT</b> debidamente acreditados con cadena de custodia.",
+                $"<color=#6CFF8A>✔ Embargo Económico Decretado:</color> <b>{C.embargo:N0} ¢</b>.",
+                $"<color=#FFD27A>★ Fondo de Decomiso Legal (15%):</color> <b>+{fund15:N0} ¢</b> transferidos para rescate y repatriación digna.",
                 C.verdict == 3
-                    ? "El beneficiario final de Tidewater Austral es condenado. Es la primera grieta en Tidewater Holdings: la cúpula sigue en el Índico."
-                    : "La red pierde al Hai Feng 77, pero Tidewater Holdings sigue operando. Con más indicadores habrías llegado más lejos.",
-            }, "Qué sigue: decidir cómo vuelve a casa cada persona rescatada.", "Atender a las personas rescatadas", () => Game.GoToPhase(5));
+                    ? $"<b>Condena Histórica:</b> El beneficiario final de {CaseData.NodesFor(C.sector)[5].name} ha sido sentenciado y sus activos marítimos confiscados."
+                    : $"<b>Retención Preventiva:</b> La red pierde el buque {CaseData.NodesFor(C.sector)[0].name} y su cargamento. {CaseData.NodesFor(C.sector)[5].name} evade cargos mayores por falta de pruebas vinculantes.",
+            }, "Fase 5: Administrar los fondos de decomiso para la atención de sobrevivientes.", "Atender a las personas rescatadas", () => Game.GoToPhase(5));
             Game.Write();
         }
 
@@ -334,6 +343,8 @@ namespace Kairos
             bool success = C.verdict > 0;
             if (success) Game.AddBudget(50000);
             C.phase = 6;
+            if (Game.S.completedSectors != null && C.sector < Game.S.completedSectors.Length)
+                Game.S.completedSectors[C.sector] = true;
             Game.Write();
             Music.Play("transmission");
 

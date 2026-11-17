@@ -191,9 +191,12 @@ namespace Kairos.Pruebas
 
         private void OnDestroy()
         {
-            if (pttOpenClip != null) DestroyImmediate(pttOpenClip);
-            if (rogerBeepClip != null) DestroyImmediate(rogerBeepClip);
-            if (staticHissClip != null) DestroyImmediate(staticHissClip);
+            if (Application.isPlaying)
+            {
+                if (pttOpenClip != null) Destroy(pttOpenClip);
+                if (rogerBeepClip != null) Destroy(rogerBeepClip);
+                if (staticHissClip != null) Destroy(staticHissClip);
+            }
         }
     }
 }

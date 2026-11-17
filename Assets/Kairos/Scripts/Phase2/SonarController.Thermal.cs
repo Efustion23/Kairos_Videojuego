@@ -55,6 +55,20 @@ namespace Kairos
             pipe.GetComponent<MeshRenderer>().material = Mats.Glow(Pal.ThermHot, true, true);
 
             drone = new GameObject("Dron").transform;
+            void DronePart(PrimitiveType pt, Vector3 pos, Vector3 scale, Color col, int layer)
+            {
+                var gp = GameObject.CreatePrimitive(pt);
+                Destroy(gp.GetComponent<Collider>());
+                gp.layer = layer;
+                gp.transform.SetParent(drone, false);
+                gp.transform.localPosition = pos;
+                gp.transform.localScale = scale;
+                gp.GetComponent<MeshRenderer>().material = Mats.Glow(col, true, true);
+            }
+            DronePart(PrimitiveType.Cube, Vector3.zero, new Vector3(.6f, .18f, .9f), Pal.Sonar, ThermalLayer);
+            DronePart(PrimitiveType.Cube, Vector3.zero, new Vector3(1.8f, .06f, .12f), Pal.DeckLight, ThermalLayer);
+            DronePart(PrimitiveType.Cube, Vector3.zero, new Vector3(.12f, .06f, 1.8f), Pal.DeckLight, ThermalLayer);
+            DronePart(PrimitiveType.Sphere, new Vector3(0, .14f, .35f), Vector3.one * .18f, Pal.Sealed, ThermalLayer);
         }
 
         GameObject thermalVisorOverlay;
@@ -62,7 +76,7 @@ namespace Kairos
         void ToggleDrone()
         {
             if (droneActive) { EndDrone(false); return; }
-            if (Ocean.Douglas >= 6) { toast.Show("El dron no vuela con Douglas 6 o más.", Pal.DeckLight); return; }
+            if (Ocean.Douglas >= 6 && !Game.Has(1, 3)) { toast.Show("El dron no vuela con Douglas 6 o más (requiere Estabilizadores activos).", Pal.DeckLight); return; }
             if (Game.S.droneParts <= 0) { toast.Show("Sin repuestos de dron: solo sonar e hidrófono desde la lancha.", Pal.DeckLight); return; }
             droneActive = true;
             droneBattery = 45f;

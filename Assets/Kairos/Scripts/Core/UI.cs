@@ -40,15 +40,36 @@ namespace Kairos
             return r;
         }
 
+        static Sprite roundedSprite;
+        public static Sprite RoundedSprite()
+        {
+            if (roundedSprite != null) return roundedSprite;
+            const int s = 64, r = 16;
+            var t = new Texture2D(s, s, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+            for (int y = 0; y < s; y++)
+                for (int x = 0; x < s; x++)
+                {
+                    float dx = Mathf.Max(0, Mathf.Abs(x - (s - 1) * .5f) - ((s - 1) * .5f - r));
+                    float dy = Mathf.Max(0, Mathf.Abs(y - (s - 1) * .5f) - ((s - 1) * .5f - r));
+                    float d = Mathf.Sqrt(dx * dx + dy * dy) - r;
+                    float a = Mathf.Clamp01(.5f - d);
+                    t.SetPixel(x, y, new Color(1, 1, 1, a));
+                }
+            t.Apply();
+            roundedSprite = Sprite.Create(t, new Rect(0, 0, s, s), new Vector2(.5f, .5f), 100f, 0, SpriteMeshType.FullRect, new Vector4(18, 18, 18, 18));
+            return roundedSprite;
+        }
+
         public static Image Panel(Transform parent, Vector2 aMin, Vector2 aMax, Vector2 oMin = default, Vector2 oMax = default, Color? color = null)
         {
             var r = Rect(parent, "Panel", aMin, aMax, oMin, oMax);
             var i = r.gameObject.AddComponent<Image>();
+            i.sprite = RoundedSprite(); i.type = Image.Type.Sliced;
             i.color = color ?? Pal.PanelBg;
             var o = r.gameObject.AddComponent<Outline>();
             o.effectColor = Pal.Line; o.effectDistance = new Vector2(1, -1);
             // Filo de instrumento: identifica los paneles como parte de la unidad KAIROS.
-            var edge = Rect(r, "Filo", new Vector2(0, 1), Vector2.one, new Vector2(0, -2), Vector2.zero);
+            var edge = Rect(r, "Filo", new Vector2(0, 1), Vector2.one, new Vector2(14, -2), new Vector2(-14, 0));
             var edgeImg = edge.gameObject.AddComponent<Image>();
             edgeImg.color = new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, .55f); edgeImg.raycastTarget = false;
             return i;
@@ -149,6 +170,7 @@ namespace Kairos
             var c = accent ?? Pal.Sonar;
             var r = Rect(parent, "Btn " + label, Vector2.zero, Vector2.one);
             var img = r.gameObject.AddComponent<Image>();
+            img.sprite = RoundedSprite(); img.type = Image.Type.Sliced;
             img.color = new Color(c.r * .16f, c.g * .16f, c.b * .16f, .95f);
             var o = r.gameObject.AddComponent<Outline>();
             o.effectColor = new Color(c.r, c.g, c.b, .75f); o.effectDistance = new Vector2(1, -1);
