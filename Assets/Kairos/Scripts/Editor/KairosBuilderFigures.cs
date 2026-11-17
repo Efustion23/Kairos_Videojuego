@@ -186,6 +186,8 @@ namespace Kairos.EditorTools
 
         static NavMeshAgent Agent(GameObject go)
         {
+            var col = go.AddComponent<CapsuleCollider>();
+            col.radius = .3f; col.height = 1.8f; col.center = new Vector3(0, .9f, 0);
             var a = go.AddComponent<NavMeshAgent>();
             a.radius = .35f; a.height = 1.8f; a.angularSpeed = 300; a.acceleration = 10; a.stoppingDistance = .2f;
             a.obstacleAvoidanceType = ObstacleAvoidanceType.LowQualityObstacleAvoidance;
