@@ -66,7 +66,7 @@ namespace Kairos
 
             // Cabecera estilizada de Pausa (Alexander - S15-1)
             UI.Line(s, "KAIROS · OPERACIÓN EN PAUSA", 32, Pal.Sonar, true);
-            UI.Line(s, $"Misión en Curso: <b>Hai Feng 77</b>  |  Agente: {Game.Inspector}", 18, Pal.Dim);
+            UI.Line(s, $"Misión en Curso: <b>{CaseData.TargetFor(C.sector).name}</b>  |  {CaseData.Sectors[C.sector].name}  |  Agente: {Game.Inspector}", 18, Pal.Dim);
 
             // Resumen de estado de misión
             UI.Line(s, $"\n<b>Estado Táctico:</b> Pruebas selladas: <color=#6CFF8A>{C.evidence.Count}/{CaseData.MaxEvidence}</color>  ·  Clima: <color=#3FE0D0>Douglas {Ocean.Douglas:0.0}</color>", 19, Pal.Text);

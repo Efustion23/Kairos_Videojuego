@@ -17,7 +17,7 @@ namespace Kairos
             compassText.margin = new Vector4(6, 2, 6, 2);
             var left = UI.Panel(canvas.transform, new Vector2(0, .62f), new Vector2(.27f, 1));
             var ls = UI.VStack(left.transform, 14, 7);
-            UI.Line(ls, "FASE 2 · ESCANEO", 26, Pal.Sonar, true);
+            UI.Line(ls, $"FASE 2 · {CaseData.TargetFor(C.sector).name.ToUpperInvariant()}", 22, Pal.Sonar, true);
             status = UI.Line(ls, "", 20);
             UI.Line(ls, "Sospecha del buque", 18, Pal.Dim);
             suspBar = UI.NewBar(ls, Pal.Danger, 12);

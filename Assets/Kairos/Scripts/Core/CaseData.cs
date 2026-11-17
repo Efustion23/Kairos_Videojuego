@@ -79,6 +79,65 @@ namespace Kairos
 
         public static ShipDef Target => Ships[0];
 
+        public static readonly ShipDef[] ShipsSector2 =
+        {
+            new ShipDef { id = "kestrel", name = "Kestrel Explorer", type = "Arrastrero industrial, 85 m", flag = "Bandera de conveniencia", target = true, ais = false,
+                lat = 2.3f, lon = 2.4f, lastLat = 1.7f, lastLon = 1.5f, mRoute = 1.25f,
+                optical = "Foto de cubierta: redes de arrastre activas en zona vedada y licencia pintada sobre otro nombre.",
+                anomalies = new[] {
+                    A("Apagón masivo de AIS", 20, 1f, LayerAIS, "Señal perdida hace 42 h en zona crítica del Golfo de Guinea."),
+                    A("Licencia local falsificada", 15, .6f, LayerVMS, "El código de permiso no figura en el registro oficial."),
+                    A("Arrastre nocturno sin luces", 10, .5f, LayerVIIRS, "Brillo tenue de maniobra nocturna en reserva."),
+                    A("Barco oscuro", 20, .8f, LayerSAR, "Casco de 85 m detectado sin señal AIS."),
+                    A("Transbordo a frigorífico", 25, .5f, LayerOptical, "Carga descargada a Atlantic Reef en altamar."),
+                } },
+            new ShipDef { id = "atlantic_reef", name = "Atlantic Reef", type = "Frigorífico", flag = "Bandera de conveniencia", ais = true,
+                lat = 1.5f, lon = 2.9f, mRoute = 1.2f,
+                optical = "Frigorífico de apoyo. Se rastrea la conexión financiera, no se aborda.",
+                anomalies = new[] {
+                    A("Merodeo de frigorífico", 10, .8f, LayerAIS, "Esperando carga en el límite marítimo."),
+                    A("Bandera de conveniencia", 5, 1f, LayerAIS, "Registro opaco."),
+                } },
+            new ShipDef { id = "tema_star", name = "Tema Star", type = "Arrastrero", flag = "Registro con convenio", ais = true,
+                lat = 2.8f, lon = 1.2f, mRoute = 1f,
+                optical = "Faena autorizada con observador a bordo.",
+                anomalies = new Anomaly[0] },
+        };
+
+        public static readonly ShipDef[] ShipsSector3 =
+        {
+            new ShipDef { id = "oceanic9", name = "Oceanic Crown 9", type = "Palangrero de atún, 95 m", flag = "Bandera de conveniencia", target = true, ais = false,
+                lat = -10.2f, lon = 58.3f, lastLat = -11.0f, lastLon = 57.1f, mRoute = 1.3f,
+                optical = "Foto de cubierta: palangrero de larga distancia sin tocar puerto hace 24 meses, vinculado a Tidewater Holdings.",
+                anomalies = new[] {
+                    A("Apagón prolongado de AIS", 20, 1f, LayerAIS, "Más de 60 h sin transpondedor en aguas internacionales."),
+                    A("Sin escala en puerto (2 años)", 15, .6f, LayerVMS, "Tripulación retenida en altamar sin relevo."),
+                    A("Faena continua 24 h", 10, .5f, LayerVIIRS, "Luces de cubierta activas toda la noche."),
+                    A("Casco oscuro de gran porte", 20, .85f, LayerSAR, "Palangrero de 95 m confirmado por radar."),
+                    A("Transbordo a nodriza", 25, .5f, LayerOptical, "Reabastecimiento y descarga con Mombasa Reefer."),
+                } },
+            new ShipDef { id = "mombasa", name = "Mombasa Reefer", type = "Buque nodriza frigorífico", flag = "Bandera de conveniencia", ais = true,
+                lat = -9.4f, lon = 58.9f, mRoute = 1.2f,
+                optical = "Buque nodriza de Tidewater Holdings. Provee combustible y recoge pesca.",
+                anomalies = new[] {
+                    A("Encuentro prolongado", 15, .8f, LayerAIS, "Permanece junto a palangreros en altamar."),
+                } },
+            new ShipDef { id = "seychelles", name = "Seychelles Drift", type = "Palangrero", flag = "Registro con convenio", ais = true,
+                lat = -10.8f, lon = 56.8f, mRoute = 1f,
+                optical = "Faena declarada rumbo a puerto.",
+                anomalies = new Anomaly[0] },
+        };
+
+        public static ShipDef[] ShipsFor(int sector) => sector == 1 ? ShipsSector2 : sector == 2 ? ShipsSector3 : Ships;
+        public static ShipDef TargetFor(int sector) => ShipsFor(sector)[0];
+        public static string CaseTitleFor(int sector) => sector == 1 ? "Caso 2: Kestrel Explorer" : sector == 2 ? "Caso 3: Oceanic Crown 9" : "Caso 1: Hai Feng 77";
+        public static string CaseSummaryFor(int sector) => sector == 1
+            ? "Arrastrero industrial de 85 m con licencia falsificada y apagón de AIS en el Golfo de Guinea."
+            : sector == 2
+            ? "Palangrero de atún de 95 m que lleva 2 años sin tocar puerto bajo la red de Tidewater Holdings."
+            : "Potero industrial de 90 m con señal AIS apagada fuera de la zona económica exclusiva.";
+        public static int DouglasFor(int sector, float hours) => Mathf.Min(9, DouglasAt(hours) + (sector == 1 ? 1 : sector == 2 ? 2 : 0));
+
         public static bool LayerVisible(ShipDef ship, Anomaly a, int mask, float hours)
         {
             if (a.layer < 0) return hours >= a.minHours;
@@ -247,6 +306,28 @@ namespace Kairos
             new NodeDef { name = "Cormorán Trade Ltd", role = "Empresa fachada", pos = new Vector2(.64f, .5f) },
             new NodeDef { name = "Tidewater Austral", role = "Beneficiario final", pos = new Vector2(.875f, .5f) },
         };
+
+        public static readonly NodeDef[] NodesSector2 =
+        {
+            new NodeDef { name = "Kestrel Explorer", role = "Arrastrero", pos = new Vector2(.12f, .5f) },
+            new NodeDef { name = "Atlantic Reef", role = "Frigorífico", pos = new Vector2(.42f, .85f) },
+            new NodeDef { name = "Agencia Costa Oeste", role = "Reclutadora", pos = new Vector2(.42f, .15f) },
+            new NodeDef { name = "Guinea Horizon Ltd", role = "Armador registrado", pos = new Vector2(.4f, .5f) },
+            new NodeDef { name = "Gold Coast Trading", role = "Empresa fachada", pos = new Vector2(.64f, .5f) },
+            new NodeDef { name = "Gulf Maritime Holdings", role = "Beneficiario final", pos = new Vector2(.875f, .5f) },
+        };
+
+        public static readonly NodeDef[] NodesSector3 =
+        {
+            new NodeDef { name = "Oceanic Crown 9", role = "Palangrero", pos = new Vector2(.12f, .5f) },
+            new NodeDef { name = "Mombasa Reefer", role = "Buque nodriza", pos = new Vector2(.42f, .85f) },
+            new NodeDef { name = "Agencia Índico Sur", role = "Reclutadora", pos = new Vector2(.42f, .15f) },
+            new NodeDef { name = "Mascarene Vessels", role = "Armador registrado", pos = new Vector2(.4f, .5f) },
+            new NodeDef { name = "Tidewater Logistics", role = "Empresa fachada", pos = new Vector2(.64f, .5f) },
+            new NodeDef { name = "Tidewater Holdings", role = "Beneficiario final", pos = new Vector2(.875f, .5f) },
+        };
+
+        public static NodeDef[] NodesFor(int sector) => sector == 1 ? NodesSector2 : sector == 2 ? NodesSector3 : Nodes;
 
         /// ¿Hay camino de pruebas del buque (0) al beneficiario final (5)?
         public static bool ChainComplete(List<string> links)

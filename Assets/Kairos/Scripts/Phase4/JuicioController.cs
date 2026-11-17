@@ -29,6 +29,8 @@ namespace Kairos
             UI.Fullscreen(root, new Color(.02f, .05f, .07f, .9f));
             Music.Play(C.phase >= 5 ? "airy" : "pulse");
             if (C.trialDays < 0) C.trialDays = StartDays;
+            if (C.phase < 5 && Game.Has(3, 4) && !C.links.Contains("3-4"))
+                C.links.Add("3-4");
             if (C.phase >= 5) ShowRepatriation(); else BuildBoard();
             if (C.phase >= 5) UI.SceneIntro(canvas.transform, "", "");
             else UI.SceneIntro(canvas.transform, "FASE 4", "Juicio financiero");
@@ -47,9 +49,10 @@ namespace Kairos
             var center = UI.Panel(root, new Vector2(.25f, .36f), new Vector2(.75f, .93f), default, default, new Color(.02f, .06f, .09f, .95f));
             board = (RectTransform)center.transform;
 
-            for (int i = 0; i < CaseData.Nodes.Length; i++)
+            var nodes = CaseData.NodesFor(C.sector);
+            for (int i = 0; i < nodes.Length; i++)
             {
-                var n = CaseData.Nodes[i];
+                var n = nodes[i];
                 var col = i == 5 ? Pal.Danger : i == 0 ? Pal.DeckLight : Pal.Sonar;
                 string tag = i == 0 ? "BUQUE OBJETIVO" : i == 1 ? "FRIGORÍFICO" : i == 2 ? "RECLUTADORA" : i == 3 ? "ARMADOR" : i == 4 ? "EMPRESA FACHADA" : "BENEFICIARIO FINAL";
                 var node = UI.Panel(board, n.pos, n.pos, new Vector2(-105, -46), new Vector2(105, 46), new Color(col.r * .16f, col.g * .16f, col.b * .16f, .95f));
@@ -89,7 +92,7 @@ namespace Kairos
         Vector2 NodeLocal(int i)
         {
             var r = board.rect;
-            return new Vector2((CaseData.Nodes[i].pos.x - .5f) * r.width, (CaseData.Nodes[i].pos.y - .5f) * r.height);
+            return new Vector2((CaseData.NodesFor(C.sector)[i].pos.x - .5f) * r.width, (CaseData.NodesFor(C.sector)[i].pos.y - .5f) * r.height);
         }
 
         void DrawEdge(string key, Color c, float width)
@@ -113,7 +116,8 @@ namespace Kairos
         static string EdgeName(string key)
         {
             var p = key.Split('-');
-            return CaseData.Nodes[int.Parse(p[0])].name + " - " + CaseData.Nodes[int.Parse(p[1])].name;
+            var nodes = CaseData.NodesFor(C.sector);
+            return nodes[int.Parse(p[0])].name + " - " + nodes[int.Parse(p[1])].name;
         }
 
         /// Una sola acción: enlaza (si procede) y cuenta para los indicadores.
@@ -251,8 +255,8 @@ namespace Kairos
                 $"<color=#6CFF8A>✔ Embargo Económico Decretado:</color> <b>{C.embargo:N0} ¢</b>.",
                 $"<color=#FFD27A>★ Fondo de Decomiso Legal (15%):</color> <b>+{fund15:N0} ¢</b> transferidos para rescate y repatriación digna.",
                 C.verdict == 3
-                    ? "<b>Condena Histórica:</b> El beneficiario final de Tidewater Austral ha sido sentenciado y sus activos marítimos confiscados. Primera grieta en el conglomerado internacional."
-                    : "<b>Retención Preventiva:</b> La red pierde el buque Hai Feng 77 y su cargamento. Tidewater Holdings evade cargos mayores por falta de pruebas vinculantes.",
+                    ? $"<b>Condena Histórica:</b> El beneficiario final de {CaseData.NodesFor(C.sector)[5].name} ha sido sentenciado y sus activos marítimos confiscados."
+                    : $"<b>Retención Preventiva:</b> La red pierde el buque {CaseData.NodesFor(C.sector)[0].name} y su cargamento. {CaseData.NodesFor(C.sector)[5].name} evade cargos mayores por falta de pruebas vinculantes.",
             }, "Fase 5: Administrar los fondos de decomiso para la atención de sobrevivientes.", "Atender a las personas rescatadas", () => Game.GoToPhase(5));
             Game.Write();
         }
@@ -339,6 +343,8 @@ namespace Kairos
             bool success = C.verdict > 0;
             if (success) Game.AddBudget(50000);
             C.phase = 6;
+            if (Game.S.completedSectors != null && C.sector < Game.S.completedSectors.Length)
+                Game.S.completedSectors[C.sector] = true;
             Game.Write();
             Music.Play("transmission");
 

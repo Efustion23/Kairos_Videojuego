@@ -8,7 +8,7 @@ namespace Kairos
     {
         public float yawA = -40, yawB = 40, range = 10f, angle = 55f, floorY = 0f;
         public string alarmName = "Cámara";
-        float charge, t;
+        float charge, t, shieldToastCd;
         VisionFan fan;
         float baseYaw;
         InfiltrationController I => InfiltrationController.I;
@@ -37,6 +37,7 @@ namespace Kairos
             {
                 seen = false;
                 fan.SetColor(new Color(.15f, .4f, .5f, .4f)); // Feedback visual: barrido térmico bloqueado
+                if (Time.time > shieldToastCd) { shieldToastCd = Time.time + 12f; I.Toast("Apantallamiento térmico: cámara CCTV burlada.", Pal.Sonar, 2.5f); }
             }
             charge = Mathf.Clamp01(charge + (seen ? Time.deltaTime * .5f * p.Visibility : -Time.deltaTime * .3f));
             if (charge >= 1f)

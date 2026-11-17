@@ -26,10 +26,19 @@ namespace Kairos
             agent.autoBraking = true;
             fan = VisionFan.Create(transform, .08f, viewRange, viewAngle);
             walker = GetComponent<Walker>();
+
+            // Linterna de patrulla sin sombras extra para no saturar el atlas de URP.
+            var lamp = new GameObject("Linterna");
+            lamp.transform.SetParent(transform, false);
+            lamp.transform.localPosition = new Vector3(0, 1.35f, .25f);
+            lamp.transform.localRotation = Quaternion.Euler(10, 0, 0);
+            var l = lamp.AddComponent<Light>();
+            l.type = LightType.Spot; l.color = new Color(1f, .88f, .68f); l.range = 10f; l.spotAngle = 46f; l.intensity = 3.5f;
+            l.shadows = LightShadows.None;
         }
 
-        // Alcance efectivo condicionado por lluvia nocturna y mar de fondo Douglas (Diego - S13-2)
-        public float EffectiveRange => viewRange * (Ocean.Douglas >= 5f ? .6f : .7f) * (Game.S.networkReorganized ? 1.15f : 1f);
+        // Alcance efectivo condicionado por lluvia nocturna, mar de fondo Douglas y sector
+        public float EffectiveRange => viewRange * (Ocean.Douglas >= 5f ? .6f : .7f) * (Game.S.networkReorganized ? 1.15f : 1f) * (Game.C.sector == 2 ? 1.15f : 1f);
 
         bool See(Vector3 target, out float dist)
         {

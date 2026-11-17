@@ -24,6 +24,7 @@ namespace Kairos
         class Marker { public ShipDef ship; public GameObject go, halo, ring; public TextMeshProUGUI label; public LineRenderer track; }
         readonly List<Marker> markers = new List<Marker>();
         readonly List<(GameObject go, int sector, TextMeshProUGUI label)> pins = new List<(GameObject, int, TextMeshProUGUI)>();
+        LineRenderer transshipLine;
 
         Canvas canvas;
         TextMeshProUGUI topBar, objective, dossier, irText;
@@ -43,11 +44,39 @@ namespace Kairos
             BuildGlobe();
             BuildUI();
             Music.Play("sector");
-            foreach (var s in CaseData.Ships) AddMarker(s);
+            RebuildMarkers();
             for (int i = 0; i < CaseData.Sectors.Length; i++) AddPin(i);
-            var q = FaceRotation(CaseData.Sectors[0].lat, CaseData.Sectors[0].lon + 25);
+            var q = FaceRotation(CaseData.Sectors[C.sector].lat, CaseData.Sectors[C.sector].lon + 25);
             globe.rotation = q; targetRot = q;
             Refresh();
+        }
+
+        void RebuildMarkers()
+        {
+            foreach (var m in markers)
+            {
+                if (m.go != null) Destroy(m.go);
+                if (m.halo != null) Destroy(m.halo);
+                if (m.ring != null) Destroy(m.ring);
+                if (m.track != null) Destroy(m.track.gameObject);
+                if (m.label != null) Destroy(m.label.gameObject);
+            }
+            markers.Clear();
+            var ships = CaseData.ShipsFor(C.sector);
+            foreach (var s in ships) AddMarker(s);
+            if (transshipLine == null)
+            {
+                transshipLine = new GameObject("Transbordo").AddComponent<LineRenderer>();
+                transshipLine.transform.SetParent(globe, false);
+                transshipLine.useWorldSpace = false; transshipLine.widthMultiplier = .0009f;
+                transshipLine.material = Mats.Glow(new Color(Pal.DeckLight.r, Pal.DeckLight.g, Pal.DeckLight.b, .85f));
+                transshipLine.positionCount = 2;
+            }
+            if (ships.Length >= 2)
+            {
+                transshipLine.SetPosition(0, LatLon(ships[0].lat, ships[0].lon, 1.003f));
+                transshipLine.SetPosition(1, LatLon(ships[1].lat, ships[1].lon, 1.003f));
+            }
         }
 
         // ---------- Globo ----------
@@ -150,10 +179,11 @@ namespace Kairos
         void AddPin(int i)
         {
             var d = CaseData.Sectors[i];
-            var go = Quad("sector" + i, i == 0 ? Pal.Sonar : Pal.Dim, .06f, true, true);
+            var go = Quad("sector" + i, Pal.Sonar, .06f, true, true);
             go.transform.localPosition = LatLon(d.lat, d.lon, 1.02f);
             go.AddComponent<SectorTag>().sector = i;
-            var label = UI.Text(labels, d.name + (i == 0 ? "" : "  [BLOQUEADO]"), 22, i == 0 ? Pal.Sonar : Pal.Dim);
+            string done = Game.S.completedSectors != null && i < Game.S.completedSectors.Length && Game.S.completedSectors[i] ? "  [COMPLETADO]" : "";
+            var label = UI.Text(labels, d.name + done, 22, Pal.Sonar);
             label.rectTransform.anchorMin = label.rectTransform.anchorMax = Vector2.zero;
             label.rectTransform.sizeDelta = new Vector2(460, 30);
             label.rectTransform.pivot = new Vector2(0, .5f);
@@ -263,7 +293,7 @@ namespace Kairos
             float h = C.hours;
             string clouds = CaseData.Cloudy(h) ? "Nublado" : "Despejado";
             string night = CaseData.Night(h) ? "Noche" : "Día";
-            topBar.text = $"<b>FASE 1 · RASTREO</b>     {Game.FormatClock(h)}     Ancho de banda <color=#3FE0D0>{C.abLeft} AB</color>     {night}, {clouds}     Douglas {CaseData.DouglasAt(h)}     Próx. SAR: {(CaseData.SarNow(h) ? "AHORA" : (CaseData.NextSarPass(h) - h).ToString("0.#") + " h")}";
+            topBar.text = $"<b>FASE 1 · RASTREO</b>     {Game.FormatClock(h)}     Ancho de banda <color=#3FE0D0>{C.abLeft} AB</color>     {night}, {clouds}     Douglas {CaseData.DouglasFor(C.sector, h)}     Próx. SAR: {(CaseData.SarNow(h) ? "AHORA" : (CaseData.NextSarPass(h) - h).ToString("0.#") + " h")}";
 
             for (int i = 0; i < layerBtns.Length; i++)
             {
@@ -301,16 +331,24 @@ namespace Kairos
             irBar.Set(ir / 100f);
             deploy.interactable = selected != null && ir >= CaseData.IrToScan;
 
-            // Objetivo guiado para el tutorial del Sector 1.
+            // Objetivo guiado del sector activo.
+            string targetName = CaseData.TargetFor(C.sector).name;
+            string secName = CaseData.Sectors[C.sector].name;
             string o;
-            if (!zoomed) o = "<b>Lo que sabemos</b>\nUn potero de 90 m ha desaparecido del AIS frente a Argentina.\n\nHaz clic en el <color=#3FE0D0>Sector 1</color> del globo.";
-            else if (selected == null) o = "<b>Busca al sospechoso</b>\nUn buque ha apagado su señal. Haz clic en <color=#3FE0D0>Hai Feng 77 (última señal)</color>, o investiga otro.";
-            else if (ir < CaseData.IrToScan && !selected.target) o = $"<b>{selected.name}</b>\nNo parece nuestro objetivo. Prueba con Hai Feng 77.";
+            if (!zoomed) o = $"<b>Lo que sabemos</b>\n{CaseData.CaseSummaryFor(C.sector)}\n\nHaz clic en cualquier <color=#3FE0D0>Sector</color> del globo.";
+            else if (selected == null) o = $"<b>{secName}</b>\nUn buque ha apagado su señal. Haz clic en <color=#3FE0D0>{targetName} (última señal)</color>, o investiga otro.";
+            else if (ir < CaseData.IrToScan && !selected.target) o = $"<b>{selected.name}</b>\nNo parece nuestro objetivo. Prueba con {targetName}.";
             else if (ir < CaseData.IrToScan) o = $"<b>Sube el IR a {CaseData.IrToScan}</b>\nUsa capas de satélite para confirmar sospechas. Prueba <color=#3FE0D0>{NextLayerTip()}</color>. Si hay que esperar, el botón lo hace por ti.";
             else o = "<b>Índice suficiente</b>\nPulsa <color=#6CFF8A>Desplegar lancha</color>.";
+            o += "\n\n<size=17><color=#8DA2AB>Controles: Arrastrar = girar globo · Clic = seleccionar · Esc = alejar</color></size>";
             objective.text = o;
 
             foreach (var m in markers) UpdateMarker(m);
+            if (transshipLine != null)
+            {
+                bool showLink = zoomed && (Game.Has(3, 1) || (C.revealed & (1 << CaseData.LayerSAR)) != 0 || (C.revealed & (1 << CaseData.LayerOptical)) != 0);
+                transshipLine.gameObject.SetActive(showLink);
+            }
             cloudMat.SetColor("_Color", new Color(1, 1, 1, CaseData.Cloudy(h) ? .85f : .18f));
         }
 
@@ -379,18 +417,20 @@ namespace Kairos
             if (ms != null) { selected = ms.ship; Sfx.Play(Sfx.Click, .5f); Refresh(); return; }
             var st = hit.collider.GetComponent<SectorTag>();
             if (st == null || zoomed) return;
-            if (st.sector == 0) ZoomIn();
-            else
+            if (st.sector != C.sector)
             {
-                var d = CaseData.Sectors[st.sector];
-                toast.Show($"{d.name}: no disponible en esta versión.", Pal.DeckLight, 5);
+                Game.StartCase(st.sector);
+                C.revealed |= 1;
+                selected = null;
+                RebuildMarkers();
             }
+            ZoomIn(st.sector);
         }
 
-        void ZoomIn()
+        void ZoomIn(int sector)
         {
             zoomed = true; targetDist = 1.13f;
-            targetRot = FaceRotation(CaseData.Sectors[0].lat, CaseData.Sectors[0].lon);
+            targetRot = FaceRotation(CaseData.Sectors[sector].lat, CaseData.Sectors[sector].lon);
             foreach (var p in pins) { p.go.SetActive(false); p.label.gameObject.SetActive(false); }
             Refresh();
         }
