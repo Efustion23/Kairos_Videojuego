@@ -598,16 +598,6 @@ namespace Kairos.EditorTools
         static GameObject BoatPrefab()
         {
             if (boatPrefab != null) return boatPrefab;
-            var fbx = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/Models/Vehicles/Lancha_RHIB.fbx");
-            if (fbx != null)
-            {
-                var root = new GameObject("Lancha");
-                var model = (GameObject)PrefabUtility.InstantiatePrefab(fbx, root.transform);
-                model.name = "RHIB_Model";
-                boatPrefab = PrefabUtility.SaveAsPrefabAsset(root, $"{Root}/Prefabs/Lancha.prefab");
-                UnityEngine.Object.DestroyImmediate(root);
-                return boatPrefab;
-            }
             var b = new ShipBuild { root = new GameObject("Lancha") };
             b.colliders = new GameObject("c").transform;
             b.colliders.SetParent(b.root.transform, false);
@@ -686,14 +676,6 @@ namespace Kairos.EditorTools
                 var r = go.GetComponent<MeshRenderer>();
                 r.sharedMaterial = mat;
                 r.shadowCastingMode = ShadowCastingMode.Off; r.receiveShadows = false;
-            }
-
-            var reeferFbx = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/Models/Ship/PolarMeridian_Reefer.fbx");
-            if (reeferFbx != null)
-            {
-                var reefer = (GameObject)PrefabUtility.InstantiatePrefab(reeferFbx, root);
-                reefer.name = "PolarMeridian";
-                reefer.transform.SetPositionAndRotation(new Vector3(240f, 0f, 310f), Quaternion.Euler(0f, -145f, 0f));
             }
         }
 

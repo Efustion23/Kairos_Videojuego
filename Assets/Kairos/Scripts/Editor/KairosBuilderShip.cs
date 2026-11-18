@@ -384,20 +384,6 @@ namespace Kairos.EditorTools
             ShipDetails(b);
             Combine(b, "HaiFeng"); // una malla por material, como un único asset cada una
 
-            var maritimeFbx = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/Models/Ship/HaiFeng_MaritimeDetails.fbx");
-            if (maritimeFbx != null)
-            {
-                var detailsGo = (GameObject)PrefabUtility.InstantiatePrefab(maritimeFbx, b.root.transform);
-                detailsGo.name = "HaiFeng_MaritimeDetails";
-            }
-
-            var fishingFbx = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/Models/Ship/HaiFeng_FishingProps.fbx");
-            if (fishingFbx != null)
-            {
-                var fishingGo = (GameObject)PrefabUtility.InstantiatePrefab(fishingFbx, b.root.transform);
-                fishingGo.name = "HaiFeng_FishingProps";
-            }
-
             var prefabPath = $"{Root}/Prefabs/HaiFeng77.prefab";
             PrefabUtility.SaveAsPrefabAsset(b.root, prefabPath);
             Object.DestroyImmediate(b.root);
