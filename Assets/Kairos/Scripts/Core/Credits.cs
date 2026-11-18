@@ -11,6 +11,12 @@ namespace Kairos
                 "congusbongus: Abandoned passages",
                 "Graciano Choc (Bz.gamedev): GameOver or Underwater",
             }),
+            ("Efectos de sonido", "CC0, vía Kenney y OpenGameArt", new[]
+            {
+                "Kenney: Interface Sounds, Impact Sounds, RPG Audio, Sci-Fi Sounds",
+                "kresiek-the-furry: AMB Rain Loop 1",
+                "sketchman3: wind whoosh loop",
+            }),
             ("Objetos 3D", "CC0, vía Poly Haven", new[]
             {
                 "Serhii Khromov: Barrel 03",
@@ -33,7 +39,7 @@ namespace Kairos
             }),
             ("Audio Procedural y Shaders", "Autoría propia del equipo KAIROS (C# DSP y HLSL URP)", new[]
             {
-                "Síntesis acústica de sonar, eco metálico, radio VHF/UHF, lluvia marina y música adaptativa",
+                "Síntesis acústica de sonar, eco metálico, radio VHF/UHF, alarma y ambientes del barco",
                 "Shaders URP: Océano nocturno, estela de lancha, barrido radial de sonar y resaltado forense",
             }),
             ("Tipografía", "SIL Open Font License", new[] { "Liberation Sans" }),

@@ -14,6 +14,17 @@ MÚSICA (Assets/Kairos/Resources/Music), CC0, OpenGameArt
 - underwater: "GameOver or Underwater", Graciano Choc - Bz.gamedev (publicado como GPL 3.0 y CC0; se usa bajo CC0)
   https://opengameart.org/node/161645
 
+EFECTOS DE SONIDO (Assets/Kairos/Resources/Sfx), CC0
+- Kenney (www.kenney.nl), packs Interface Sounds, Impact Sounds, RPG Audio y Sci-Fi Sounds:
+  click (click_001), seal (confirmation_001), step (footstep_concrete_000), knock (impactMetal_medium_000),
+  grapple (impactMetal_heavy_000), slip (impactSoft_heavy_000), shutter (metalClick), creak (creak1),
+  stun (forceField_000), plasma (thrusterFire_000)
+  https://kenney.nl/assets/interface-sounds · https://kenney.nl/assets/impact-sounds
+  https://kenney.nl/assets/rpg-audio · https://kenney.nl/assets/sci-fi-sounds
+- rain: "AMB Rain Loop 1", kresiek-the-furry (OpenGameArt) https://opengameart.org/content/amb-rain-loop-1
+- wind: "wind whoosh loop", sketchman3 (OpenGameArt) https://opengameart.org/content/wind-whoosh-loop
+  (lluvia y viento con la ganancia normalizada; el sonar, la alarma, la radio y los ambientes del barco son síntesis propia)
+
 OBJETOS 3D (Assets/Kairos/Models/Props), CC0, Poly Haven: https://polyhaven.com/a/<nombre>
 - barrel_03: Serhii Khromov
 - plastic_crate_02: Fabi_G
