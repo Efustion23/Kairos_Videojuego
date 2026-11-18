@@ -8,6 +8,7 @@ Shader "Kairos/Pruebas/SonarScreenSweep"
         _Width("Wavefront Width", Float) = 0.08
         _Intensity("HDR Intensity", Float) = 2.5
         _Ripples("Ripple Frequency", Float) = 32.0
+        [HideInInspector] _MainTex("Texture", 2D) = "white" {} // la UI de Unity la exige en todo material de Image
     }
     SubShader
     {

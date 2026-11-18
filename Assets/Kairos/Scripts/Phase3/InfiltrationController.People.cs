@@ -15,7 +15,7 @@ namespace Kairos
         {
             DialogWith = npc;
             SetOverlay(Mode.Dialog);
-            player.FaceTo(npc.transform.position);
+            player.FaceTo(npc.transform.position, 20f); // el panel tapa la derecha
             var toPlayer = player.transform.position - npc.transform.position; toPlayer.y = 0;
             if (toPlayer.sqrMagnitude > .01f) npc.transform.rotation = Quaternion.LookRotation(toPlayer);
             var p = UI.Panel(overlay, new Vector2(.52f, .08f), new Vector2(.98f, .92f)); // a un lado: los personajes siguen a la vista
@@ -26,7 +26,7 @@ namespace Kairos
 
             // Módulo 03: Indicador de Traductor Neuronal (Alexander - S13-1)
             if (Game.Has(2, 4))
-                UI.Line(s, "🌐 <color=#3FE0D0>TRADUCTOR NEURONAL EN CASCO: ACTIVO</color>", 16, Pal.Sonar, true);
+                UI.Line(s, "● <color=#3FE0D0>TRADUCTOR NEURONAL EN CASCO: ACTIVO</color>", 16, Pal.Sonar, true);
 
             // Medidor interactivo de confianza y empatía (Alexander - S13-1)
             var trustColor = st.trust >= 60 ? Pal.Sealed : st.trust >= 40 ? Pal.ThermHot : Pal.Danger;

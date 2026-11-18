@@ -187,7 +187,7 @@ namespace Kairos
                 var indNames = new List<string>();
                 foreach (var i in d.indicators) indNames.Add(CaseData.Indicators[i]);
                 string shaDisplay = (seal != null && seal.sha.Length >= 24) ? seal.sha.Substring(0, 24) : (seal?.sha ?? "N/A");
-                detail.text = $"<b>{d.title}</b>  <color=#3FE0D0>[Categoría {d.cat}]</color>\n{(Game.S.omitSensitive ? d.descSafe : d.desc)}\n<b>Indicadores OIT:</b> {(indNames.Count > 0 ? string.Join(", ", indNames) : "<color=#8DA2AB>Sin indicadores directos (vínculo societario estratégico)</color>")}\n<size=15><color=#6CFF8A>✔ Sello Forense:</color> SHA-256 <color=#3FE0D0>{shaDisplay}…</color>  |  Fecha: <color=#8DA2AB>{seal?.stamp}</color></size>";
+                detail.text = $"<b>{d.title}</b>  <color=#3FE0D0>[Categoría {d.cat}]</color>\n{(Game.S.omitSensitive ? d.descSafe : d.desc)}\n<b>Indicadores OIT:</b> {(indNames.Count > 0 ? string.Join(", ", indNames) : "<color=#8DA2AB>Sin indicadores directos (vínculo societario estratégico)</color>")}\n<size=15><color=#6CFF8A>■ Sello Forense:</color> SHA-256 <color=#3FE0D0>{shaDisplay}…</color>  |  Fecha: <color=#8DA2AB>{seal?.stamp}</color></size>";
                 bool any = false;
                 foreach (var key in d.edges)
                 {
@@ -252,8 +252,8 @@ namespace Kairos
                 $"<b>Veredicto del Tribunal: {CaseData.VerdictNames[C.verdict]}</b>",
                 $"Expediente Fiscal Oficial: <b>KAIROS-JUD-2026</b>  |  Investigador: {Game.Inspector}",
                 $"Carga probatoria: <b>{inds} de 11 indicadores de la OIT</b> debidamente acreditados con cadena de custodia.",
-                $"<color=#6CFF8A>✔ Embargo Económico Decretado:</color> <b>{C.embargo:N0} ¢</b>.",
-                $"<color=#FFD27A>★ Fondo de Decomiso Legal (15%):</color> <b>+{fund15:N0} ¢</b> transferidos para rescate y repatriación digna.",
+                $"<color=#6CFF8A>■ Embargo Económico Decretado:</color> <b>{C.embargo:N0} ¢</b>.",
+                $"<color=#FFD27A>■ Fondo de Decomiso Legal (15%):</color> <b>+{fund15:N0} ¢</b> transferidos para rescate y repatriación digna.",
                 C.verdict == 3
                     ? $"<b>Condena Histórica:</b> El beneficiario final de {CaseData.NodesFor(C.sector)[5].name} ha sido sentenciado y sus activos marítimos confiscados."
                     : $"<b>Retención Preventiva:</b> La red pierde el buque {CaseData.NodesFor(C.sector)[0].name} y su cargamento. {CaseData.NodesFor(C.sector)[5].name} evade cargos mayores por falta de pruebas vinculantes.",

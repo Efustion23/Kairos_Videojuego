@@ -7,6 +7,7 @@ namespace Kairos
         void SetOverlay(Mode m)
         {
             mode = m;
+            PlaceToast(m == Mode.Dialog);
             UI.Clear(overlay);
             overlay.gameObject.SetActive(true);
             Time.timeScale = 0;
@@ -15,8 +16,17 @@ namespace Kairos
 
         void CloseOverlayKeep() { UI.Clear(overlay); }
 
+        /// En un diálogo el panel ocupa la derecha: los avisos van a la mitad libre.
+        void PlaceToast(bool aside)
+        {
+            var r = (RectTransform)toast.transform;
+            r.anchorMin = new Vector2(aside ? .02f : .2f, .68f);
+            r.anchorMax = new Vector2(aside ? .5f : .8f, .84f);
+        }
+
         public void CloseOverlay()
         {
+            PlaceToast(false);
             UI.Clear(overlay);
             overlay.gameObject.SetActive(false);
             Time.timeScale = 1;
@@ -47,7 +57,7 @@ namespace Kairos
                 {
                     var d = CaseData.Evidence(ev.id);
                     string catTag = d.cat == 'C' ? "CONTRATO" : d.cat == 'L' ? "BITÁCORA" : d.cat == 'T' ? "TESTIMONIO" : "FORENSE";
-                    UI.Line(s, $"<color=#3FE0D0>◄ {catTag} ►</color> <b>{d.title}</b>\n{(Game.S.omitSensitive ? d.descSafe : d.desc)}\n<size=15><color=#6CFF8A>✔ SELLO SHA-256: {ev.sha.Substring(0, 20)}…</color>  ·  <color=#8DA2AB>{ev.stamp}</color></size>", 19);
+                    UI.Line(s, $"<color=#3FE0D0>◄ {catTag} ►</color> <b>{d.title}</b>\n{(Game.S.omitSensitive ? d.descSafe : d.desc)}\n<size=15><color=#6CFF8A>■ SELLO SHA-256: {ev.sha.Substring(0, 20)}…</color>  ·  <color=#8DA2AB>{ev.stamp}</color></size>", 19);
                 }
             }
 

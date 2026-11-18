@@ -23,6 +23,7 @@ namespace Kairos
                 n -= fade;
             }
             var c = AudioClip.Create(name, n, 1, Rate, false);
+            c.hideFlags = HideFlags.DontSave; // procedural: ni se guarda en la escena ni la destruye el cambio de escena
             c.SetData(d, 0);
             return c;
         }

@@ -217,7 +217,7 @@ namespace Kairos.EditorTools
             var fog = go.AddComponent<Kairos.Pruebas.MaritimeFogAtmosphereController>();
             fog.fogDensity = .0022f; fog.marineFogColor = RenderSettings.fogColor;
             go.AddComponent<Kairos.Pruebas.MaritimeRainParticlesController>();
-            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/Kairos/Arte y audio/Audio/SonarAudioMixer.mixer");
+            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/Kairos/Arte y audio/Audio/Resources/SonarAudioMixer.mixer");
             Kairos.Pruebas.MasterAudioMixerCalibration.CreateMasterAudioCalibration(mixer, go.transform);
             SaveScene(s, "00_Menu", list);
         }
@@ -238,6 +238,14 @@ namespace Kairos.EditorTools
             SaveScene(s, "01_Rastreo", list);
         }
 
+        /// La radio va en su propio objeto: sus filtros pasa-banda afectan a todo AudioSource del mismo objeto.
+        static void RadioComms(Transform parent)
+        {
+            var radio = new GameObject("RadioTactica");
+            radio.transform.SetParent(parent, false);
+            radio.AddComponent<Kairos.Pruebas.TacticalRadioCommsAudio>();
+        }
+
         static void BuildSonarScene(GameObject ship, List<EditorBuildSettingsScene> list)
         {
             var s = NewScene("02_Sonar");
@@ -250,13 +258,13 @@ namespace Kairos.EditorTools
             c.cam = cam; c.ship = sh.transform; c.boat = boat.transform;
 
             go.AddComponent<Kairos.Pruebas.MaritimeRainParticlesController>();
-            go.AddComponent<Kairos.Pruebas.TacticalRadioCommsAudio>();
+            RadioComms(go.transform);
             go.AddComponent<Kairos.Pruebas.SonarWaveRadialSweep>();
             var thermalVisor = go.AddComponent<Kairos.Pruebas.ThermalVisorBoatController>();
             thermalVisor.targetCamera = cam;
             var fog = go.AddComponent<Kairos.Pruebas.MaritimeFogAtmosphereController>();
             fog.fogDensity = .0022f; fog.marineFogColor = RenderSettings.fogColor;
-            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/Kairos/Arte y audio/Audio/SonarAudioMixer.mixer");
+            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/Kairos/Arte y audio/Audio/Resources/SonarAudioMixer.mixer");
             Kairos.Pruebas.MasterAudioMixerCalibration.CreateMasterAudioCalibration(mixer, go.transform);
 
             SaveScene(s, "02_Sonar", list);
@@ -457,13 +465,13 @@ namespace Kairos.EditorTools
             var sysGo = new GameObject("SistemasAmbientales");
             sysGo.transform.SetParent(gameplay, false);
             sysGo.AddComponent<Kairos.Pruebas.MaritimeRainParticlesController>();
-            sysGo.AddComponent<Kairos.Pruebas.TacticalRadioCommsAudio>();
+            RadioComms(sysGo.transform);
             sysGo.AddComponent<Kairos.Pruebas.InteriorSpatialAudio>();
             sysGo.AddComponent<Kairos.Pruebas.BridgeAndCabinInterior>();
             var fog = sysGo.AddComponent<Kairos.Pruebas.MaritimeFogAtmosphereController>();
             fog.fogDensity = .0022f; fog.marineFogColor = RenderSettings.fogColor;
             Kairos.Pruebas.AdaptiveTensionMusic.CreateAdaptiveMusicSystem(sysGo.transform);
-            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/Kairos/Arte y audio/Audio/SonarAudioMixer.mixer");
+            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/Kairos/Arte y audio/Audio/Resources/SonarAudioMixer.mixer");
             Kairos.Pruebas.MasterAudioMixerCalibration.CreateMasterAudioCalibration(mixer, sysGo.transform);
             if (compressor != null)
                 Kairos.Pruebas.InteriorSpatialAudio.CreateSpatialLoop(compressor.gameObject, Kairos.Pruebas.InteriorSpatialAudio.CompressorHumLoop, 0.45f, 25f);

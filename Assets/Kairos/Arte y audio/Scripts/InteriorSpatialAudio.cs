@@ -36,6 +36,7 @@ namespace Kairos.Pruebas
                 n -= crossfade;
             }
             var clip = AudioClip.Create(name, n, 1, SampleRate, false);
+            clip.hideFlags = HideFlags.DontSave; // procedural: ni se guarda en la escena ni la destruye el cambio de escena
             clip.SetData(samples, 0);
             return clip;
         }
