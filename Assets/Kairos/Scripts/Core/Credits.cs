@@ -15,13 +15,16 @@ namespace Kairos
             {
                 "Serhii Khromov: Barrel 03",
                 "Fabi_G: Plastic Crate 02",
-                "Ulan Cabanilla: Medical Box, Metal Stool 02, Metal Office Desk, Plastic Jerrycan, Metal Jerrycan Green",
+                "Ulan Cabanilla: Medical Box, Metal Stool 02, Metal Office Desk, Plastic Jerrycan, Metal Jerrycan Green, Office Notepads",
                 "Aron Łyczek: Dining Table",
                 "James Ray Cock: Utility Box 01",
                 "Kuutti Siitonen: Industrial Wall Lamp",
                 "Hank Kaamura: Lifebuoy",
                 "Slinc: Propane Tank",
                 "DaDrood: Binder Notebook",
+                "Mateusz Sadek: Vintage Radio Transceiver",
+                "Arrangemonk: Classic Laptop",
+                "ProgrammerOnCoffee: Clipboard",
             }),
             ("Personajes y Animación", "Modelos 3D propios / Tripo AI · Rigging y clips de Adobe Mixamo", new[]
             {

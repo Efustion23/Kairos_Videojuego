@@ -35,9 +35,12 @@ namespace Kairos.EditorTools
             bool first = true;
             foreach (var r in mesh.GetComponentsInChildren<MeshRenderer>())
             {
+                // Algunos modelos traen curvas (líneas) exportadas como malla: no se dibujan.
+                var mf = r.GetComponent<MeshFilter>();
+                if (mf == null || mf.sharedMesh == null || mf.sharedMesh.subMeshCount == 0 || mf.sharedMesh.GetTopology(0) != MeshTopology.Triangles || mf.sharedMesh.GetIndexCount(0) == 0) { r.gameObject.SetActive(false); continue; }
                 var slots = r.sharedMaterials;
                 for (int i = 0; i < slots.Length; i++)
-                    slots[i] = PropMaterial(id, dir, slots[i] != null && slots[i].name.ToLowerInvariant().Contains("glass"));
+                    slots[i] = PropMaterial(id, dir, slots[i] != null ? slots[i].name : id);
                 r.sharedMaterials = slots;
                 if (first) { bounds = r.bounds; first = false; } else bounds.Encapsulate(r.bounds);
             }
@@ -48,9 +51,21 @@ namespace Kairos.EditorTools
             return propPrefabs[id] = prefab;
         }
 
-        static Material PropMaterial(string id, string dir, bool glass)
+        /// Textura de un juego (diff, nor_gl, rough, metal, opacity) sea cual sea su formato.
+        static string Tex(string dir, string set, string kind)
         {
-            string path = $"{dir}/M_{id}{(glass ? "_glass" : "")}.mat";
+            foreach (var ext in new[] { ".jpg", ".png", ".exr" })
+                if (File.Exists($"{dir}/{set}_{kind}_1k{ext}")) return $"{dir}/{set}_{kind}_1k{ext}";
+            return null;
+        }
+
+        /// Cada hueco de material usa su propio juego de texturas si el modelo lo trae (p. ej. «_accessories»).
+        static Material PropMaterial(string id, string dir, string slot)
+        {
+            string lower = slot.ToLowerInvariant();
+            bool glass = lower.Contains("glass"), screen = lower.EndsWith("_screen");
+            if (Tex(dir, slot, "diff") != null) id = slot;
+            string path = $"{dir}/M_{id}{(glass ? "_glass" : screen ? "_screen" : "")}.mat";
             var m = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (m != null) return m;
             m = new Material(Shader.Find("Universal Render Pipeline/Lit"));
@@ -64,16 +79,27 @@ namespace Kairos.EditorTools
                 AssetDatabase.CreateAsset(m, path);
                 return m;
             }
-            string baseTex = $"{dir}/{id}_diff_1k.jpg", opacity = $"{dir}/{id}_opacity_1k.png";
-            if (File.Exists(opacity)) baseTex = BakeAlpha(baseTex, opacity, $"{dir}/{id}_base.png");
+            if (screen)
+            {
+                // Pantalla encendida: carta náutica en verde azulado, como el resto de consolas del puente.
+                m.SetColor("_BaseColor", new Color(.03f, .18f, .16f));
+                m.SetFloat("_Smoothness", .9f);
+                m.EnableKeyword("_EMISSION");
+                m.SetColor("_EmissionColor", new Color(.15f, .85f, .7f) * 1.4f);
+                m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+                AssetDatabase.CreateAsset(m, path);
+                return m;
+            }
+            string baseTex = Tex(dir, id, "diff"), opacity = Tex(dir, id, "opacity");
+            if (opacity != null) baseTex = BakeAlpha(baseTex, opacity, $"{dir}/{id}_base.png");
             m.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(baseTex));
-            if (File.Exists(opacity))
+            if (opacity != null)
             {
                 m.SetFloat("_AlphaClip", 1); m.SetFloat("_Cutoff", .5f);
                 m.EnableKeyword("_ALPHATEST_ON");
                 m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
             }
-            string normal = $"{dir}/{id}_nor_gl_1k.exr";
+            string normal = Tex(dir, id, "nor_gl");
             var ni = (TextureImporter)AssetImporter.GetAtPath(normal);
             if (ni.textureType != TextureImporterType.NormalMap) { ni.textureType = TextureImporterType.NormalMap; ni.SaveAndReimport(); }
             m.SetTexture("_BumpMap", AssetDatabase.LoadAssetAtPath<Texture2D>(normal));
@@ -92,10 +118,9 @@ namespace Kairos.EditorTools
             string output = $"{dir}/{id}_mask.png";
             if (!File.Exists(output))
             {
-                string rough = File.Exists($"{dir}/{id}_rough_1k.exr") ? $"{dir}/{id}_rough_1k.exr" : $"{dir}/{id}_rough_1k.jpg";
-                string metal = $"{dir}/{id}_metal_1k.exr";
+                string rough = Tex(dir, id, "rough"), metal = Tex(dir, id, "metal");
                 var r = ReadPixels(rough, out int w, out int h);
-                var mt = File.Exists(metal) ? ReadPixels(metal, out _, out _) : null;
+                var mt = metal != null ? ReadPixels(metal, out _, out _) : null;
                 var px = new Color[r.Length];
                 for (int i = 0; i < px.Length; i++)
                     px[i] = new Color(mt != null && mt.Length == r.Length ? mt[i].r : 0, 1, 0, 1 - r[i].r);

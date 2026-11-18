@@ -1,5 +1,5 @@
 Recursos de terceros en KAIROS: Sombras en Altamar
-Comprobados y actualizados el 2026-11-17. CC0 = dominio público, sin atribución obligatoria.
+Comprobados y actualizados el 2026-11-18. CC0 = dominio público, sin atribución obligatoria.
 
 EQUIPO DE DESARROLLO (Unidad KAIROS)
 - Alexander Aiken Benites Fierro: Dirección de Diseño, UI/UX, Narrativa y Gestión de Escenas
@@ -24,7 +24,10 @@ OBJETOS 3D (Assets/Kairos/Models/Props), CC0, Poly Haven: https://polyhaven.com/
 - lifebuoy: Hank Kaamura
 - propane_tank: Slinc
 - binder_notebook: DaDrood
-- Radio VHF Satelital y Plotter GPS Náutico: Modelado modular propio del equipo KAIROS
+- vintage_radio_transceiver (Radio VHF satelital): Mateusz Sadek
+- classic_laptop (Plotter GPS náutico): Arrangemonk
+- clipboard (manifiesto, planilla de turnos y facturas): ProgrammerOnCoffee
+- office_notepads (contratos falsos): Ulan Cabanilla
 
 PERSONAJES 3D Y ANIMACIONES (Assets/Kairos/Models)
 - Modelos 3D humanoid (Inspectora KAIROS, Rodel Santos, Ari Wibowo, Moussa Diallo, Thant Zin, Guardias y Capitán): generados con herramienta de modelado 3D (Tripo AI) bajo licencia de uso libre en proyectos académicos y comerciales.
