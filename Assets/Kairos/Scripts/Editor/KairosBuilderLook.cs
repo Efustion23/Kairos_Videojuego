@@ -687,6 +687,14 @@ namespace Kairos.EditorTools
                 r.sharedMaterial = mat;
                 r.shadowCastingMode = ShadowCastingMode.Off; r.receiveShadows = false;
             }
+
+            var reeferFbx = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/Models/Ship/PolarMeridian_Reefer.fbx");
+            if (reeferFbx != null)
+            {
+                var reefer = (GameObject)PrefabUtility.InstantiatePrefab(reeferFbx, root);
+                reefer.name = "PolarMeridian";
+                reefer.transform.SetPositionAndRotation(new Vector3(240f, 0f, 310f), Quaternion.Euler(0f, -145f, 0f));
+            }
         }
 
         // ---------- Tratamiento de imagen ----------
