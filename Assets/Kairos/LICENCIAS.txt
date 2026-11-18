@@ -41,7 +41,7 @@ OBJETOS 3D (Assets/Kairos/Models/Props), CC0, Poly Haven: https://polyhaven.com/
 - office_notepads (contratos falsos): Ulan Cabanilla
 
 PERSONAJES 3D Y ANIMACIONES (Assets/Kairos/Models)
-- Modelos 3D humanoid (Inspectora KAIROS, Rodel Santos, Ari Wibowo, Moussa Diallo, Thant Zin, Guardias y Capitán): generados con herramienta de modelado 3D (Tripo AI) bajo licencia de uso libre en proyectos académicos y comerciales.
+- Modelos 3D humanoid (Inspectora KAIROS, Rodel Santos, Ari Wibowo, Moussa Diallo, Thant Zin, Guardias y Capitán): generados por el equipo con Tripo AI (https://www.tripo3d.ai); su uso sigue los términos del plan de la cuenta con la que se generaron.
 - Esqueleto Humanoid y clips de animación (Assets/Kairos/Models/Protagonista/Clips): Adobe Mixamo, uso libre permitido en producciones interactivas empaquetadas según sus términos de servicio.
 
 TIPOGRAFÍA: Liberation Sans, SIL Open Font License (incluida con TextMesh Pro).
