@@ -368,6 +368,13 @@ namespace Kairos
             StartCoroutine(Ring());
             SendMessage("FireSonarPulse", boat.position, SendMessageOptions.DontRequireReceiver);
 
+            // Ping acústico del sonar submarino en sincronía con la onda cian
+            Sfx.Play(Sfx.PingAcoustic, crest ? .95f : .65f);
+
+            // Eco metálico retrasado por propagación acústica en agua de mar (~1500 m/s)
+            float acousticDelay = Mathf.Clamp(d / 450f, 0.15f, 1.25f);
+            StartCoroutine(DelayedEco(acousticDelay, crest));
+
             // El casco se reconstruye con impactos reales; las bodegas, según el lado desde el que disparas.
             var from = boat.position + Vector3.up * 1.5f;
             for (int i = 0; i < (crest ? 260 : 90); i++)
@@ -395,6 +402,12 @@ namespace Kairos
             Sfx.Play(dense / total > .62f ? Sfx.PingDense : Sfx.PingHollow, crest ? .9f : .5f);
             if (crest) toast.Show("Pulso en la cresta.", Pal.Sealed, 1.2f);
             RefreshPanel();
+        }
+
+        IEnumerator DelayedEco(float delay, bool crest)
+        {
+            yield return new WaitForSeconds(delay);
+            Sfx.Play(Sfx.EcoMetallic, crest ? .85f : .55f);
         }
 
         IEnumerator Ring()

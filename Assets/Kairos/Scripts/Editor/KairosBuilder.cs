@@ -193,6 +193,8 @@ namespace Kairos.EditorTools
             var fog = go.AddComponent<Kairos.Pruebas.MaritimeFogAtmosphereController>();
             fog.fogDensity = .0022f; fog.marineFogColor = RenderSettings.fogColor;
             go.AddComponent<Kairos.Pruebas.MaritimeRainParticlesController>();
+            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/cambios de prueba/Audio/SonarAudioMixer.mixer");
+            Kairos.Pruebas.MasterAudioMixerCalibration.CreateMasterAudioCalibration(mixer, go.transform);
             SaveScene(s, "00_Menu", list);
         }
 
@@ -230,6 +232,8 @@ namespace Kairos.EditorTools
             thermalVisor.targetCamera = cam;
             var fog = go.AddComponent<Kairos.Pruebas.MaritimeFogAtmosphereController>();
             fog.fogDensity = .0022f; fog.marineFogColor = RenderSettings.fogColor;
+            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/cambios de prueba/Audio/SonarAudioMixer.mixer");
+            Kairos.Pruebas.MasterAudioMixerCalibration.CreateMasterAudioCalibration(mixer, go.transform);
 
             SaveScene(s, "02_Sonar", list);
         }
@@ -433,6 +437,8 @@ namespace Kairos.EditorTools
             var fog = sysGo.AddComponent<Kairos.Pruebas.MaritimeFogAtmosphereController>();
             fog.fogDensity = .0022f; fog.marineFogColor = RenderSettings.fogColor;
             Kairos.Pruebas.AdaptiveTensionMusic.CreateAdaptiveMusicSystem(sysGo.transform);
+            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/cambios de prueba/Audio/SonarAudioMixer.mixer");
+            Kairos.Pruebas.MasterAudioMixerCalibration.CreateMasterAudioCalibration(mixer, sysGo.transform);
             if (compressor != null)
                 Kairos.Pruebas.InteriorSpatialAudio.CreateSpatialLoop(compressor.gameObject, Kairos.Pruebas.InteriorSpatialAudio.CompressorHumLoop, 0.45f, 25f);
 
