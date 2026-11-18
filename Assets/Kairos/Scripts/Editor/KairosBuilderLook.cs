@@ -314,8 +314,8 @@ namespace Kairos.EditorTools
             b.Solid(new Vector3(-3.7f, 6.12f, -21.6f), new Vector3(.95f, .24f, .95f));
             foreach (var (x, z) in new[] { (-3.6f, 12.7f), (-3.1f, 7.6f) })
             {
-                b.Ellipsoid(orange, new Vector3(x, 7.05f, z), Vector3.one * .3f); // boyas sobre las tapas de bodega
-                b.Solid(new Vector3(x, 7.05f, z), Vector3.one * .55f);
+                b.Prop("ocean_buoy", new Vector3(x, 6.9f, z), x * 25f, .75f); // boyas PBR reales sobre las tapas de bodega
+                b.Solid(new Vector3(x, 7.15f, z), Vector3.one * .6f);
             }
 
             // Bidones.
@@ -341,6 +341,12 @@ namespace Kairos.EditorTools
             b.Solid(new Vector3(2.6f, 6.25f, -40.2f), new Vector3(.38f, .5f, .38f));
             b.Prop("propane_tank", new Vector3(5.4f, 6, -24.2f), 0, .9f);
             b.Solid(new Vector3(5.4f, 6.45f, -24.2f), new Vector3(.45f, .9f, .45f));
+            b.Prop("metal_toolbox", new Vector3(2.2f, 6, -40.5f), 25f, .55f);
+            b.Solid(new Vector3(2.2f, 6.2f, -40.5f), new Vector3(.5f, .4f, .35f));
+            b.Prop("old_military_crate", new Vector3(4.8f, 6, -31.5f), 12f, 1.05f);
+            b.Solid(new Vector3(4.8f, 6.35f, -31.5f), new Vector3(1.0f, .7f, .7f));
+            b.Prop("old_military_crate", new Vector3(-4.9f, 6, -36.2f), 85f, 1.05f);
+            b.Solid(new Vector3(-4.9f, 6.35f, -36.2f), new Vector3(.7f, .7f, 1.0f));
 
             // Salvavidas y apliques en el mamparo de popa de la habilitación.
             b.Prop("lifebuoy", new Vector3(3.4f, 7.1f, -20.34f), 0, .8f);
