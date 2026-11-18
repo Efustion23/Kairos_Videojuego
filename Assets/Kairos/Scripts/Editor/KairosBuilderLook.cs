@@ -598,6 +598,16 @@ namespace Kairos.EditorTools
         static GameObject BoatPrefab()
         {
             if (boatPrefab != null) return boatPrefab;
+            var fbx = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/Models/Vehicles/Lancha_RHIB.fbx");
+            if (fbx != null)
+            {
+                var root = new GameObject("Lancha");
+                var model = (GameObject)PrefabUtility.InstantiatePrefab(fbx, root.transform);
+                model.name = "RHIB_Model";
+                boatPrefab = PrefabUtility.SaveAsPrefabAsset(root, $"{Root}/Prefabs/Lancha.prefab");
+                UnityEngine.Object.DestroyImmediate(root);
+                return boatPrefab;
+            }
             var b = new ShipBuild { root = new GameObject("Lancha") };
             b.colliders = new GameObject("c").transform;
             b.colliders.SetParent(b.root.transform, false);
