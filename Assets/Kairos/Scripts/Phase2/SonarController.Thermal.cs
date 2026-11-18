@@ -71,6 +71,8 @@ namespace Kairos
             DronePart(PrimitiveType.Sphere, new Vector3(0, .14f, .35f), Vector3.one * .18f, Pal.Sealed, ThermalLayer);
         }
 
+        GameObject thermalVisorOverlay;
+
         void ToggleDrone()
         {
             if (droneActive) { EndDrone(false); return; }
@@ -84,12 +86,32 @@ namespace Kairos
             savedBg = cam.backgroundColor; savedClear = cam.clearFlags; savedMask = cam.cullingMask;
             cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = new Color(.01f, .02f, .05f);
             cam.cullingMask = 1 << ThermalLayer;
+
+            BuildThermalVisor();
+        }
+
+        void BuildThermalVisor()
+        {
+            if (thermalVisorOverlay != null) Destroy(thermalVisorOverlay);
+            if (canvasRoot == null) return;
+
+            thermalVisorOverlay = new GameObject("ThermalVisorOverlay");
+            thermalVisorOverlay.transform.SetParent(canvasRoot, false);
+
+            var topPanel = UI.Panel(thermalVisorOverlay.transform, new Vector2(.25f, .93f), new Vector2(.75f, .985f), default, default, new Color(.01f, .03f, .08f, .85f));
+            var topText = UI.Text(topPanel.transform, "● ÓPTICA TÉRMICA FLIR DRON · CONTRASTE TÉRMICO AZUL/ÁMBAR", 15, Pal.ThermHot, TMPro.TextAlignmentOptions.Center);
+            topText.margin = new Vector4(6, 2, 6, 2);
+
+            var scalePanel = UI.Panel(thermalVisorOverlay.transform, new Vector2(.02f, .02f), new Vector2(.28f, .10f), default, default, new Color(.01f, .04f, .09f, .88f));
+            var scaleText = UI.Text(scalePanel.transform, "<color=#2050FF>■ Frío (-18°C)</color>  |  <color=#FFD27A>■ Vital (37°C)</color>\nBodegas refrigeradas vs. Presencia humana", 13, Pal.Text, TMPro.TextAlignmentOptions.Center);
+            scaleText.margin = new Vector4(4, 2, 4, 2);
         }
 
         void EndDrone(bool lost)
         {
             droneActive = false;
             thermalRoot.SetActive(false);
+            if (thermalVisorOverlay != null) Destroy(thermalVisorOverlay);
             cam.clearFlags = savedClear; cam.backgroundColor = savedBg; cam.cullingMask = savedMask;
             float away = Vector3.Distance(drone.position, boat.position);
             if (lost || away > 220f)

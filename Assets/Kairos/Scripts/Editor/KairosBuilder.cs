@@ -188,6 +188,11 @@ namespace Kairos.EditorTools
             PrefabUtility.InstantiatePrefab(ship);
             var go = new GameObject("Menu");
             go.AddComponent<MenuController>().cam = cam;
+            var seq = go.AddComponent<Kairos.Pruebas.TrailerCinematicSequencer>();
+            seq.targetCamera = cam;
+            var fog = go.AddComponent<Kairos.Pruebas.MaritimeFogAtmosphereController>();
+            fog.fogDensity = .0022f; fog.marineFogColor = RenderSettings.fogColor;
+            go.AddComponent<Kairos.Pruebas.MaritimeRainParticlesController>();
             SaveScene(s, "00_Menu", list);
         }
 
@@ -221,6 +226,10 @@ namespace Kairos.EditorTools
             go.AddComponent<Kairos.Pruebas.MaritimeRainParticlesController>();
             go.AddComponent<Kairos.Pruebas.TacticalRadioCommsAudio>();
             go.AddComponent<Kairos.Pruebas.SonarWaveRadialSweep>();
+            var thermalVisor = go.AddComponent<Kairos.Pruebas.ThermalVisorBoatController>();
+            thermalVisor.targetCamera = cam;
+            var fog = go.AddComponent<Kairos.Pruebas.MaritimeFogAtmosphereController>();
+            fog.fogDensity = .0022f; fog.marineFogColor = RenderSettings.fogColor;
 
             SaveScene(s, "02_Sonar", list);
         }
@@ -420,6 +429,9 @@ namespace Kairos.EditorTools
             sysGo.AddComponent<Kairos.Pruebas.MaritimeRainParticlesController>();
             sysGo.AddComponent<Kairos.Pruebas.TacticalRadioCommsAudio>();
             sysGo.AddComponent<Kairos.Pruebas.InteriorSpatialAudio>();
+            sysGo.AddComponent<Kairos.Pruebas.BridgeAndCabinInterior>();
+            var fog = sysGo.AddComponent<Kairos.Pruebas.MaritimeFogAtmosphereController>();
+            fog.fogDensity = .0022f; fog.marineFogColor = RenderSettings.fogColor;
             Kairos.Pruebas.AdaptiveTensionMusic.CreateAdaptiveMusicSystem(sysGo.transform);
             if (compressor != null)
                 Kairos.Pruebas.InteriorSpatialAudio.CreateSpatialLoop(compressor.gameObject, Kairos.Pruebas.InteriorSpatialAudio.CompressorHumLoop, 0.45f, 25f);
@@ -433,6 +445,7 @@ namespace Kairos.EditorTools
             foreach (var l in ship.GetComponentsInChildren<Light>())
                 if (l.name.StartsWith("Foco") || l.name == "Luz Tejado") lights.Add(l);
             ctrl.dangerLights = lights.ToArray();
+            fog.deckFloodlights.AddRange(lights);
 
             SaveScene(s, "03_Infiltracion", list);
         }
