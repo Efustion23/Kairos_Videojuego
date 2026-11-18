@@ -20,7 +20,7 @@ namespace Kairos
     /// Datos del caso de apertura. Todos los buques y empresas son ficticios.
     public static class CaseData
     {
-        public const int MaxEvidence = 13; // caben todas: nadie debe descartar pruebas
+        public const int MaxEvidence = 15; // caben todas: nadie debe descartar pruebas
         public const int IrToScan = 60, ConfidenceToBoard = 70;
 
         // ---------- Fase 1 ----------
@@ -288,6 +288,8 @@ namespace Kairos
             E("e_turnos", "Planilla de turnos", 'C', "Turnos de hasta 20 horas, firmados por el contramaestre.", new[] { 10 }, NoEdge),
             E("e_candados", "Candados exteriores", 'C', "La escotilla solo se cierra desde fuera.", new[] { 2 }, NoEdge),
             E("e_facturas", "Facturas de venta", 'C', "Ventas del Polar Meridian a una filial de Tidewater Austral.", None, new[] { "1-5" }),
+            E("e_radio", "Radio VHF satelital", 'A', "Emisora de banda oculta sintonizada con Cormorán Trade sin acceso para la tripulación.", new[] { 3 }, new[] { "3-4" }),
+            E("e_plotter", "Plotter GPS náutico", 'B', "Registro de derrota con 72 h de apagado de AIS y desvío deliberado lejos de puerto.", new[] { 1, 2 }, new[] { "0-1" }),
             E("t_rodel", "Testimonio de Rodel Santos", 'B', "Testimonio con consentimiento y lector biométrico.", new[] { 1, 3 }, new[] { "0-2" }),
             E("t_ari", "Testimonio de Ari Wibowo", 'A', "Testimonio con consentimiento y lector biométrico.", new[] { 4, 5 }, NoEdge, "Testimonio con consentimiento. Descripción omitida por tus ajustes."),
             E("t_moussa", "Testimonio de Moussa Diallo", 'A', "Testimonio con consentimiento y lector biométrico.", new[] { 0, 8 }, new[] { "0-2" }),
