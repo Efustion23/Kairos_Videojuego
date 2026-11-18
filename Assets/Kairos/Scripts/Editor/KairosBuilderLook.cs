@@ -206,9 +206,21 @@ namespace Kairos.EditorTools
             navGreen = Lit("M_NavGreen", Color.black, .5f, 0, null, new Color(.05f, 1f, .2f) * 5f);
             navWhite = Lit("M_NavWhite", Color.black, .5f, 0, null, Color.white * 6f);
 
-            string glowPath = "Assets/Kairos/Resources/KGlow.mat";
-            if (AssetDatabase.LoadAssetAtPath<Material>(glowPath) == null)
-                AssetDatabase.CreateAsset(new Material(Shader.Find("Kairos/Glow")), glowPath);
+            void EnsureResourceMat(string resName, string shaderName)
+            {
+                string p = $"Assets/Kairos/Resources/{resName}.mat";
+                var sh = Shader.Find(shaderName);
+                if (sh == null) return;
+                var existing = AssetDatabase.LoadAssetAtPath<Material>(p);
+                if (existing == null) AssetDatabase.CreateAsset(new Material(sh), p);
+                else if (existing.shader != sh) { existing.shader = sh; EditorUtility.SetDirty(existing); }
+            }
+            EnsureResourceMat("KGlow", "Kairos/Glow");
+            EnsureResourceMat("KSonarRadialSweep", "Kairos/Pruebas/SonarRadialSweep");
+            EnsureResourceMat("KBoatWakeFoam", "Kairos/Pruebas/BoatWakeFoam");
+            EnsureResourceMat("KSonarScreenSweep", "Kairos/Pruebas/SonarScreenSweep");
+            EnsureResourceMat("KInspectableOutline", "Kairos/Pruebas/InspectableOutlineGlow");
+            EnsureResourceMat("KSonarSweep", "Kairos/SonarSweep");
         }
 
         static Material GlowAsset(string name, Color c, bool additive, bool round)

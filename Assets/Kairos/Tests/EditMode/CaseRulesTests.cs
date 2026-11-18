@@ -51,6 +51,8 @@ namespace Kairos.Tests
             foreach (var e in CaseData.EvidenceDefs) all.Add(e.id);
             Assert.AreEqual(11, CaseData.CountIndicators(all));
             Assert.LessOrEqual(all.Count, CaseData.MaxEvidence);
+            Assert.IsNotNull(CaseData.Evidence("e_radio"));
+            Assert.IsNotNull(CaseData.Evidence("e_plotter"));
         }
 
         [Test]

@@ -122,10 +122,11 @@ namespace Kairos
             var sh = wakeFx.shape; sh.shapeType = ParticleSystemShapeType.Cone; sh.angle = 22f; sh.radius = .45f;
             var size = wakeFx.sizeOverLifetime; size.enabled = true; size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0, .6f, 1, 2.4f));
             var r = go.GetComponent<ParticleSystemRenderer>();
-            var wakeShader = Shader.Find("Kairos/Pruebas/BoatWakeFoam");
-            if (wakeShader != null)
+            var wakeTemplate = Resources.Load<Material>("KBoatWakeFoam");
+            var wakeShader = wakeTemplate != null ? wakeTemplate.shader : Shader.Find("Kairos/Pruebas/BoatWakeFoam");
+            if (wakeTemplate != null || wakeShader != null)
             {
-                var wakeMat = new Material(wakeShader);
+                var wakeMat = wakeTemplate != null ? new Material(wakeTemplate) : new Material(wakeShader);
                 wakeMat.SetColor("_FoamColor", new Color(0.85f, 0.95f, 1.0f, 0.8f));
                 wakeMat.SetColor("_DeepColor", new Color(0.05f, 0.15f, 0.25f, 0.3f));
                 r.sharedMaterial = wakeMat;
@@ -416,10 +417,11 @@ namespace Kairos
             {
                 var go = new GameObject("PulsoRing");
                 var lr = go.AddComponent<LineRenderer>();
-                var sweepShader = Shader.Find("Kairos/Pruebas/SonarRadialSweep");
-                if (sweepShader != null)
+                var sweepTemplate = Resources.Load<Material>("KSonarRadialSweep");
+                var sweepShader = sweepTemplate != null ? sweepTemplate.shader : Shader.Find("Kairos/Pruebas/SonarRadialSweep");
+                if (sweepTemplate != null || sweepShader != null)
                 {
-                    var m = new Material(sweepShader);
+                    var m = sweepTemplate != null ? new Material(sweepTemplate) : new Material(sweepShader);
                     m.SetColor("_SweepColor", Pal.Sonar);
                     lr.material = m;
                 }

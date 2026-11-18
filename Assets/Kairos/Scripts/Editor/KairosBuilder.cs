@@ -175,9 +175,33 @@ namespace Kairos.EditorTools
 
             PlayerSettings.productName = "KAIROS Sombras en Altamar";
             PlayerSettings.companyName = "Unidad KAIROS";
+            PlayerSettings.bundleVersion = "1.0.0";
             AssetDatabase.SaveAssets();
             EditorSceneManager.OpenScene(scenes[0].path);
             Debug.Log("KAIROS: juego generado (" + scenes.Count + " escenas).");
+        }
+
+        [MenuItem("Kairos/Compilar ejecutable (.exe)")]
+        public static void BuildWindowsExecutable()
+        {
+            string[] scenePaths = new[]
+            {
+                $"{ScenesDir}/00_Menu.unity",
+                $"{ScenesDir}/01_Rastreo.unity",
+                $"{ScenesDir}/02_Sonar.unity",
+                $"{ScenesDir}/03_Infiltracion.unity",
+                $"{ScenesDir}/04_Juicio.unity"
+            };
+            if (!System.IO.Directory.Exists("Builds")) System.IO.Directory.CreateDirectory("Builds");
+            var opts = new BuildPlayerOptions
+            {
+                scenes = scenePaths,
+                locationPathName = "Builds/KAIROS_SombrasEnAltamar.exe",
+                target = BuildTarget.StandaloneWindows64,
+                options = BuildOptions.None
+            };
+            var report = BuildPipeline.BuildPlayer(opts);
+            Debug.Log("KAIROS Build: " + report.summary.result + " -> Builds/KAIROS_SombrasEnAltamar.exe");
         }
 
         static void BuildMenuScene(GameObject ship, List<EditorBuildSettingsScene> list)
@@ -193,7 +217,7 @@ namespace Kairos.EditorTools
             var fog = go.AddComponent<Kairos.Pruebas.MaritimeFogAtmosphereController>();
             fog.fogDensity = .0022f; fog.marineFogColor = RenderSettings.fogColor;
             go.AddComponent<Kairos.Pruebas.MaritimeRainParticlesController>();
-            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/cambios de prueba/Audio/SonarAudioMixer.mixer");
+            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/Kairos/Arte y audio/Audio/SonarAudioMixer.mixer");
             Kairos.Pruebas.MasterAudioMixerCalibration.CreateMasterAudioCalibration(mixer, go.transform);
             SaveScene(s, "00_Menu", list);
         }
@@ -232,7 +256,7 @@ namespace Kairos.EditorTools
             thermalVisor.targetCamera = cam;
             var fog = go.AddComponent<Kairos.Pruebas.MaritimeFogAtmosphereController>();
             fog.fogDensity = .0022f; fog.marineFogColor = RenderSettings.fogColor;
-            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/cambios de prueba/Audio/SonarAudioMixer.mixer");
+            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/Kairos/Arte y audio/Audio/SonarAudioMixer.mixer");
             Kairos.Pruebas.MasterAudioMixerCalibration.CreateMasterAudioCalibration(mixer, go.transform);
 
             SaveScene(s, "02_Sonar", list);
@@ -406,6 +430,8 @@ namespace Kairos.EditorTools
                 Evidence(gameplay, "e_turnos", new Vector3(4.86f, 7.5f, -7f), new Vector3(.06f, .9f, .7f), paper),
                 Evidence(gameplay, "e_candados", new Vector3(-1.05f, 4.3f, 1.05f), new Vector3(.15f, .35f, .3f), darkMetal),
                 Evidence(gameplay, "e_facturas", new Vector3(6.66f, 4.3f, -21f), new Vector3(.06f, .7f, .5f), paper),
+                Evidence(gameplay, "e_radio", new Vector3(-1.9f, 9.95f, -5.8f), new Vector3(.32f, .28f, .26f), darkMetal),
+                Evidence(gameplay, "e_plotter", new Vector3(1.9f, 9.95f, -5.8f), new Vector3(.36f, .28f, .22f), darkMetal),
             };
 
             // Consola del puente y salida
@@ -437,7 +463,7 @@ namespace Kairos.EditorTools
             var fog = sysGo.AddComponent<Kairos.Pruebas.MaritimeFogAtmosphereController>();
             fog.fogDensity = .0022f; fog.marineFogColor = RenderSettings.fogColor;
             Kairos.Pruebas.AdaptiveTensionMusic.CreateAdaptiveMusicSystem(sysGo.transform);
-            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/cambios de prueba/Audio/SonarAudioMixer.mixer");
+            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/Kairos/Arte y audio/Audio/SonarAudioMixer.mixer");
             Kairos.Pruebas.MasterAudioMixerCalibration.CreateMasterAudioCalibration(mixer, sysGo.transform);
             if (compressor != null)
                 Kairos.Pruebas.InteriorSpatialAudio.CreateSpatialLoop(compressor.gameObject, Kairos.Pruebas.InteriorSpatialAudio.CompressorHumLoop, 0.45f, 25f);

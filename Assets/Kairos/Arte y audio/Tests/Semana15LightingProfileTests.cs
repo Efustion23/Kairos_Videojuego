@@ -78,7 +78,7 @@ namespace Kairos.Pruebas.Tests
         [Test]
         public void PostProcessProfile_CargaYValidaComponentes()
         {
-            string profilePath = "Assets/cambios de prueba/Profiles/NightMaritimePostProcessProfile.asset";
+            string profilePath = "Assets/Kairos/Arte y audio/Profiles/NightMaritimePostProcessProfile.asset";
             var profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(profilePath);
             Assert.IsNotNull(profile, "El asset NightMaritimePostProcessProfile debe existir y ser legible.");
             Assert.IsTrue(profile.components.Count >= 3, "El perfil debe contener múltiples overrides de post-procesado.");

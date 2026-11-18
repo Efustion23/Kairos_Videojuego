@@ -11,8 +11,12 @@ namespace Kairos.Pruebas
         {
             if (radialSweepMat == null)
             {
-                var s = Shader.Find("Kairos/Pruebas/SonarRadialSweep") ?? Shader.Find("Kairos/SonarSweep");
-                if (s != null) radialSweepMat = new Material(s);
+                radialSweepMat = Resources.Load<Material>("KSonarRadialSweep") ?? Resources.Load<Material>("KSonarSweep");
+                if (radialSweepMat == null)
+                {
+                    var s = Shader.Find("Kairos/Pruebas/SonarRadialSweep") ?? Shader.Find("Kairos/SonarSweep");
+                    if (s != null) radialSweepMat = new Material(s);
+                }
             }
             if (radialSweepMat != null)
             {
@@ -32,8 +36,12 @@ namespace Kairos.Pruebas
         {
             if (screenSweepMat == null)
             {
-                var s = Shader.Find("Kairos/Pruebas/SonarScreenSweep") ?? Shader.Find("Kairos/SonarScreenSweep");
-                if (s != null) screenSweepMat = new Material(s);
+                screenSweepMat = Resources.Load<Material>("KSonarScreenSweep");
+                if (screenSweepMat == null)
+                {
+                    var s = Shader.Find("Kairos/Pruebas/SonarScreenSweep") ?? Shader.Find("Kairos/SonarScreenSweep");
+                    if (s != null) screenSweepMat = new Material(s);
+                }
             }
             if (screenSweepMat != null)
             {
