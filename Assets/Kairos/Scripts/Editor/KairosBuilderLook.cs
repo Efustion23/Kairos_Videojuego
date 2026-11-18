@@ -206,9 +206,21 @@ namespace Kairos.EditorTools
             navGreen = Lit("M_NavGreen", Color.black, .5f, 0, null, new Color(.05f, 1f, .2f) * 5f);
             navWhite = Lit("M_NavWhite", Color.black, .5f, 0, null, Color.white * 6f);
 
-            string glowPath = "Assets/Kairos/Resources/KGlow.mat";
-            if (AssetDatabase.LoadAssetAtPath<Material>(glowPath) == null)
-                AssetDatabase.CreateAsset(new Material(Shader.Find("Kairos/Glow")), glowPath);
+            void EnsureResourceMat(string resName, string shaderName)
+            {
+                string p = $"Assets/Kairos/Resources/{resName}.mat";
+                var sh = Shader.Find(shaderName);
+                if (sh == null) return;
+                var existing = AssetDatabase.LoadAssetAtPath<Material>(p);
+                if (existing == null) AssetDatabase.CreateAsset(new Material(sh), p);
+                else if (existing.shader != sh) { existing.shader = sh; EditorUtility.SetDirty(existing); }
+            }
+            EnsureResourceMat("KGlow", "Kairos/Glow");
+            EnsureResourceMat("KSonarRadialSweep", "Kairos/Pruebas/SonarRadialSweep");
+            EnsureResourceMat("KBoatWakeFoam", "Kairos/Pruebas/BoatWakeFoam");
+            EnsureResourceMat("KSonarScreenSweep", "Kairos/Pruebas/SonarScreenSweep");
+            EnsureResourceMat("KInspectableOutline", "Kairos/Pruebas/InspectableOutlineGlow");
+            EnsureResourceMat("KSonarSweep", "Kairos/SonarSweep");
         }
 
         static Material GlowAsset(string name, Color c, bool additive, bool round)
@@ -277,10 +289,15 @@ namespace Kairos.EditorTools
                     var p = new Vector3(side * (Beam(z) - .55f), 6, z);
                     b.Pipe(darkMetal, p, p + Vector3.up * .55f, .13f, 10);
                     b.Pipe(darkMetal, p + Vector3.forward * .45f, p + Vector3.forward * .45f + Vector3.up * .55f, .13f, 10);
+                    b.Solid(p + new Vector3(0, .28f, .225f), new Vector3(.38f, .56f, .8f));
                 }
 
             // Pórtico de popa con su motón.
-            foreach (var x in new[] { -5.2f, 5.2f }) b.Pipe(rust, new Vector3(x, 6, -43.4f), new Vector3(x * .8f, 11.6f, -43.4f), .16f, 10);
+            foreach (var x in new[] { -5.2f, 5.2f })
+            {
+                b.Pipe(rust, new Vector3(x, 6, -43.4f), new Vector3(x * .8f, 11.6f, -43.4f), .16f, 10);
+                b.Solid(new Vector3(x * .95f, 7.4f, -43.4f), new Vector3(.45f, 2.8f, .45f));
+            }
             b.Pipe(rust, new Vector3(-4.3f, 11.6f, -43.4f), new Vector3(4.3f, 11.6f, -43.4f), .15f, 10);
             b.Box(darkMetal, new Vector3(0, 11.2f, -43.4f), new Vector3(.4f, .55f, .3f), null, false);
             b.Pipe(rope, new Vector3(0, 11, -43.4f), new Vector3(0, 7.7f, -41.6f), .025f, 5);
@@ -292,8 +309,14 @@ namespace Kairos.EditorTools
             b.Ellipsoid(netMat, new Vector3(-4.6f, 6.45f, -32.2f), new Vector3(.7f, .35f, .9f));
             b.Solid(new Vector3(-5, 6.4f, -33), new Vector3(2.2f, .8f, 3));
             b.Pipe(rope, new Vector3(3.6f, 6.03f, -41.4f), new Vector3(3.6f, 6.2f, -41.4f), .55f, 14);
+            b.Solid(new Vector3(3.6f, 6.12f, -41.4f), new Vector3(1.05f, .24f, 1.05f));
             b.Pipe(rope, new Vector3(-3.7f, 6.03f, -21.6f), new Vector3(-3.7f, 6.18f, -21.6f), .5f, 14);
-            foreach (var (x, z) in new[] { (-3.6f, 12.7f), (-3.1f, 7.6f) }) b.Ellipsoid(orange, new Vector3(x, 7.05f, z), Vector3.one * .3f); // boyas sobre las tapas de bodega
+            b.Solid(new Vector3(-3.7f, 6.12f, -21.6f), new Vector3(.95f, .24f, .95f));
+            foreach (var (x, z) in new[] { (-3.6f, 12.7f), (-3.1f, 7.6f) })
+            {
+                b.Ellipsoid(orange, new Vector3(x, 7.05f, z), Vector3.one * .3f); // boyas sobre las tapas de bodega
+                b.Solid(new Vector3(x, 7.05f, z), Vector3.one * .55f);
+            }
 
             // Bidones.
             foreach (var (x, z, yaw) in new[] { (5.6f, -38.6f, 20f), (5.6f, -39.4f, 140f), (4.9f, -39f, 250f), (-5.7f, 19.2f, 70f), (5.3f, 22.5f, 310f) })
@@ -313,7 +336,9 @@ namespace Kairos.EditorTools
 
             // Bidones y bombonas sueltos: el buque lleva meses sin tocar puerto.
             b.Prop("metal_jerrycan_green", new Vector3(3.1f, 6, -39.9f), 35, .5f);
+            b.Solid(new Vector3(3.1f, 6.25f, -39.9f), new Vector3(.38f, .5f, .38f));
             b.Prop("metal_jerrycan_green", new Vector3(2.6f, 6, -40.2f), 80, .5f);
+            b.Solid(new Vector3(2.6f, 6.25f, -40.2f), new Vector3(.38f, .5f, .38f));
             b.Prop("propane_tank", new Vector3(5.4f, 6, -24.2f), 0, .9f);
             b.Solid(new Vector3(5.4f, 6.45f, -24.2f), new Vector3(.45f, .9f, .45f));
 
@@ -352,6 +377,7 @@ namespace Kairos.EditorTools
             {
                 b.Ellipsoid(orange, new Vector3(x, 10.25f, -17), new Vector3(.75f, .55f, 2.4f));
                 b.Ellipsoid(super, new Vector3(x, 10.6f, -17), new Vector3(.6f, .35f, 1.7f));
+                b.Solid(new Vector3(x, 10.25f, -17), new Vector3(1.4f, 1.1f, 4.6f));
                 foreach (var z in new[] { -18.4f, -15.6f })
                 {
                     b.Pipe(darkMetal, new Vector3(x, 9.1f, z), new Vector3(x, 11, z), .06f, 8);
@@ -365,6 +391,7 @@ namespace Kairos.EditorTools
                 var p = new Vector3(x, 9.1f, z);
                 b.Pipe(super, p, p + Vector3.up * .9f, .2f, 10);
                 b.Ellipsoid(super, p + Vector3.up * 1f, new Vector3(.34f, .2f, .34f));
+                b.Solid(p + Vector3.up * .55f, new Vector3(.55f, 1.1f, .55f));
             }
             b.Pipe(darkMetal, new Vector3(3, 12.1f, -12), new Vector3(3, 15.5f, -12), .025f, 5);
             b.Pipe(darkMetal, new Vector3(-3, 12.1f, -12), new Vector3(-3, 14.6f, -12), .025f, 5);
@@ -422,12 +449,14 @@ namespace Kairos.EditorTools
             foreach (var (x, z) in new[] { (1.13f, -25f), (-1.13f, -14f), (1.13f, 8f) })
             {
                 b.Prop("utility_box_01", new Vector3(x, 4.35f, z), x > 0 ? -90 : 90, .65f);
+                b.Solid(new Vector3(x, 4.65f, z), new Vector3(.24f, .7f, .5f));
                 b.Pipe(rubber, new Vector3(x, 5, z), new Vector3(x, 5.72f, z), .015f, 5);
             }
             foreach (var (x, z) in new[] { (1.1f, -8.5f), (-1.1f, 7f), (-1.1f, -24f) })
             {
                 b.Pipe(redPaint, new Vector3(x, 3.5f, z), new Vector3(x, 4.05f, z), .08f, 10);
                 b.Ellipsoid(redPaint, new Vector3(x, 4.05f, z), Vector3.one * .08f);
+                b.Solid(new Vector3(x, 3.8f, z), new Vector3(.22f, .7f, .22f));
             }
             foreach (var z in new[] { -21f, -6f, 12f }) DoorFrameZ(b, 1.25f, z, 3);
             foreach (var z in new[] { -20f, -10f, 2f, 16f }) DoorFrameZ(b, -1.25f, z, 3);
@@ -455,7 +484,11 @@ namespace Kairos.EditorTools
 
             // Habilitación: literas con colchón, banquetas, carteles y lámparas.
             foreach (var z in new[] { -10f, -6.5f, -3f, .5f }) b.Box(mattress, new Vector3(4.2f, 7.84f, z), new Vector3(1.2f, .08f, 2f), null, false);
-            foreach (var z in new[] { -6.2f, -5f, -3.2f }) b.Prop("metal_stool_02", new Vector3(-2.15f, 6, z), z * 40, .5f);
+            foreach (var z in new[] { -6.2f, -5f, -3.2f })
+            {
+                b.Prop("metal_stool_02", new Vector3(-2.15f, 6, z), z * 40, .5f);
+                b.Solid(new Vector3(-2.15f, 6.25f, z), new Vector3(.42f, .5f, .42f));
+            }
             b.Prop("medical_box", new Vector3(-3.6f, 6.8f, -3.2f), 200, .42f);
             b.Prop("propane_tank", new Vector3(-4.45f, 6, .9f), 0, .9f);
             b.Solid(new Vector3(-4.45f, 6.45f, .9f), new Vector3(.45f, .9f, .45f));
@@ -468,6 +501,7 @@ namespace Kairos.EditorTools
             b.Pipe(darkMetal, new Vector3(0, 9.1f, -6.5f), new Vector3(0, 9.65f, -6.5f), .04f, 8);
             b.Pipe(rubber, new Vector3(0, 9.65f, -6.5f), new Vector3(0, 9.73f, -6.5f), .25f, 12);
             b.Box(rubber, new Vector3(0, 10, -6.72f), new Vector3(.5f, .55f, .07f), null, false);
+            b.Solid(new Vector3(0, 9.7f, -6.55f), new Vector3(.65f, 1.3f, .75f));
             b.Box(super, new Vector3(-2.6f, 10.01f, -11.8f), new Vector3(1.4f, .01f, 1f), null, false);
         }
 
@@ -519,6 +553,7 @@ namespace Kairos.EditorTools
             b.Pipe(super, new Vector3(0, 9.1f, -17), new Vector3(0, 11.8f, -17), .68f, 16);
             b.Pipe(redPaint, new Vector3(0, 11.2f, -17), new Vector3(0, 11.65f, -17), .695f, 16);
             b.Pipe(darkMetal, new Vector3(0, 11.65f, -17), new Vector3(0, 12.3f, -17), .7f, 16);
+            b.Solid(new Vector3(0, 10.7f, -17f), new Vector3(1.38f, 3.2f, 1.38f));
 
             var go = new GameObject("Humo");
             go.transform.SetParent(b.root.transform, false);

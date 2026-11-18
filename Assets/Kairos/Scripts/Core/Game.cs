@@ -33,6 +33,7 @@ namespace Kairos
     [Serializable]
     public class CaseState
     {
+        public int sector;    // 0: Atlántico Sur, 1: Golfo de Guinea, 2: Océano Índico
         public int phase = 1; // 1-4 fases, 5 repatriación, 6 cerrado
         public float hours;
         public int abLeft = 60;
@@ -68,6 +69,7 @@ namespace Kairos
         public int budget = 500000, droneParts = 6, reputation = 20, sentences;
         public float fuel = 4000;
         public int[] upgrades = new int[4];
+        public bool[] completedSectors = new bool[3];
         public bool networkReorganized;
         public List<string> hints = new List<string>(); // tutorial ya visto
         public CaseState c = new CaseState();
@@ -111,9 +113,9 @@ namespace Kairos
             StartCase();
         }
 
-        public static void StartCase()
+        public static void StartCase(int sector = 0)
         {
-            S.c = new CaseState { trialDays = -1 };
+            S.c = new CaseState { sector = Mathf.Clamp(sector, 0, 2), trialDays = -1 };
             foreach (var p in CaseData.People)
                 S.c.persons.Add(new PersonState { id = p.id, trust = p.startTrust, freed = p.startsFree });
         }

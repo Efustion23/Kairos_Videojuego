@@ -175,9 +175,33 @@ namespace Kairos.EditorTools
 
             PlayerSettings.productName = "KAIROS Sombras en Altamar";
             PlayerSettings.companyName = "Unidad KAIROS";
+            PlayerSettings.bundleVersion = "1.0.0";
             AssetDatabase.SaveAssets();
             EditorSceneManager.OpenScene(scenes[0].path);
             Debug.Log("KAIROS: juego generado (" + scenes.Count + " escenas).");
+        }
+
+        [MenuItem("Kairos/Compilar ejecutable (.exe)")]
+        public static void BuildWindowsExecutable()
+        {
+            string[] scenePaths = new[]
+            {
+                $"{ScenesDir}/00_Menu.unity",
+                $"{ScenesDir}/01_Rastreo.unity",
+                $"{ScenesDir}/02_Sonar.unity",
+                $"{ScenesDir}/03_Infiltracion.unity",
+                $"{ScenesDir}/04_Juicio.unity"
+            };
+            if (!System.IO.Directory.Exists("Builds")) System.IO.Directory.CreateDirectory("Builds");
+            var opts = new BuildPlayerOptions
+            {
+                scenes = scenePaths,
+                locationPathName = "Builds/KAIROS_SombrasEnAltamar.exe",
+                target = BuildTarget.StandaloneWindows64,
+                options = BuildOptions.None
+            };
+            var report = BuildPipeline.BuildPlayer(opts);
+            Debug.Log("KAIROS Build: " + report.summary.result + " -> Builds/KAIROS_SombrasEnAltamar.exe");
         }
 
         static void BuildMenuScene(GameObject ship, List<EditorBuildSettingsScene> list)
@@ -188,6 +212,13 @@ namespace Kairos.EditorTools
             PrefabUtility.InstantiatePrefab(ship);
             var go = new GameObject("Menu");
             go.AddComponent<MenuController>().cam = cam;
+            var seq = go.AddComponent<Kairos.Pruebas.TrailerCinematicSequencer>();
+            seq.targetCamera = cam;
+            var fog = go.AddComponent<Kairos.Pruebas.MaritimeFogAtmosphereController>();
+            fog.fogDensity = .0022f; fog.marineFogColor = RenderSettings.fogColor;
+            go.AddComponent<Kairos.Pruebas.MaritimeRainParticlesController>();
+            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/Kairos/Arte y audio/Audio/SonarAudioMixer.mixer");
+            Kairos.Pruebas.MasterAudioMixerCalibration.CreateMasterAudioCalibration(mixer, go.transform);
             SaveScene(s, "00_Menu", list);
         }
 
@@ -217,6 +248,17 @@ namespace Kairos.EditorTools
             var go = new GameObject("Sonar");
             var c = go.AddComponent<SonarController>();
             c.cam = cam; c.ship = sh.transform; c.boat = boat.transform;
+
+            go.AddComponent<Kairos.Pruebas.MaritimeRainParticlesController>();
+            go.AddComponent<Kairos.Pruebas.TacticalRadioCommsAudio>();
+            go.AddComponent<Kairos.Pruebas.SonarWaveRadialSweep>();
+            var thermalVisor = go.AddComponent<Kairos.Pruebas.ThermalVisorBoatController>();
+            thermalVisor.targetCamera = cam;
+            var fog = go.AddComponent<Kairos.Pruebas.MaritimeFogAtmosphereController>();
+            fog.fogDensity = .0022f; fog.marineFogColor = RenderSettings.fogColor;
+            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/Kairos/Arte y audio/Audio/SonarAudioMixer.mixer");
+            Kairos.Pruebas.MasterAudioMixerCalibration.CreateMasterAudioCalibration(mixer, go.transform);
+
             SaveScene(s, "02_Sonar", list);
         }
 
@@ -229,7 +271,7 @@ namespace Kairos.EditorTools
 
         static GuardAI Guard(Transform parent, string name, Vector3 start, Material hat, Vector3[] route)
         {
-            var go = Humanoid(name, coat, skinD, darkMetal, hat);
+            var go = GuardFigure(name, coat, skinD, hat, out var motion);
             go.transform.SetParent(parent, false);
             go.transform.position = start;
             Agent(go);
@@ -388,6 +430,8 @@ namespace Kairos.EditorTools
                 Evidence(gameplay, "e_turnos", new Vector3(4.86f, 7.5f, -7f), new Vector3(.06f, .9f, .7f), paper),
                 Evidence(gameplay, "e_candados", new Vector3(-1.05f, 4.3f, 1.05f), new Vector3(.15f, .35f, .3f), darkMetal),
                 Evidence(gameplay, "e_facturas", new Vector3(6.66f, 4.3f, -21f), new Vector3(.06f, .7f, .5f), paper),
+                Evidence(gameplay, "e_radio", new Vector3(-1.9f, 9.95f, -5.8f), new Vector3(.32f, .28f, .26f), darkMetal),
+                Evidence(gameplay, "e_plotter", new Vector3(1.9f, 9.95f, -5.8f), new Vector3(.36f, .28f, .22f), darkMetal),
             };
 
             // Consola del puente y salida
@@ -409,6 +453,21 @@ namespace Kairos.EditorTools
             var compressor = new GameObject("Compresores").transform;
             compressor.position = new Vector3(3.9f, 4.2f, -21f);
 
+            // Sistemas ambientales, lluvia, radio táctica, audio espacial y música adaptativa
+            var sysGo = new GameObject("SistemasAmbientales");
+            sysGo.transform.SetParent(gameplay, false);
+            sysGo.AddComponent<Kairos.Pruebas.MaritimeRainParticlesController>();
+            sysGo.AddComponent<Kairos.Pruebas.TacticalRadioCommsAudio>();
+            sysGo.AddComponent<Kairos.Pruebas.InteriorSpatialAudio>();
+            sysGo.AddComponent<Kairos.Pruebas.BridgeAndCabinInterior>();
+            var fog = sysGo.AddComponent<Kairos.Pruebas.MaritimeFogAtmosphereController>();
+            fog.fogDensity = .0022f; fog.marineFogColor = RenderSettings.fogColor;
+            Kairos.Pruebas.AdaptiveTensionMusic.CreateAdaptiveMusicSystem(sysGo.transform);
+            var mixer = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/Kairos/Arte y audio/Audio/SonarAudioMixer.mixer");
+            Kairos.Pruebas.MasterAudioMixerCalibration.CreateMasterAudioCalibration(mixer, sysGo.transform);
+            if (compressor != null)
+                Kairos.Pruebas.InteriorSpatialAudio.CreateSpatialLoop(compressor.gameObject, Kairos.Pruebas.InteriorSpatialAudio.CompressorHumLoop, 0.45f, 25f);
+
             // Controlador
             var ctrl = new GameObject("Infiltracion").AddComponent<InfiltrationController>();
             ctrl.cam = cam; ctrl.player = agent; ctrl.surface = surface; ctrl.guards = guards.ToArray(); ctrl.captain = captain;
@@ -418,6 +477,7 @@ namespace Kairos.EditorTools
             foreach (var l in ship.GetComponentsInChildren<Light>())
                 if (l.name.StartsWith("Foco") || l.name == "Luz Tejado") lights.Add(l);
             ctrl.dangerLights = lights.ToArray();
+            fog.deckFloodlights.AddRange(lights);
 
             SaveScene(s, "03_Infiltracion", list);
         }

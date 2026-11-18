@@ -26,7 +26,7 @@ namespace Kairos
         float listen;
         int selected = 3;
 
-        ParticleSystem cloud;
+        ParticleSystem cloud, wakeFx;
         AudioSource engineSrc, listenSrc;
         readonly List<Vector3> personFoci = new List<Vector3>();
 
@@ -36,7 +36,7 @@ namespace Kairos
         Color savedBg; CameraClearFlags savedClear; int savedMask;
 
         // UI
-        TextMeshProUGUI status, confidenceText, crestText, hintText;
+        TextMeshProUGUI status, confidenceText, crestText, hintText, compassText;
         UI.Bar suspBar, crestBar, confBar, listenBar;
         readonly TextMeshProUGUI[] cardText = new TextMeshProUGUI[5];
         readonly Button[] classBtn = new Button[5], selectBtn = new Button[5];
@@ -64,6 +64,7 @@ namespace Kairos
                 if ((C.scanSignals[i] & Bit_Thermal) != 0) thermal[i] = 1;
             }
             BuildCloud();
+            BuildWake();
             BuildThermal();
             BuildUI();
             RainFx.Create(cam.transform, 500);
@@ -78,7 +79,7 @@ namespace Kairos
         /// El mar de esta noche es el que marca el reloj del caso.
         void SyncSea()
         {
-            seaBase = CaseData.DouglasAt(C.hours);
+            seaBase = CaseData.DouglasFor(C.sector, C.hours);
             Ocean.SetSea(seaBase);
         }
 
@@ -104,6 +105,37 @@ namespace Kairos
             var r = go.GetComponent<ParticleSystemRenderer>();
             r.material = Mats.Glow(Color.white, true, true, true);
             cloud.Play();
+        }
+
+        void BuildWake()
+        {
+            var go = new GameObject("EstelaLancha");
+            go.transform.SetParent(boat, false);
+            go.transform.localPosition = new Vector3(0, .15f, -3.4f);
+            wakeFx = go.AddComponent<ParticleSystem>();
+            var main = wakeFx.main;
+            main.loop = true; main.startLifetime = 1.6f; main.startSpeed = 1.4f;
+            main.startSize = new ParticleSystem.MinMaxCurve(.4f, 1.1f);
+            main.startColor = new Color(.72f, .92f, 1f, .45f);
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            var em = wakeFx.emission; em.rateOverTime = 0;
+            var sh = wakeFx.shape; sh.shapeType = ParticleSystemShapeType.Cone; sh.angle = 22f; sh.radius = .45f;
+            var size = wakeFx.sizeOverLifetime; size.enabled = true; size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0, .6f, 1, 2.4f));
+            var r = go.GetComponent<ParticleSystemRenderer>();
+            var wakeTemplate = Resources.Load<Material>("KBoatWakeFoam");
+            var wakeShader = wakeTemplate != null ? wakeTemplate.shader : Shader.Find("Kairos/Pruebas/BoatWakeFoam");
+            if (wakeTemplate != null || wakeShader != null)
+            {
+                var wakeMat = wakeTemplate != null ? new Material(wakeTemplate) : new Material(wakeShader);
+                wakeMat.SetColor("_FoamColor", new Color(0.85f, 0.95f, 1.0f, 0.8f));
+                wakeMat.SetColor("_DeepColor", new Color(0.05f, 0.15f, 0.25f, 0.3f));
+                r.sharedMaterial = wakeMat;
+            }
+            else
+            {
+                r.sharedMaterial = Mats.Glow(Color.white, true, true, true);
+            }
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
         void EmitPoint(Vector3 p, Color c, float size = .22f, float life = 90f)
@@ -205,11 +237,22 @@ namespace Kairos
             // HUD
             hintText.text = CurrentHint(d);
             suspBar.Set(C.suspicion / 100f);
+            suspBar.img.color = C.suspicion > 65f ? Pal.Danger : C.suspicion > 30f ? Pal.DeckLight : Pal.Sonar;
             float sw = Ocean.Swell(boat.position.x, boat.position.z);
             crestBar.Set((sw + 1) * .5f);
             bool onCrest = Ocean.SecondsFromCrest(boat.position.x, boat.position.z) <= CrestWindow;
             crestBar.img.color = onCrest ? Pal.Sealed : Pal.Sonar;
             crestText.text = onCrest ? "<color=#6CFF8A>¡AHORA! Pulsa Espacio</color>" : "Ola: el pulso rinde más en verde";
+
+            // Brújula táctica náutica (Alexander - Tarea S12-1)
+            if (compassText != null && boat != null && ship != null)
+            {
+                float boatHeading = (boat.eulerAngles.y % 360f + 360f) % 360f;
+                Vector3 toShip = (new Vector3(ship.position.x, 0, ship.position.z) - new Vector3(boat.position.x, 0, boat.position.z)).normalized;
+                float bearingToShip = Vector3.SignedAngle(boat.forward, toShip, Vector3.up);
+                string side = bearingToShip >= 0 ? "Estribor" : "Babor";
+                compassText.text = $"<color=#3FE0D0>RUMBO</color> {boatHeading:000}°  |  <color=#FFD27A>BLANCO</color> {Mathf.Abs(bearingToShip):000}° {side} ({d:0} m)";
+            }
             status.text = $"Distancia al buque: <b>{d:0} m</b>\nMarcha: {Mathf.Abs(speed):0} m/s\nCombustible: {Game.S.fuel:0} L\nRepuestos de dron: {Game.S.droneParts}\nDouglas: {Ocean.Douglas:0.0}{(droneActive ? $"\n<color=#FFD27A>Batería del dron: {droneBattery:0} s. T: volver</color>" : "")}";
         }
 
@@ -229,9 +272,11 @@ namespace Kairos
             buoy.yaw = yaw;
             var heading = Quaternion.Euler(0, yaw, 0) * Vector3.forward;
             boat.position += heading * speed * Time.deltaTime;
+            KeepBoatOutsideShipHull();
             Shader.SetGlobalVector("_BoatPos", new Vector4(boat.position.x, boat.position.y, boat.position.z, Mathf.Abs(speed)));
             Shader.SetGlobalVector("_BoatDir", heading * Mathf.Sign(speed + .001f));
             engineSrc.pitch = .7f + Mathf.Abs(speed) / MaxSpeed;
+            if (wakeFx != null) { var em = wakeFx.emission; em.rateOverTime = Mathf.Abs(speed) > 1.2f ? Mathf.Abs(speed) * 4.5f : 0f; }
 
             if (Mathf.Abs(throttle) > 0)
             {
@@ -251,10 +296,35 @@ namespace Kairos
             cam.transform.SetPositionAndRotation(targetPos, rot);
         }
 
+        /// Evita que la lancha atraviese el casco del Hai Feng 77 (90 m de eslora, 14 m de manga).
+        void KeepBoatOutsideShipHull()
+        {
+            if (ship == null) return;
+            var local = ship.InverseTransformPoint(boat.position);
+            const float halfLen = 47.5f;
+            if (Mathf.Abs(local.z) >= halfLen) return;
+            float zClamped = Mathf.Clamp(local.z, -45f, 45f);
+            float beam = zClamped < 15f ? 7f : 7f * Mathf.Sqrt(Mathf.Max(0f, 1f - Mathf.Pow((zClamped - 15f) / 30f, 2f)));
+            float halfW = beam + 2.5f;
+            if (Mathf.Abs(local.x) >= halfW) return;
+
+            float pushX = halfW - Mathf.Abs(local.x);
+            float pushZ = halfLen - Mathf.Abs(local.z);
+            if (pushX < pushZ)
+                local.x = (local.x >= 0f ? 1f : -1f) * halfW;
+            else
+                local.z = (local.z >= 0f ? 1f : -1f) * halfLen;
+
+            var pushed = ship.TransformPoint(local);
+            pushed.y = boat.position.y;
+            boat.position = pushed;
+            speed *= .25f;
+        }
+
         void DriveDrone(Keyboard kb)
         {
             droneBattery -= Time.deltaTime;
-            if (droneBattery <= 0 || Ocean.Douglas >= 6) { EndDrone(true); return; }
+            if (droneBattery <= 0 || (Ocean.Douglas >= 6 && !Game.Has(1, 3))) { EndDrone(true); return; }
             Vector3 move = Vector3.zero;
             float turn = 0;
             if (kb != null)
@@ -291,12 +361,20 @@ namespace Kairos
             float q = crest ? 1f : Game.Has(1, 3) ? .85f : .6f;
             if (d > PulseRange) { toast.Show($"Fuera de alcance del sonar: acércate a {PulseRange:0} m.", Pal.DeckLight); return; }
             if (Game.Has(0, 2)) q *= 1.5f;
-            if (d < 150f)
+            if (d < 150f && !Game.Has(0, 4))
             {
                 C.suspicion = Mathf.Min(100, C.suspicion + (Game.Has(1, 4) ? 3 : 6));
                 toast.Show("Pulso a menos de 150 m: el buque lo nota.", Pal.Danger);
             }
             StartCoroutine(Ring());
+            SendMessage("FireSonarPulse", boat.position, SendMessageOptions.DontRequireReceiver);
+
+            // Ping acústico del sonar submarino en sincronía con la onda cian
+            Sfx.Play(Sfx.PingAcoustic, crest ? .95f : .65f);
+
+            // Eco metálico retrasado por propagación acústica en agua de mar (~1500 m/s)
+            float acousticDelay = Mathf.Clamp(d / 450f, 0.15f, 1.25f);
+            StartCoroutine(DelayedEco(acousticDelay, crest));
 
             // El casco se reconstruye con impactos reales; las bodegas, según el lado desde el que disparas.
             var from = boat.position + Vector3.up * 1.5f;
@@ -327,26 +405,55 @@ namespace Kairos
             RefreshPanel();
         }
 
+        IEnumerator DelayedEco(float delay, bool crest)
+        {
+            yield return new WaitForSeconds(delay);
+            Sfx.Play(Sfx.EcoMetallic, crest ? .85f : .55f);
+        }
+
         IEnumerator Ring()
         {
-            var go = new GameObject("PulsoRing");
-            var lr = go.AddComponent<LineRenderer>();
-            lr.material = Mats.Glow(Pal.Sonar);
-            lr.loop = true; lr.positionCount = 64; lr.widthMultiplier = 1f;
+            LineRenderer MakeRing(float width)
+            {
+                var go = new GameObject("PulsoRing");
+                var lr = go.AddComponent<LineRenderer>();
+                var sweepTemplate = Resources.Load<Material>("KSonarRadialSweep");
+                var sweepShader = sweepTemplate != null ? sweepTemplate.shader : Shader.Find("Kairos/Pruebas/SonarRadialSweep");
+                if (sweepTemplate != null || sweepShader != null)
+                {
+                    var m = sweepTemplate != null ? new Material(sweepTemplate) : new Material(sweepShader);
+                    m.SetColor("_SweepColor", Pal.Sonar);
+                    lr.material = m;
+                }
+                else
+                {
+                    lr.material = Mats.Glow(Pal.Sonar);
+                }
+                lr.loop = true; lr.positionCount = 64; lr.widthMultiplier = width;
+                return lr;
+            }
+            var lr1 = MakeRing(1.2f);
+            var lr2 = MakeRing(.6f);
             var c = boat.position;
             for (float t = 0; t < 1.6f; t += Time.deltaTime)
             {
-                float r = t * 300f;
+                float r1 = t * 300f, r2 = Mathf.Max(0f, (t - .18f) * 260f);
                 for (int i = 0; i < 64; i++)
                 {
                     float a = i * Mathf.PI * 2 / 64;
-                    float x = c.x + Mathf.Cos(a) * r, z = c.z + Mathf.Sin(a) * r;
-                    lr.SetPosition(i, new Vector3(x, Ocean.Height(x, z) + .4f, z));
+                    float ca = Mathf.Cos(a), sa = Mathf.Sin(a);
+                    float x1 = c.x + ca * r1, z1 = c.z + sa * r1;
+                    lr1.SetPosition(i, new Vector3(x1, Ocean.Height(x1, z1) + .45f, z1));
+                    float x2 = c.x + ca * r2, z2 = c.z + sa * r2;
+                    lr2.SetPosition(i, new Vector3(x2, Ocean.Height(x2, z2) + .45f, z2));
                 }
-                lr.material.SetColor("_Color", new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, 1 - t / 1.6f));
+                float alpha = 1f - t / 1.6f;
+                lr1.material.SetColor("_Color", new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, alpha));
+                lr2.material.SetColor("_Color", new Color(Pal.Sealed.r, Pal.Sealed.g, Pal.Sealed.b, alpha * .65f));
                 yield return null;
             }
-            Destroy(go);
+            Destroy(lr1.gameObject);
+            Destroy(lr2.gameObject);
         }
 
         void Detected()

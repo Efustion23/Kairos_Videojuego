@@ -74,7 +74,7 @@ namespace Kairos
         void Start()
         {
             path = new NavMeshPath();
-            seaBase = CaseData.DouglasAt(C.hours); // el mar de esta noche es el que marca el reloj del caso
+            seaBase = CaseData.DouglasFor(C.sector, C.hours); // el mar de esta noche es el que marca el reloj del caso
             Ocean.SetSea(seaBase + .5f);
             exitZone = FindAnyObjectByType<ExitZone>().transform;
             ApplySavedState();
