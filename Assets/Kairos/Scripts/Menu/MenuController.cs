@@ -250,20 +250,22 @@ namespace Kairos
                 UI.Btn(actions, "JUGAR · " + PhaseNames[c.phase].ToUpperInvariant(), () => Game.GoToPhase(c.phase), Pal.Sealed, 23, 58);
             UI.Btn(actions, "Ver guía y controles", () => OpenTab(1), Pal.DeckLight, 20, 58);
 
-            // Sectores en fila horizontal: todos seleccionables para jugar la campaña completa
-            UI.Line(s, "SECTORES DE CAMPAÑA (ELIGE UN SECTOR)", 20, Pal.Sonar, true);
+            // Sectores en fila horizontal: Sector 1 jugable, Sectores 2 y 3 marcados como Próximamente según el GDD
+            UI.Line(s, "SECTORES DE CAMPAÑA", 20, Pal.Sonar, true);
             var secRow = UI.HStack(s, 118, 12);
             for (int i = 0; i < CaseData.Sectors.Length; i++)
             {
                 int sec = i;
                 var d = CaseData.Sectors[i];
-                bool current = c.sector == i;
+                bool unlocked = i == 0;
+                bool current = unlocked && c.sector == i;
                 bool done = Game.S.completedSectors != null && i < Game.S.completedSectors.Length && Game.S.completedSectors[i];
-                Color col = current ? Pal.Sealed : done ? Pal.DeckLight : Pal.Sonar;
-                string badge = current ? "<color=#6CFF8A>ACTIVO</color>" : done ? "<color=#FFD27A>COMPLETADO</color>" : "<color=#3FE0D0>DISPONIBLE</color>";
+                Color col = !unlocked ? Pal.Dim : current ? Pal.Sealed : done ? Pal.DeckLight : Pal.Sonar;
+                string badge = !unlocked ? "<color=#8DA2AB>PRÓXIMAMENTE</color>" : current ? "<color=#6CFF8A>ACTIVO</color>" : done ? "<color=#FFD27A>COMPLETADO</color>" : "<color=#3FE0D0>DISPONIBLE</color>";
                 var sp = Card(secRow, col, 12, 6, new Color(col.r * .10f, col.g * .10f, col.b * .10f, .90f));
-                UI.Line(sp, $"<b>{d.name}</b>\n<size=16>{d.ship} · {badge}</size>", 17, Pal.Text, false, TextAlignmentOptions.Center);
-                UI.Btn(sp, current ? "En curso" : "Seleccionar sector", () => { if (!current) { Game.StartCase(sec); Game.Write(); TabMission(); } }, col, 17, 36).interactable = !current;
+                UI.Line(sp, $"<b>{d.name}</b>\n<size=16>{d.ship} · {badge}</size>", 17, unlocked ? Pal.Text : Pal.Dim, false, TextAlignmentOptions.Center);
+                string btnLabel = !unlocked ? "Próximamente" : current ? "En curso" : "Seleccionar sector";
+                UI.Btn(sp, btnLabel, () => { if (unlocked && !current) { Game.StartCase(sec); Game.Write(); TabMission(); } }, col, 17, 36).interactable = unlocked && !current;
             }
         }
 

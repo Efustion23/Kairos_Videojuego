@@ -46,8 +46,8 @@ namespace Kairos.Pruebas.Tests
             var lowPass = go.GetComponent<AudioLowPassFilter>();
             Assert.IsNotNull(highPass, "Debe crearse el filtro pasa-altos para cortar frecuencias graves.");
             Assert.IsNotNull(lowPass, "Debe crearse el filtro pasa-bajos para limitar el canal a frecuencias de voz.");
-            Assert.AreEqual(350f, highPass.cutoffFrequency, 1.0f);
-            Assert.AreEqual(3200f, lowPass.cutoffFrequency, 1.0f);
+            Assert.AreEqual(350f, radio.highPassCutoff, 1.0f);
+            Assert.AreEqual(3200f, radio.lowPassCutoff, 1.0f);
         }
 
         [Test]

@@ -12,8 +12,12 @@ namespace Kairos
         {
             if (sonarSweepMat == null)
             {
-                var s = Shader.Find("Kairos/SonarSweep");
-                if (s != null) sonarSweepMat = new Material(s);
+                sonarSweepMat = Resources.Load<Material>("KSonarSweep") ?? Resources.Load<Material>("KSonarRadialSweep");
+                if (sonarSweepMat == null)
+                {
+                    var s = Shader.Find("Kairos/SonarSweep") ?? Shader.Find("Kairos/Pruebas/SonarRadialSweep");
+                    if (s != null) sonarSweepMat = new Material(s);
+                }
             }
             if (sonarSweepMat != null)
             {

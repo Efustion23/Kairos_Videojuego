@@ -88,7 +88,7 @@ namespace Kairos.Pruebas.Tests
         [Test]
         public void PerfilTermicoEnCambiosDePruebaExisteYTieneContrasteCobaltoAmbar()
         {
-            var profile = UnityEditor.AssetDatabase.LoadAssetAtPath<VolumeProfile>("Assets/cambios de prueba/Profiles/ThermalProfile.asset");
+            var profile = UnityEditor.AssetDatabase.LoadAssetAtPath<VolumeProfile>("Assets/Kairos/Arte y audio/Profiles/ThermalProfile.asset");
             Assert.IsNotNull(profile, "El asset ThermalProfile.asset debe existir en la carpeta de prueba.");
 
             Assert.IsTrue(profile.TryGet<ColorAdjustments>(out var ca));

@@ -9,7 +9,7 @@ namespace Kairos.Pruebas
     /// eco en mamparos de acero, turbulencia hidrodinámica y crujidos bajo agua.
     /// Integrada con AudioMixer para mezcla y ecualización profesional.
     /// </summary>
-    public static class SubmarineAudioSuite
+    public class SubmarineAudioSuite : MonoBehaviour
     {
         const int SampleRate = 44100;
         static readonly System.Random Rng = new System.Random(88);
@@ -132,7 +132,7 @@ namespace Kairos.Pruebas
                 mixerAsset = Resources.Load<AudioMixer>("SonarAudioMixer");
 #if UNITY_EDITOR
                 if (mixerAsset == null)
-                    mixerAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioMixer>("Assets/cambios de prueba/Audio/SonarAudioMixer.mixer");
+                    mixerAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioMixer>("Assets/Kairos/Arte y audio/Audio/SonarAudioMixer.mixer");
 #endif
                 if (mixerAsset != null)
                 {

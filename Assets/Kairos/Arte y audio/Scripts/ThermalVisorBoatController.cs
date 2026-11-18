@@ -37,7 +37,7 @@ namespace Kairos.Pruebas
                 thermalProfile = Resources.Load<VolumeProfile>("ThermalProfile");
 #if UNITY_EDITOR
                 if (thermalProfile == null)
-                    thermalProfile = UnityEditor.AssetDatabase.LoadAssetAtPath<VolumeProfile>("Assets/cambios de prueba/Profiles/ThermalProfile.asset");
+                    thermalProfile = UnityEditor.AssetDatabase.LoadAssetAtPath<VolumeProfile>("Assets/Kairos/Arte y audio/Profiles/ThermalProfile.asset");
 #endif
             }
 

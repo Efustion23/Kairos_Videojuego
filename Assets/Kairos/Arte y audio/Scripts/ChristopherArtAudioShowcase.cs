@@ -26,6 +26,7 @@ namespace Kairos.Pruebas
         [Header("Estado de Demostración")]
         public ShowcaseMode activeMode = ShowcaseMode.SonarSweep;
         public bool showTelemetryHud = true;
+        public bool enableInteractiveHotkeys = false;
 
         [Header("Referencias Opcionales")]
         public SonarWaveRadialSweep sonarComponent;
@@ -66,6 +67,7 @@ namespace Kairos.Pruebas
 
         private void Update()
         {
+            if (!enableInteractiveHotkeys) return;
             UpdateFpsMeter();
             HandleKeyboardShortcuts();
         }
@@ -123,7 +125,7 @@ namespace Kairos.Pruebas
 
         private void OnGUI()
         {
-            if (!showTelemetryHud) return;
+            if (!enableInteractiveHotkeys || !showTelemetryHud) return;
 
             GUI.backgroundColor = new Color(0.04f, 0.08f, 0.12f, 0.92f);
             GUI.Box(new Rect(15, 15, 480, 240), "");

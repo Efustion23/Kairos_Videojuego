@@ -70,10 +70,11 @@ flowchart LR
 * **Objetivo:** Abordar el pesquero y asegurar pruebas físicas sin ser capturado.
 * **Técnica Técnica de Sigilo:** *"Barco estático, mar que se mueve"*. La física del buque y el NavMesh permanecen fijos localmente para garantizar estabilidad de la IA y el control del jugador, mientras el mar y los horizontes se desplazan.
 * **Mecánicas:**
-  * **Sigilo Social y Ambiental:** Conos de visión dinámicos modificados por clima, lluvia, sombras y postura.
-  * **Maletín Estanco (12 ranuras):** Registro fotográfico con sellado digital (SHA-256).
-  * **11 Indicadores de la OIT:** Servidumbre por deudas, retención de pasaportes, jornadas de 20 horas, falta de agua potable.
-  * **Diálogos con Víctimas:** El Inspector no "salva"; ofrece apoyo y documenta testimonios con consentimiento.
+  * **Sigilo Social y Ambiental:** Conos de visión dinámicos modificados por clima, lluvia, sombras y postura; guardias y capitán con modelos humanoid 3D propios, rig Mixamo y linterna halógena de patrulla.
+  * **Maletín Estanco (15 ranuras):** Registro fotográfico con sellado digital (SHA-256), incluyendo evidencias documentales, radio VHF satelital y plotter GPS náutico en el puente de mando.
+  * **11 Indicadores de la OIT:** Servidumbre por deudas, retención de pasaportes, jornadas de 20 horas, aislamiento, engaño y restricción de movimiento.
+  * **Diálogos con Víctimas (4 sobrevivientes con modelos 3D):** Rodel Santos (Filipinas), Ari Wibowo (Indonesia), Moussa Diallo (Senegal) y Thant Zin (Myanmar). El Inspector no "salva"; ofrece apoyo y documenta testimonios con consentimiento.
+  * **Sistemas Audiovisuales y Ambientales:** Música adaptativa reactiva a la sospecha, radio táctica VHF/UHF con estática y pitido Roger, audio espacial 3D de pasos metálicos y compresores, partículas de lluvia torrencial y shaders URP de estela de lancha, barrido radial de sonar y resaltado forense.
 
 ---
 
@@ -89,13 +90,13 @@ flowchart LR
 
 ## 4. Estructura de Sectores Oceánicos
 
-1. **Sector 1 — Atlántico Sur (Milla 201, Argentina):**
-   * *Caso Tutorial:* Potero *Hai Feng 77*.
-   * *Enfoque:* Pesca de calamar con focos poteros, incursiones al límite de la ZEE y transbordos opacos.
-2. **Sector 2 — Golfo de Guinea (África Occidental):**
-   * *Enfoque:* Arrastreros industriales, falsificación de licencias locales y apagones masivos de AIS.
-3. **Sector 3 — Océano Índico Occidental:**
-   * *Enfoque:* Palangreros de atún de larga distancia, tripulaciones retenidas por más de 2 años sin tocar puerto y desenlace contra *Tidewater Holdings*.
+1. **Sector 1 — Atlántico Sur (Milla 201, Argentina) [Jugable en v1.0]:**
+   * *Caso Principal:* Potero *Hai Feng 77* (con bucle completo de 4 fases, repatriación digna y epílogo personalizado para los 4 pescadores).
+   * *Enfoque:* Pesca de calamar con focos poteros, incursiones al límite de la ZEE y transbordos opacos hacia el frigorífico *Polar Meridian*.
+2. **Sector 2 — Golfo de Guinea (África Occidental) [Próximamente]:**
+   * *Enfoque:* Arrastreros industriales (*Kestrel Explorer*), falsificación de licencias locales y apagones masivos de AIS. Mostrado como *Próximamente* en el mapa orbital v1.0 manteniendo los datos de flota y nodos listos para expansión.
+3. **Sector 3 — Océano Índico Occidental [Próximamente]:**
+   * *Enfoque:* Palangreros de atún de larga distancia (*Oceanic Crown 9*), tripulaciones retenidas por más de 2 años sin tocar puerto y desenlace contra *Tidewater Holdings*. Mostrado como *Próximamente* en el mapa orbital v1.0.
 
 ---
 

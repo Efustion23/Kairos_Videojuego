@@ -123,7 +123,8 @@ namespace Kairos.Pruebas
 
         public static Material CreateGlowMaterial(Color baseColor, Color glowColor, float highlightStrength = 1.6f)
         {
-            Shader shader = Shader.Find(ShaderName);
+            var resMat = Resources.Load<Material>("KInspectableOutline");
+            Shader shader = resMat != null ? resMat.shader : Shader.Find(ShaderName);
             if (shader == null)
             {
                 shader = Shader.Find("Universal Render Pipeline/Lit");

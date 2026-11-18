@@ -58,11 +58,13 @@ namespace Kairos.Pruebas
             voiceAudioSource.volume = masterRadioVolume;
 
             // Filtro pasa-banda para efecto walkie-talkie
-            var highPass = gameObject.GetComponent<AudioHighPassFilter>() ?? gameObject.AddComponent<AudioHighPassFilter>();
-            highPass.cutoffFrequency = highPassCutoff;
+            var highPass = gameObject.GetComponent<AudioHighPassFilter>();
+            if (highPass == null) highPass = gameObject.AddComponent<AudioHighPassFilter>();
+            if (highPass != null) highPass.cutoffFrequency = highPassCutoff;
 
-            var lowPass = gameObject.GetComponent<AudioLowPassFilter>() ?? gameObject.AddComponent<AudioLowPassFilter>();
-            lowPass.cutoffFrequency = lowPassCutoff;
+            var lowPass = gameObject.GetComponent<AudioLowPassFilter>();
+            if (lowPass == null) lowPass = gameObject.AddComponent<AudioLowPassFilter>();
+            if (lowPass != null) lowPass.cutoffFrequency = lowPassCutoff;
 
             // AudioSource secundario para beeps y clics mecánicos del micro PTT
             GameObject fxChild = new GameObject("Radio_Squelch_FX");
