@@ -130,7 +130,7 @@
 * **Checklist (Subtareas):**
   - [x] Crear Shader Graph de barrido volumétrico cian (#3FE0D0) *(Completado por Christopher Veliz)*
   - [x] Configurar filtro de visión térmica fría/caliente para el dron *(Completado por Christopher Veliz)*
-  - [ ] Integrar bancos de sonido de ping acústico y eco metálico
+  - [x] Integrar bancos de sonido de ping acústico y eco metálico *(Completado por Christopher Veliz)*
 
 ---
 
@@ -166,8 +166,8 @@
 * **Commit:** `art(interior): decorar puente de mando, bodegas y audio de tormenta`
 * **Checklist (Subtareas):**
   - [x] Ambientar interior del puente de mando y camarote del contramaestre *(Completado por Christopher Veliz)*
-  - [ ] Integrar animaciones de patrullaje con linterna para los guardias
-  - [ ] Configurar audio espacial 3D de pasos metálicos y compresores
+  - [x] Integrar animaciones de patrullaje con linterna para los guardias *(Completado por Christopher Veliz)*
+  - [x] Configurar audio espacial 3D de pasos metálicos y compresores *(Completado por Christopher Veliz)*
 
 ---
 
@@ -202,9 +202,9 @@
 * **Rama:** `feature/christopher-arte-audio`
 * **Commit:** `art(props): añadir modelos 3D de evidencias y música de infiltración`
 * **Checklist (Subtareas):**
-  - [ ] Modelar y texturizar bitácora real, pasaportes, radio y plotter GPS
-  - [ ] Añadir shader sutil de resaltado para objetos inspeccionables
-  - [ ] Integrar música adaptativa de tensión e infiltración nocturna
+  - [x] Modelar y texturizar bitácora real, pasaportes, radio y plotter GPS *(Completado por Christopher Veliz)*
+  - [x] Añadir shader sutil de resaltado para objetos inspeccionables *(Completado por Christopher Veliz)*
+  - [x] Integrar música adaptativa de tensión e infiltración nocturna *(Completado por Christopher Veliz)*
 
 ### 16. `[S15-1]` Pruebas de usabilidad, ajuste de textos y menú de pausa/inicio
 * **Miembro:** Alexander Benites (AB)
@@ -235,6 +235,6 @@
 * **Rama:** `feature/christopher-arte-audio`
 * **Commit:** `art(final): ajustar post-procesado nocturno y capturar video de inicio`
 * **Checklist (Subtareas):**
-  - [ ] Calibrar corrección de color y bloom en perfiles de Post-Processing
-  - [ ] Nivelar mezcla maestra de audio (voces, sonar, tormenta y música)
-  - [ ] Capturar secuencias cinemáticas en alta definición para la portada
+  - [x] Calibrar corrección de color y bloom en perfiles de Post-Processing *(Completado por Christopher Veliz)*
+  - [x] Nivelar mezcla maestra de audio (voces, sonar, tormenta y música) *(Completado por Christopher Veliz)*
+  - [x] Capturar secuencias cinemáticas en alta definición para la portada *(Completado por Christopher Veliz)*
