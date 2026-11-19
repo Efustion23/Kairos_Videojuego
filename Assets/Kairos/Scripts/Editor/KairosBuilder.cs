@@ -378,7 +378,7 @@ namespace Kairos.EditorTools
             // Guardias: rondas en bucle con pausas tácticas en cubierta y huecos para colarse.
             var guards = new List<GuardAI>();
             var contramaestre = Guard(gameplay, "Contramaestre", new Vector3(-5.5f, 6.05f, -24), bulb, new[] {
-                new Vector3(-5.5f, 6, -24), new Vector3(-5.8f, 6, -6), new Vector3(-1.8f, 6, 8), new Vector3(-1.6f, 6, 28),
+                new Vector3(-5.5f, 6, -24), new Vector3(-5.8f, 6, -6), new Vector3(-1.15f, 6, 8), new Vector3(-1.6f, 6, 28),
                 new Vector3(2.2f, 6, 33), new Vector3(5.6f, 6, 12), new Vector3(2.2f, 6, 4), new Vector3(-5.5f, 6, -12),
                 new Vector3(-2.5f, 6, -28), new Vector3(2.8f, 6, -27) });
             contramaestre.minWaitTime = 2.0f; contramaestre.maxWaitTime = 3.6f;
