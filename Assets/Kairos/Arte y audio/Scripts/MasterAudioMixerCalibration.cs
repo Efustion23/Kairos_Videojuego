@@ -39,6 +39,30 @@ namespace Kairos.Pruebas
         [Header("Estado Actual de Mezcla")]
         public AudioMixerSnapshotState currentState = AudioMixerSnapshotState.InfiltracionNormal;
 
+        [SerializeField, HideInInspector] private System.Collections.Generic.List<string> exposedParamNames = new System.Collections.Generic.List<string>();
+
+        private void OnValidate()
+        {
+            RefreshExposedParamsCache();
+        }
+
+        private void RefreshExposedParamsCache()
+        {
+#if UNITY_EDITOR
+            exposedParamNames.Clear();
+            if (targetMixer == null) return;
+            var so = new UnityEditor.SerializedObject(targetMixer);
+            var prop = so.FindProperty("m_ExposedParameters");
+            if (prop == null) return;
+            for (int i = 0; i < prop.arraySize; i++)
+            {
+                var nameProp = prop.GetArrayElementAtIndex(i).FindPropertyRelative("name");
+                if (nameProp != null && !string.IsNullOrEmpty(nameProp.stringValue))
+                    exposedParamNames.Add(nameProp.stringValue);
+            }
+#endif
+        }
+
         private void Start()
         {
             ApplyNominalLevels();
@@ -87,7 +111,7 @@ namespace Kairos.Pruebas
 
         private void SetMixerParamSafe(string paramName, float valueDb)
         {
-            if (targetMixer != null)
+            if (targetMixer != null && exposedParamNames != null && exposedParamNames.Contains(paramName))
             {
                 targetMixer.SetFloat(paramName, valueDb);
             }
@@ -103,6 +127,7 @@ namespace Kairos.Pruebas
 
             var cal = go.AddComponent<MasterAudioMixerCalibration>();
             cal.targetMixer = mixer;
+            cal.RefreshExposedParamsCache();
             cal.ApplyNominalLevels();
 
             return go;

@@ -375,18 +375,30 @@ namespace Kairos.EditorTools
             var agent = player.AddComponent<PlayerAgent>();
             agent.cam = cam; agent.motion = motion;
 
-            // Guardias: rondas en bucle con huecos para colarse.
+            // Guardias: rondas en bucle con pausas tácticas en cubierta y huecos para colarse.
             var guards = new List<GuardAI>();
-            guards.Add(Guard(gameplay, "Contramaestre", new Vector3(-6, 6.05f, -24), bulb, new[] {
-                new Vector3(-6, 6, -23), new Vector3(-6, 6, 1), new Vector3(0, 6, 8), new Vector3(0, 6, 34), new Vector3(5.8f, 6, 12), new Vector3(0, 6, 4), new Vector3(-6, 6, -6), new Vector3(0, 6, -24), new Vector3(0, 6, -37), new Vector3(3, 6, -29) }));
-            guards.Add(Guard(gameplay, "Guardia de bodega", new Vector3(0, 3.05f, -26), darkMetal, new[] {
-                new Vector3(0, 3, -26), new Vector3(3.6f, 3, -6), new Vector3(0, 3, 0), new Vector3(0, 3, 19), new Vector3(3.2f, 3, 12), new Vector3(0, 3, 8), new Vector3(-3.5f, 3, -20), new Vector3(0, 3, -12) }));
-            guards.Add(Guard(gameplay, "Guardia de habilitación", new Vector3(0, 6.05f, -18), darkMetal, new[] {
-                new Vector3(0, 6, -18), new Vector3(0, 6, 0), new Vector3(3.2f, 6, -8), new Vector3(0, 6, 4), new Vector3(6, 6, 3), new Vector3(0, 6, -22), new Vector3(0, 6, -9) }));
+            var contramaestre = Guard(gameplay, "Contramaestre", new Vector3(-5.5f, 6.05f, -24), bulb, new[] {
+                new Vector3(-5.5f, 6, -24), new Vector3(-5.8f, 6, -6), new Vector3(-1.15f, 6, 8), new Vector3(-1.6f, 6, 28),
+                new Vector3(2.2f, 6, 33), new Vector3(5.6f, 6, 12), new Vector3(2.2f, 6, 4), new Vector3(-5.5f, 6, -12),
+                new Vector3(-2.5f, 6, -28), new Vector3(2.8f, 6, -27) });
+            contramaestre.minWaitTime = 2.0f; contramaestre.maxWaitTime = 3.6f;
+            guards.Add(contramaestre);
+
+            var bodega = Guard(gameplay, "Guardia de bodega", new Vector3(0, 3.05f, -26), darkMetal, new[] {
+                new Vector3(0, 3, -26), new Vector3(3.6f, 3, -6), new Vector3(0, 3, 0), new Vector3(0, 3, 19), new Vector3(3.2f, 3, 12), new Vector3(0, 3, 8), new Vector3(-3.5f, 3, -20), new Vector3(0, 3, -12) });
+            bodega.minWaitTime = 1.5f; bodega.maxWaitTime = 2.8f;
+            guards.Add(bodega);
+
+            var habilitacion = Guard(gameplay, "Guardia de habilitación", new Vector3(0, 6.05f, -18), darkMetal, new[] {
+                new Vector3(0, 6, -18), new Vector3(0, 6, -2), new Vector3(3.2f, 6, -8), new Vector3(1.6f, 6, 4), new Vector3(5.8f, 6, 3), new Vector3(0, 6, -22), new Vector3(0, 6, -10) });
+            habilitacion.minWaitTime = 1.6f; habilitacion.maxWaitTime = 3.0f;
+            guards.Add(habilitacion);
+
             var captain = Guard(gameplay, "Capitán", new Vector3(0, 9.15f, -7), coat, new[] {
                 new Vector3(0, 9.1f, -7), new Vector3(-2, 9.1f, -11), new Vector3(2.5f, 9.1f, -9) });
-            guards.Add(captain);
+            captain.minWaitTime = 2.2f; captain.maxWaitTime = 4.0f;
             captain.viewRange = 9;
+            guards.Add(captain);
 
             // Cámara del barco: vigila la cubierta de popa; el pasillo inferior queda libre.
             var cam1 = new GameObject("Camara popa").AddComponent<SecurityCam>();

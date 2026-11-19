@@ -144,8 +144,8 @@
 * **Commit:** `feat(dialogue): integrar textos de conversación y medidor de confianza`
 * **Checklist (Subtareas):**
   - [x] Redactar árbol de diálogo con víctimas y opciones de asistencia *(Completado por Alexander Benites)*
-  - [ ] Diseñar interfaz de nivel de confianza y consentimiento de testigo
-  - [ ] Ajustar waypoints y tiempos de parada de los guardias en cubierta
+  - [x] Diseñar interfaz de nivel de confianza y consentimiento de testigo *(Completado por Alexander Benites)*
+  - [x] Ajustar waypoints y tiempos de parada de los guardias en cubierta *(Completado por Alexander Benites)*
 
 ### 11. `[S13-2]` Inteligencia Artificial de guardias y conos de visión
 * **Miembro:** Diego Tornero (DT)
