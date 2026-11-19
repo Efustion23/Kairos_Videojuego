@@ -13,7 +13,8 @@ namespace Kairos
         const float StartDays = 14f;
         Canvas canvas;
         RectTransform root, board, cards, actions;
-        TextMeshProUGUI clock, detail, indicatorText, verdictText, hint;
+        TextMeshProUGUI clock, detail, indicatorText, verdictText, hint, boardLegend;
+        UI.Bar oitBar;
         UI.Toasts toast;
         Button sentenceBtn, reboardBtn, closeBtn;
         string selected;
@@ -48,6 +49,8 @@ namespace Kairos
 
             var center = UI.Panel(root, new Vector2(.25f, .36f), new Vector2(.75f, .93f), default, default, new Color(.02f, .06f, .09f, .95f));
             board = (RectTransform)center.transform;
+            var legRect = UI.Rect(board, "BoardLegend", new Vector2(0, .92f), Vector2.one);
+            boardLegend = UI.Text(legRect, "", 15, Pal.Dim, TextAlignmentOptions.Center);
 
             var nodes = CaseData.NodesFor(C.sector);
             for (int i = 0; i < nodes.Length; i++)
@@ -70,6 +73,7 @@ namespace Kairos
             var right = UI.Panel(root, new Vector2(.75f, 0), new Vector2(1, .93f));
             var rs = UI.VStack(right.transform, 14, 4);
             UI.Line(rs, "Indicadores OIT probados", 22, Pal.Sonar, true);
+            oitBar = UI.NewBar(rs, Pal.Sealed, 8);
             indicatorText = UI.Line(rs, "", 18);
             verdictText = UI.Line(rs, "", 19, Pal.ThermHot);
             sentenceBtn = UI.Btn(rs, "Ejecutar sentencia", ExecuteSentence, Pal.Sealed, 22, 52);
@@ -177,6 +181,13 @@ namespace Kairos
 
             int inds = CaseData.CountIndicators(C.presented);
             bool chain = CaseData.ChainComplete(C.links);
+            if (oitBar != null)
+            {
+                oitBar.Set(Mathf.Clamp01((float)inds / CaseData.Indicators.Length));
+                oitBar.img.color = inds >= 7 ? Pal.Sealed : inds >= 4 ? Pal.DeckLight : Pal.Sonar;
+            }
+            if (boardLegend != null)
+                boardLegend.text = $"PIZARRA DE CONEXIÓN  ·  Enlaces probados: <b>{C.links.Count}</b>  ·  Cadena: {(chain ? "<color=#6CFF8A>COMPLETA</color>" : "<color=#F2A73B>EN CONSTRUCCIÓN</color>")}  ·  <color=#6CFF8A>■ Probado</color>  <color=#F2A73B>■ Disponible</color>";
             clock.text = $"<b>FASE 4 · JUICIO FINANCIERO</b>     Antes de que cambie de nombre y bandera: <color={(C.trialDays <= 3 ? "#FF5940" : "#F2A73B")}>{C.trialDays:0.#} días</color>     Salida: {CaseData.ExitNames[C.exitUsed]}";
 
             UI.Clear(actions);
@@ -252,6 +263,7 @@ namespace Kairos
                 $"<b>Veredicto del Tribunal: {CaseData.VerdictNames[C.verdict]}</b>",
                 $"Expediente Fiscal Oficial: <b>KAIROS-JUD-2026</b>  |  Investigador: {Game.Inspector}",
                 $"Carga probatoria: <b>{inds} de 11 indicadores de la OIT</b> debidamente acreditados con cadena de custodia.",
+                "<color=#3FE0D0>⚖ Medidas Internacionales:</color> Orden de Retención (WRO) ante aduanas y cierre de puertos bajo Acuerdo PSMA (FAO).",
                 $"<color=#6CFF8A>✔ Embargo Económico Decretado:</color> <b>{C.embargo:N0} ¢</b>.",
                 $"<color=#FFD27A>★ Fondo de Decomiso Legal (15%):</color> <b>+{fund15:N0} ¢</b> transferidos para rescate y repatriación digna.",
                 C.verdict == 3
@@ -285,6 +297,7 @@ namespace Kairos
             var head = UI.Text(top.transform, "", 24, Pal.Text, TextAlignmentOptions.Left);
             head.margin = new Vector4(24, 0, 24, 0);
             var body = UI.Scroll(root, new Vector2(.08f, .1f), new Vector2(.92f, .9f));
+            toast = UI.Toasts.Create(root, new Vector2(.2f, .02f), new Vector2(.8f, .09f));
 
             int rescued = 0;
             foreach (var st in C.persons)
@@ -292,7 +305,9 @@ namespace Kairos
                 if (!st.rescued) continue;
                 rescued++;
                 var d = CaseData.PersonDefOf(st.id);
-                UI.Line(body, $"{d.name} · {d.origin}", 28, Pal.Sonar, true);
+                int digCount = 0;
+                foreach (var dg in st.dignified) if (dg) digCount++;
+                UI.Line(body, $"{d.name} · {d.origin}  <size=18><color=#6CFF8A>({digCount}/5 cobertura digna)</color></size>", 26, Pal.Sonar, true);
                 for (int n = 0; n < CaseData.Needs.Length; n++)
                 {
                     int need = n;
@@ -305,13 +320,19 @@ namespace Kairos
                     b2.onClick.AddListener(() =>
                     {
                         st.dignified[need] = true;
-                        if (TotalCost() > Game.S.budget) { st.dignified[need] = false; }
+                        if (TotalCost() > Game.S.budget)
+                        {
+                            st.dignified[need] = false;
+                            toast.Show("Presupuesto insuficiente para esta cobertura digna.", Pal.Danger);
+                            return;
+                        }
                         ShowRepatriation();
                     });
                 }
             }
             if (rescued == 0) UI.Line(body, "No hay personas rescatadas en este caso.", 24, Pal.Dim);
-            head.text = $"<b>REPATRIACIÓN</b>     Presupuesto {Game.S.budget:N0} ¢     Coste de lo elegido <color=#F2A73B>{TotalCost():N0} ¢</color>     Elegir la opción digna cuesta más, da reputación y cambia su epílogo.";
+            int remaining = Game.S.budget - TotalCost();
+            head.text = $"<b>REPATRIACIÓN DIGNA</b>     Presupuesto: {Game.S.budget:N0} ¢     Coste: <color=#F2A73B>{TotalCost():N0} ¢</color>     Restante: <color=#6CFF8A>{remaining:N0} ¢</color>";
             UI.Btn(body, "Confirmar y ver qué fue de cada persona", ConfirmRepatriation, Pal.Sealed, 24, 56);
         }
 

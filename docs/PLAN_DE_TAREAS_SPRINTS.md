@@ -180,9 +180,9 @@
 * **Rama:** `feature/alexander-ui-narrativa`
 * **Commit:** `ui(caseboard): diseñar maletín de pruebas y pantalla de victoria`
 * **Checklist (Subtareas):**
-  - [ ] Diseñar cuadrícula del maletín estanco con sello criptográfico
-  - [ ] Construir pizarra de conexión de evidencias e indicadores OIT
-  - [ ] Maquetar pantalla de sentencia judicial y repatriación digna
+  - [x] Diseñar cuadrícula del maletín estanco con sello criptográfico *(Completado por Alexander Benites)*
+  - [x] Construir pizarra de conexión de evidencias e indicadores OIT *(Completado por Alexander Benites)*
+  - [x] Maquetar pantalla de sentencia judicial y repatriación digna *(Completado por Alexander Benites)*
 
 ### 14. `[S14-2]` Cámara fotográfica de pruebas y transición completa de las 4 fases
 * **Miembro:** Diego Tornero (DT)
