@@ -138,31 +138,31 @@ namespace Kairos
             });
         }
 
-        // ---------- Base (Navegación superior limpia tipo app / videojuego) ----------
+        // ---------- Base (Consola táctica naval sin espacios muertos, con fondo 3D y tarjetas ilustradas) ----------
         void ShowBase(int initialTab = 0)
         {
             activeTab = initialTab;
             Screen();
-            UI.Fullscreen(root, new Color(.01f, .03f, .05f, .54f));
+            UI.Fullscreen(root, new Color(.008f, .022f, .036f, .46f));
 
-            // Barra de estado superior
-            var top = UI.Panel(root, new Vector2(.03f, .915f), new Vector2(.97f, .982f), default, default, new Color(.025f, .07f, .10f, .94f));
-            var th = UI.Rect(top.transform, "TopRow", Vector2.zero, Vector2.one, new Vector2(20, 4), new Vector2(-20, -4));
+            // Barra de estado superior flotante
+            var top = UI.Panel(root, new Vector2(.025f, .922f), new Vector2(.975f, .982f), default, default, new Color(.02f, .05f, .08f, .92f));
+            var th = UI.Rect(top.transform, "TopRow", Vector2.zero, Vector2.one, new Vector2(22, 4), new Vector2(-22, -4));
             var hl = th.gameObject.AddComponent<HorizontalLayoutGroup>();
-            hl.spacing = 12; hl.childControlHeight = true; hl.childControlWidth = true; hl.childForceExpandWidth = false;
-            var brand = UI.Line(th, $"<b>BASE KAIROS</b>   <color=#8DA2AB>·  {Game.Inspector}</color>", 20, Pal.Sonar, false, TextAlignmentOptions.MidlineLeft);
+            hl.spacing = 14; hl.childControlHeight = true; hl.childControlWidth = true; hl.childForceExpandWidth = false;
+            var brand = UI.Line(th, $"<b>KAIROS</b> <color=#3FE0D0>//</color> BASE DE OPERACIONES   <color=#8DA2AB>·  {Game.Inspector}</color>", 20, Pal.Text, false, TextAlignmentOptions.MidlineLeft);
             brand.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
             resources = UI.Line(th, "", 19, Pal.Text, false, TextAlignmentOptions.MidlineRight);
-            resources.gameObject.AddComponent<LayoutElement>().minWidth = 680;
+            resources.gameObject.AddComponent<LayoutElement>().minWidth = 720;
             RefreshResources();
 
-            // Barra de 4 pestañas principales (imposible perderse)
-            navBar = UI.Rect(root, "NavBar", new Vector2(.03f, .835f), new Vector2(.97f, .902f));
+            // Barra de 4 pestañas principales
+            navBar = UI.Rect(root, "NavBar", new Vector2(.025f, .852f), new Vector2(.975f, .910f));
             var nh = navBar.gameObject.AddComponent<HorizontalLayoutGroup>();
-            nh.spacing = 10; nh.childControlHeight = true; nh.childControlWidth = true; nh.childForceExpandWidth = true;
+            nh.spacing = 12; nh.childControlHeight = true; nh.childControlWidth = true; nh.childForceExpandWidth = true;
 
-            var body = UI.Panel(root, new Vector2(.03f, .025f), new Vector2(.97f, .820f), default, default, new Color(.025f, .07f, .10f, .88f));
-            tabBody = (RectTransform)body.transform;
+            // Contenedor principal transparente (cada pestaña administra sus propios módulos sin crear paredes opacas vacías)
+            tabBody = UI.Rect(root, "TabBody", new Vector2(.025f, .025f), new Vector2(.975f, .838f));
 
             OpenTab(activeTab);
         }
@@ -210,49 +210,97 @@ namespace Kairos
             "Caso cerrado. Puedes repetirlo conservando tus mejoras y recursos."
         };
 
-        // ---------- 1. MISIÓN ACTUAL ----------
+        static readonly string[] SectorArtKeys = { "UI/sector_atlantico", "UI/sector_guinea", "UI/sector_indico" };
+
+        // ---------- 1. MISIÓN ACTUAL (Layout táctico 2 zonas: sin huecos muertos + tarjetas ilustradas) ----------
         void TabMission()
         {
             UI.Clear(tabBody);
-            var s = UI.Scroll(tabBody, Vector2.zero, Vector2.one, new Vector2(12, 12), new Vector2(-12, -12));
             var c = Game.C;
 
-            var hero = Card(s, Pal.Sonar, 24, 14);
-            UI.Line(hero, $"{CaseData.Sectors[c.sector].name.ToUpperInvariant()}", 16, Pal.Dim, true);
-            UI.Line(hero, CaseData.TargetFor(c.sector).name, 38, Pal.Sonar, true);
-            UI.Line(hero, CaseData.CaseSummaryFor(c.sector), 20, Pal.Text);
+            // ===== ZONA SUPERIOR (56%): Briefing izquierdo + Dossier visual del objetivo derecho =====
+            var heroPanel = UI.Panel(tabBody, new Vector2(0f, .44f), new Vector2(.59f, 1f), default, default, new Color(.025f, .058f, .088f, .92f));
+            var hs = UI.VStack(heroPanel.transform, 24, 12);
 
-            // 4 pasos visuales
-            var steps = UI.HStack(hero, 78, 12);
-            string[] stepTitles = { "1. RASTREO", "2. SONAR", "3. INFILTRACIÓN", "4. JUICIO" };
-            string[] stepGoals = { "IR ≥ 60", "Confianza ≥ 70 %", "≥ 1 prueba A", "Sentencia" };
+            UI.Line(hs, $"OPERACIÓN ACTIVA  ·  {CaseData.Sectors[c.sector].name.ToUpperInvariant()}", 15, Pal.Sonar, true);
+            UI.Line(hs, CaseData.TargetFor(c.sector).name.ToUpperInvariant(), 42, Pal.Text, true);
+            UI.Line(hs, CaseData.CaseSummaryFor(c.sector), 19, new Color(.78f, .86f, .90f));
+
+            // 4 fases en fila horizontal limpia con buena legibilidad
+            var steps = UI.HStack(hs, 84, 10);
+            string[] stepNums = { "01", "02", "03", "04" };
+            string[] stepTitles = { "RASTREO", "SONAR", "INFILTRACIÓN", "JUICIO" };
+            string[] stepGoals = { "IR ≥ 60", "Conf. ≥ 70%", "Prueba A", "Sentencia" };
             for (int i = 0; i < 4; i++)
             {
                 bool done = c.phase > i + 1;
                 bool now = c.phase == i + 1;
-                Color col = done ? Pal.Sealed : now ? Pal.Sonar : Pal.Dim;
-                string badge = done ? "LISTO" : now ? "AHORA" : "SIGUIENTE";
-                var sc = UI.Panel(steps, Vector2.zero, Vector2.one, default, default, new Color(col.r * .13f, col.g * .13f, col.b * .13f, .92f));
+                Color col = done ? Pal.Sealed : now ? Pal.Sonar : new Color(.45f, .54f, .60f);
+                string badge = done ? "✔ LISTO" : now ? "● EN CURSO" : "PENDIENTE";
+                var sc = UI.Panel(steps, Vector2.zero, Vector2.one, default, default,
+                    now ? new Color(.04f, .16f, .19f, .96f) : done ? new Color(.04f, .15f, .09f, .92f) : new Color(.03f, .05f, .07f, .82f));
                 var o = sc.GetComponent<Outline>();
-                if (o != null) o.effectColor = new Color(col.r, col.g, col.b, now ? .85f : .45f);
-                var txt = UI.Text(sc.transform, $"<b>{stepTitles[i]}</b>\n<size=17>{stepGoals[i]}</size>\n<size=14>[{badge}]</size>", 19, col, TextAlignmentOptions.Center);
-                txt.margin = new Vector4(6, 6, 6, 6);
+                if (o != null) o.effectColor = new Color(col.r, col.g, col.b, now ? .95f : .45f);
+                var filo = sc.transform.Find("Filo")?.GetComponent<Image>();
+                if (filo != null) filo.color = col;
+                var txt = UI.Text(sc.transform, $"<size=13><color=#8DA2AB>{stepNums[i]}</color></size> <b>{stepTitles[i]}</b>\n<size=15>{stepGoals[i]}</size>\n<size=12>{badge}</size>", 16, col, TextAlignmentOptions.Center);
+                txt.margin = new Vector4(6, 8, 6, 6);
             }
 
-            UI.Line(hero, PhaseTips[Mathf.Clamp(c.phase, 1, 6)], 20, Pal.DeckLight);
-            if (c.phase >= 6)
-                UI.Line(hero, $"Sentencia: {CaseData.VerdictNames[c.verdict]}  ·  Embargo: {c.embargo:N0} ¢", 21, Pal.Sealed, true);
+            // Caja de objetivo inmediato
+            var objBox = UI.Panel(hs, Vector2.zero, Vector2.one, default, default, new Color(.14f, .09f, .02f, .78f));
+            objBox.gameObject.AddComponent<LayoutElement>().minHeight = 46;
+            var objOut = objBox.GetComponent<Outline>(); if (objOut != null) objOut.effectColor = new Color(Pal.DeckLight.r, Pal.DeckLight.g, Pal.DeckLight.b, .75f);
+            var objFilo = objBox.transform.Find("Filo")?.GetComponent<Image>(); if (objFilo != null) objFilo.color = Pal.DeckLight;
+            var objTxt = UI.Text(objBox.transform, "▸ " + PhaseTips[Mathf.Clamp(c.phase, 1, 6)], 18, Pal.DeckLight, TextAlignmentOptions.MidlineLeft, true);
+            objTxt.margin = new Vector4(14, 4, 14, 4);
 
-            var actions = UI.HStack(hero, 58, 14);
             if (c.phase >= 6)
-                UI.Btn(actions, "REPETIR CASO (conservas mejoras)", () => { Game.StartCase(c.sector); Game.GoToPhase(1); }, Pal.Sonar, 22, 58);
+                UI.Line(hs, $"Sentencia: {CaseData.VerdictNames[c.verdict]}  ·  Embargo: {c.embargo:N0} ¢", 19, Pal.Sealed, true);
+
+            // Botones de acción principales
+            var actions = UI.HStack(hs, 58, 12);
+            if (c.phase >= 6)
+                UI.Btn(actions, "▶  REPETIR CASO (conservas mejoras)", () => { Game.StartCase(c.sector); Game.GoToPhase(1); }, Pal.Sonar, 21, 58);
             else
-                UI.Btn(actions, "JUGAR · " + PhaseNames[c.phase].ToUpperInvariant(), () => Game.GoToPhase(c.phase), Pal.Sealed, 23, 58);
-            UI.Btn(actions, "Ver guía y controles", () => OpenTab(1), Pal.DeckLight, 20, 58);
+                UI.Btn(actions, "▶  DESPLEGAR · " + PhaseNames[c.phase].ToUpperInvariant(), () => Game.GoToPhase(c.phase), Pal.Sealed, 21, 58);
+            var guideBtn = UI.Btn(actions, "Guía y controles", () => OpenTab(1), Pal.DeckLight, 19, 58);
+            guideBtn.gameObject.GetComponent<LayoutElement>().preferredWidth = 260;
 
-            // Sectores en fila horizontal: Sector 1 jugable, Sectores 2 y 3 marcados como Próximamente según el GDD
-            UI.Line(s, "SECTORES DE CAMPAÑA", 20, Pal.Sonar, true);
-            var secRow = UI.HStack(s, 118, 12);
+            // Panel derecho: Vista visual del buque objetivo + telemetría del caso
+            var rightCard = UI.Panel(tabBody, new Vector2(.605f, .44f), new Vector2(1f, 1f), default, default, new Color(.02f, .045f, .07f, .95f));
+            var artFrame = UI.Rect(rightCard.transform, "TargetArt", Vector2.zero, Vector2.one, new Vector2(3, 3), new Vector2(-3, -3));
+            artFrame.gameObject.AddComponent<RectMask2D>();
+            var targetTex = UI.LoadTex(SectorArtKeys[Mathf.Clamp(c.sector, 0, SectorArtKeys.Length - 1)]);
+            if (targetTex != null)
+            {
+                var raw = artFrame.gameObject.AddComponent<RawImage>();
+                raw.texture = targetTex;
+                raw.raycastTarget = false;
+            }
+            UI.BottomScrim(artFrame, .96f);
+
+            // Badge superior derecho sobre la foto
+            var badgePill = UI.Panel(artFrame, new Vector2(.56f, .86f), new Vector2(.97f, .96f), default, default, new Color(.02f, .10f, .08f, .88f));
+            UI.Text(badgePill.transform, "● OBJETIVO EN SEGUIMIENTO", 13, Pal.Sealed, TextAlignmentOptions.Center, true);
+
+            // Datos del dossier sobre el degradado inferior
+            var dossier = UI.VStack(artFrame, 18, 4, new Vector2(0, 0), new Vector2(1, .46f));
+            dossier.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.LowerLeft;
+            int rescuedNow = 0;
+            foreach (var p in c.persons) if (p.rescued) rescuedNow++;
+            UI.Line(dossier, $"DOSSIER SATELITAL · {CaseData.TargetFor(c.sector).name.ToUpperInvariant()}", 14, Pal.Sonar, true);
+            UI.Line(dossier, $"Pruebas selladas: <b>{c.evidence.Count}/{CaseData.MaxEvidence}</b>   ·   Tripulantes rescatados: <b>{rescuedNow}/4</b>", 18, Pal.Text);
+            UI.Line(dossier, $"Fase actual: <color=#6CFF8A><b>{PhaseNames[Mathf.Clamp(c.phase, 1, 6)]}</b></color>   ·   Sentencias logradas: <b>{Game.S.sentences}</b>", 16, Pal.Dim);
+
+            // ===== ZONA INFERIOR (42%): 3 Tarjetas Visuales de Sectores Oceánicos =====
+            var secHeader = UI.Rect(tabBody, "SecHeader", new Vector2(0f, .375f), new Vector2(1f, .425f));
+            UI.Text(secHeader, "SECTORES OCEÁNICOS DE CAMPAÑA   <size=15><color=#7F9098>·  Selecciona teatro de operaciones</color></size>", 19, Pal.Sonar, TextAlignmentOptions.MidlineLeft, true);
+
+            var secRow = UI.Rect(tabBody, "SecRow", new Vector2(0f, 0f), new Vector2(1f, .372f));
+            var sH = secRow.gameObject.AddComponent<HorizontalLayoutGroup>();
+            sH.spacing = 14; sH.childControlHeight = true; sH.childControlWidth = true; sH.childForceExpandHeight = true; sH.childForceExpandWidth = true;
+
             for (int i = 0; i < CaseData.Sectors.Length; i++)
             {
                 int sec = i;
@@ -260,12 +308,40 @@ namespace Kairos
                 bool unlocked = i == 0;
                 bool current = unlocked && c.sector == i;
                 bool done = Game.S.completedSectors != null && i < Game.S.completedSectors.Length && Game.S.completedSectors[i];
-                Color col = !unlocked ? Pal.Dim : current ? Pal.Sealed : done ? Pal.DeckLight : Pal.Sonar;
-                string badge = !unlocked ? "<color=#8DA2AB>PRÓXIMAMENTE</color>" : current ? "<color=#6CFF8A>ACTIVO</color>" : done ? "<color=#FFD27A>COMPLETADO</color>" : "<color=#3FE0D0>DISPONIBLE</color>";
-                var sp = Card(secRow, col, 12, 6, new Color(col.r * .10f, col.g * .10f, col.b * .10f, .90f));
-                UI.Line(sp, $"<b>{d.name}</b>\n<size=16>{d.ship} · {badge}</size>", 17, unlocked ? Pal.Text : Pal.Dim, false, TextAlignmentOptions.Center);
-                string btnLabel = !unlocked ? "Próximamente" : current ? "En curso" : "Seleccionar sector";
-                UI.Btn(sp, btnLabel, () => { if (unlocked && !current) { Game.StartCase(sec); Game.Write(); TabMission(); } }, col, 17, 36).interactable = unlocked && !current;
+                Color col = !unlocked ? new Color(.45f, .52f, .58f) : current ? Pal.Sealed : done ? Pal.DeckLight : Pal.Sonar;
+                string badge = !unlocked ? "PRÓXIMAMENTE" : current ? "● ACTIVO" : done ? "✔ COMPLETADO" : "DISPONIBLE";
+
+                var card = UI.Panel(secRow, Vector2.zero, Vector2.one, default, default, new Color(.02f, .048f, .075f, .94f));
+                var co = card.GetComponent<Outline>(); if (co != null) co.effectColor = new Color(col.r, col.g, col.b, current ? .95f : .40f);
+                var cFilo = card.transform.Find("Filo")?.GetComponent<Image>(); if (cFilo != null) cFilo.color = col;
+
+                // Ilustración 16:9 en la mitad superior de la tarjeta
+                var imgWrap = UI.Rect(card.transform, "Art", new Vector2(0, .34f), Vector2.one, new Vector2(3, 0), new Vector2(-3, -3));
+                imgWrap.gameObject.AddComponent<RectMask2D>();
+                var tex = UI.LoadTex(SectorArtKeys[i]);
+                if (tex != null)
+                {
+                    var ri = imgWrap.gameObject.AddComponent<RawImage>();
+                    ri.texture = tex;
+                    ri.color = unlocked ? Color.white : new Color(.45f, .50f, .56f, .85f);
+                    ri.raycastTarget = false;
+                }
+                UI.BottomScrim(imgWrap, .92f);
+
+                // Etiqueta de estado arriba a la derecha sobre la foto
+                var stPill = UI.Panel(imgWrap, new Vector2(.58f, .76f), new Vector2(.97f, .94f), default, default, new Color(.015f, .04f, .06f, .88f));
+                var stOut = stPill.GetComponent<Outline>(); if (stOut != null) stOut.effectColor = col;
+                UI.Text(stPill.transform, badge, 12, col, TextAlignmentOptions.Center, true);
+
+                // Título sobre el borde inferior de la foto
+                var titleOverlay = UI.Text(UI.Rect(imgWrap, "Title", new Vector2(0, 0), new Vector2(1, .44f), new Vector2(14, 6), new Vector2(-14, 0)),
+                    $"<b>{d.name}</b>\n<size=14><color=#B5C7D0>{d.ship}</color></size>", 19, unlocked ? Pal.Text : Pal.Dim, TextAlignmentOptions.BottomLeft);
+
+                // Pie de tarjeta con botón limpio
+                var footer = UI.Rect(card.transform, "Footer", Vector2.zero, new Vector2(1, .34f), new Vector2(12, 10), new Vector2(-12, -8));
+                string btnLabel = !unlocked ? "SECTOR BLOQUEADO · PRÓXIMAMENTE" : current ? "SECTOR EN CURSO" : "SELECCIONAR SECTOR";
+                var btn = UI.Btn(footer, btnLabel, () => { if (unlocked && !current) { Game.StartCase(sec); Game.Write(); TabMission(); } }, col, 15, 42);
+                btn.interactable = unlocked && !current;
             }
         }
 

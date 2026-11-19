@@ -41,37 +41,72 @@ namespace Kairos
         }
 
         static Sprite roundedSprite;
+        /// Sprite táctico 9-slice con esquinas biseladas (chamfered HUD naval) y gradiente vertical sutil.
         public static Sprite RoundedSprite()
         {
             if (roundedSprite != null) return roundedSprite;
-            const int s = 64, r = 16;
+            const int s = 64, cut = 10;
             var t = new Texture2D(s, s, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
             for (int y = 0; y < s; y++)
+            {
+                float grad = Mathf.Lerp(.82f, 1.0f, y / (float)(s - 1));
                 for (int x = 0; x < s; x++)
                 {
-                    float dx = Mathf.Max(0, Mathf.Abs(x - (s - 1) * .5f) - ((s - 1) * .5f - r));
-                    float dy = Mathf.Max(0, Mathf.Abs(y - (s - 1) * .5f) - ((s - 1) * .5f - r));
-                    float d = Mathf.Sqrt(dx * dx + dy * dy) - r;
-                    float a = Mathf.Clamp01(.5f - d);
-                    t.SetPixel(x, y, new Color(1, 1, 1, a));
+                    // Esquinas biseladas en diagonal (arriba-izq y abajo-der más marcadas, las otras suaves)
+                    float dTL = (s - 1 - y) + x;
+                    float dBR = y + (s - 1 - x);
+                    float dTR = (s - 1 - y) + (s - 1 - x);
+                    float dBL = y + x;
+                    float a = 1f;
+                    a = Mathf.Min(a, Mathf.Clamp01(dTL - cut + .5f));
+                    a = Mathf.Min(a, Mathf.Clamp01(dBR - cut + .5f));
+                    a = Mathf.Min(a, Mathf.Clamp01(dTR - 3 + .5f));
+                    a = Mathf.Min(a, Mathf.Clamp01(dBL - 3 + .5f));
+                    t.SetPixel(x, y, new Color(grad, grad, grad, a));
                 }
+            }
             t.Apply();
-            roundedSprite = Sprite.Create(t, new Rect(0, 0, s, s), new Vector2(.5f, .5f), 100f, 0, SpriteMeshType.FullRect, new Vector4(18, 18, 18, 18));
+            roundedSprite = Sprite.Create(t, new Rect(0, 0, s, s), new Vector2(.5f, .5f), 100f, 0, SpriteMeshType.FullRect, new Vector4(14, 14, 14, 14));
             return roundedSprite;
         }
+
+        static Texture2D bottomScrimTex;
+        /// Gradiente vertical oscuro desde abajo para garantizar legibilidad de texto sobre imágenes.
+        public static RawImage BottomScrim(Transform parent, float maxAlpha = .92f)
+        {
+            if (bottomScrimTex == null)
+            {
+                bottomScrimTex = new Texture2D(1, 64, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+                for (int y = 0; y < 64; y++)
+                {
+                    float t = y / 63f;
+                    float a = Mathf.Pow(1f - t, 1.5f);
+                    bottomScrimTex.SetPixel(0, y, new Color(.015f, .035f, .055f, a));
+                }
+                bottomScrimTex.Apply();
+            }
+            var r = Rect(parent, "Scrim", Vector2.zero, Vector2.one);
+            var img = r.gameObject.AddComponent<RawImage>();
+            img.texture = bottomScrimTex;
+            img.color = new Color(1, 1, 1, maxAlpha);
+            img.raycastTarget = false;
+            return img;
+        }
+
+        public static Texture2D LoadTex(string resourcePath) => Resources.Load<Texture2D>(resourcePath);
 
         public static Image Panel(Transform parent, Vector2 aMin, Vector2 aMax, Vector2 oMin = default, Vector2 oMax = default, Color? color = null)
         {
             var r = Rect(parent, "Panel", aMin, aMax, oMin, oMax);
             var i = r.gameObject.AddComponent<Image>();
             i.sprite = RoundedSprite(); i.type = Image.Type.Sliced;
-            i.color = color ?? Pal.PanelBg;
+            i.color = color ?? new Color(.035f, .065f, .095f, .88f);
             var o = r.gameObject.AddComponent<Outline>();
-            o.effectColor = Pal.Line; o.effectDistance = new Vector2(1, -1);
-            // Filo de instrumento: identifica los paneles como parte de la unidad KAIROS.
-            var edge = Rect(r, "Filo", new Vector2(0, 1), Vector2.one, new Vector2(14, -2), new Vector2(-14, 0));
+            o.effectColor = new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, .32f); o.effectDistance = new Vector2(1.2f, -1.2f);
+            // Filo táctico superior: identifica cada módulo de la consola KAIROS.
+            var edge = Rect(r, "Filo", new Vector2(0, 1), Vector2.one, new Vector2(14, -2.5f), new Vector2(-8, 0));
             var edgeImg = edge.gameObject.AddComponent<Image>();
-            edgeImg.color = new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, .55f); edgeImg.raycastTarget = false;
+            edgeImg.color = new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, .72f); edgeImg.raycastTarget = false;
             return i;
         }
 
@@ -171,19 +206,33 @@ namespace Kairos
             var r = Rect(parent, "Btn " + label, Vector2.zero, Vector2.one);
             var img = r.gameObject.AddComponent<Image>();
             img.sprite = RoundedSprite(); img.type = Image.Type.Sliced;
-            img.color = new Color(c.r * .16f, c.g * .16f, c.b * .16f, .95f);
+            img.color = new Color(Mathf.Lerp(.04f, c.r, .26f), Mathf.Lerp(.07f, c.g, .26f), Mathf.Lerp(.10f, c.b, .26f), .96f);
             var o = r.gameObject.AddComponent<Outline>();
-            o.effectColor = new Color(c.r, c.g, c.b, .75f); o.effectDistance = new Vector2(1, -1);
+            o.effectColor = new Color(c.r, c.g, c.b, .85f); o.effectDistance = new Vector2(1.4f, -1.4f);
+
+            // Barra de acento lateral izquierda para dar peso visual y jerarquía táctica
+            var stripe = Rect(r, "AccentBar", new Vector2(0, .14f), new Vector2(0, .86f), new Vector2(4, 0), new Vector2(8, 0));
+            var stripeImg = stripe.gameObject.AddComponent<Image>();
+            stripeImg.color = c; stripeImg.raycastTarget = false;
+
             var b = r.gameObject.AddComponent<Button>();
             var cb = b.colors;
-            cb.normalColor = new Color(.5f, .5f, .5f); cb.highlightedColor = new Color(1f, 1f, 1f); cb.pressedColor = new Color(.3f, .3f, .3f);
-            cb.selectedColor = cb.normalColor; cb.disabledColor = new Color(.2f, .2f, .2f, .5f); cb.colorMultiplier = 2f; b.colors = cb;
+            cb.normalColor = new Color(.85f, .88f, .92f, 1f);
+            cb.highlightedColor = new Color(1.25f, 1.25f, 1.25f, 1f);
+            cb.pressedColor = new Color(.65f, .68f, .72f, 1f);
+            cb.selectedColor = cb.normalColor;
+            cb.disabledColor = new Color(.35f, .38f, .42f, .55f);
+            cb.colorMultiplier = 1f;
+            cb.fadeDuration = .08f;
+            b.colors = cb;
             b.targetGraphic = img;
             b.onClick.AddListener(() => { Sfx.Play(Sfx.Click, .35f); onClick?.Invoke(); });
-            var t = Text(r, label, size, c, TextAlignmentOptions.Center);
-            t.margin = new Vector4(8, 2, 8, 2);
+            var textCol = Color.Lerp(Pal.Text, c, .35f);
+            var t = Text(r, label, size, textCol, TextAlignmentOptions.Center, true);
+            t.margin = new Vector4(14, 2, 10, 2);
             t.textWrappingMode = TextWrappingModes.Normal;
-            r.gameObject.AddComponent<LayoutElement>().minHeight = height;
+            var le = r.gameObject.AddComponent<LayoutElement>();
+            le.minHeight = height; le.preferredHeight = height;
             return b;
         }
 
