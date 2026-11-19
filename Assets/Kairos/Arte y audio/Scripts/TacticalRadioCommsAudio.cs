@@ -51,27 +51,37 @@ namespace Kairos.Pruebas
         {
             if (voiceAudioSource == null)
             {
-                voiceAudioSource = gameObject.AddComponent<AudioSource>();
+                GameObject voiceChild = new GameObject("Radio_Voice_Audio");
+                voiceChild.SetActive(false);
+                voiceChild.transform.SetParent(transform, false);
+                voiceAudioSource = voiceChild.AddComponent<AudioSource>();
+                voiceAudioSource.playOnAwake = false;
+                voiceChild.SetActive(true);
             }
 
+            voiceAudioSource.playOnAwake = false;
             voiceAudioSource.spatialBlend = 0.0f; // Sonido 2D en cascos del operador
             voiceAudioSource.volume = masterRadioVolume;
 
-            // Filtro pasa-banda para efecto walkie-talkie
-            var highPass = gameObject.GetComponent<AudioHighPassFilter>();
-            if (highPass == null) highPass = gameObject.AddComponent<AudioHighPassFilter>();
+            // Filtro pasa-banda para efecto walkie-talkie en el mismo nodo que voiceAudioSource
+            GameObject filterHost = voiceAudioSource.gameObject;
+            var highPass = filterHost.GetComponent<AudioHighPassFilter>();
+            if (highPass == null) highPass = filterHost.AddComponent<AudioHighPassFilter>();
             if (highPass != null) highPass.cutoffFrequency = highPassCutoff;
 
-            var lowPass = gameObject.GetComponent<AudioLowPassFilter>();
-            if (lowPass == null) lowPass = gameObject.AddComponent<AudioLowPassFilter>();
+            var lowPass = filterHost.GetComponent<AudioLowPassFilter>();
+            if (lowPass == null) lowPass = filterHost.AddComponent<AudioLowPassFilter>();
             if (lowPass != null) lowPass.cutoffFrequency = lowPassCutoff;
 
             // AudioSource secundario para beeps y clics mecánicos del micro PTT
             GameObject fxChild = new GameObject("Radio_Squelch_FX");
+            fxChild.SetActive(false);
             fxChild.transform.SetParent(transform, false);
             fxAudioSource = fxChild.AddComponent<AudioSource>();
+            fxAudioSource.playOnAwake = false;
             fxAudioSource.spatialBlend = 0.0f;
             fxAudioSource.volume = masterRadioVolume * 0.9f;
+            fxChild.SetActive(true);
         }
 
         private void GenerateRadioSfxClips()

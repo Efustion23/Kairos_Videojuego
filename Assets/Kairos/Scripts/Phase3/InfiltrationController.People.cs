@@ -33,6 +33,18 @@ namespace Kairos
             UI.Line(s, $"Confianza: <b>{Mathf.Clamp(st.trust, 0, 100)}%</b> · {TrustWord(st.trust)}", 20, trustColor);
             var trustBar = UI.NewBar(s, trustColor, 8);
             trustBar.Set(Mathf.Clamp01(st.trust / 100f));
+            UI.Line(s, "Hitos: 40% Acompañar · 60% Consentimiento · 80% Apoyo", 14, Pal.Dim);
+
+            // Estado explícito de consentimiento informado del testigo (Alexander - S13-1)
+            string consentText = st.testimony == 1
+                ? "Consentimiento biométrico: <b>OTORGADO</b> · Testimonio sellado (SHA-256)"
+                : st.testimony == 2
+                    ? "Consentimiento: <b>DECLINADO</b> · Decisión del testigo respetada"
+                    : st.trust >= 60
+                        ? "Consentimiento: <b>LISTO PARA CONSULTAR</b> (opcional, sin presión)"
+                        : $"Consentimiento: Pendiente (requiere confianza ≥ 60%, falta {Mathf.Max(0, 60 - st.trust)}%)";
+            Color consentCol = st.testimony == 1 ? Pal.Sealed : st.testimony == 2 ? Pal.Dim : st.trust >= 60 ? Pal.Sonar : Pal.ThermHot;
+            UI.Line(s, consentText, 16, consentCol);
 
             var said = UI.Line(s, st.talked ? "" : d.intro, 24);
 

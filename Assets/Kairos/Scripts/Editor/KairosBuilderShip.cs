@@ -374,9 +374,12 @@ namespace Kairos.EditorTools
             }
 
             // Focos de cubierta: zonas de peligro. El color avisa.
-            b.Lamp("Foco Popa", new Vector3(0, 9.4f, -32), amber, 18, 9, true);
+            // Usamos Point sin sombras para el relleno + Spot cenital con sombras (1 mapa vs 6 en URP) para evitar downsampling del atlas.
+            b.Lamp("Foco Popa", new Vector3(0, 9.4f, -32), amber, 18, 5);
+            b.Spot("Foco Popa Haz", new Vector3(0, 9.35f, -32), new Vector3(90, 0, 0), amber, 18, 115, 18);
             b.Lamp("Foco Proa 1", new Vector3(0, 9.8f, 12), amber, 16, 8);
-            b.Lamp("Foco Proa 2", new Vector3(0, 9.8f, 30), amber, 15, 8, true);
+            b.Lamp("Foco Proa 2", new Vector3(0, 9.8f, 30), amber, 15, 5);
+            b.Spot("Foco Proa 2 Haz", new Vector3(0, 9.75f, 30), new Vector3(90, 0, 0), amber, 16, 115, 18);
             b.Lamp("Foco Babor", new Vector3(-6.2f, 8.6f, -9), amber, 8, 3.5f);
             b.Lamp("Luz Tejado", new Vector3(5.8f, 11f, -3), amber, 8, 3.5f);
             b.Spot("Foco Mastil", new Vector3(0, 12.5f, -2.5f), new Vector3(72, 0, 0), amber, 40, 70, 12);

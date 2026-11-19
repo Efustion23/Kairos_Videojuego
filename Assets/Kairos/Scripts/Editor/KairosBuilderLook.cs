@@ -312,10 +312,11 @@ namespace Kairos.EditorTools
             b.Solid(new Vector3(3.6f, 6.12f, -41.4f), new Vector3(1.05f, .24f, 1.05f));
             b.Pipe(rope, new Vector3(-3.7f, 6.03f, -21.6f), new Vector3(-3.7f, 6.18f, -21.6f), .5f, 14);
             b.Solid(new Vector3(-3.7f, 6.12f, -21.6f), new Vector3(.95f, .24f, .95f));
-            foreach (var (x, z) in new[] { (-3.6f, 12.7f), (-3.1f, 7.6f) })
+            foreach (var (x, z, yaw) in new[] { (4.4f, 11.2f, 35f), (4.1f, 9.6f, 145f) })
             {
-                b.Ellipsoid(orange, new Vector3(x, 7.05f, z), Vector3.one * .3f); // boyas sobre las tapas de bodega
-                b.Solid(new Vector3(x, 7.05f, z), Vector3.one * .55f);
+                var buoy = b.Prop("ocean_buoy", new Vector3(x, 6.20f, z), yaw, .75f); // boyas PBR reales tumbadas en cubierta de proa (estribor)
+                buoy.localRotation = Quaternion.Euler(84f, yaw, 0f);
+                b.Solid(new Vector3(x, 6.25f, z), new Vector3(.65f, .5f, .65f));
             }
 
             // Bidones.
@@ -341,6 +342,12 @@ namespace Kairos.EditorTools
             b.Solid(new Vector3(2.6f, 6.25f, -40.2f), new Vector3(.38f, .5f, .38f));
             b.Prop("propane_tank", new Vector3(5.4f, 6, -24.2f), 0, .9f);
             b.Solid(new Vector3(5.4f, 6.45f, -24.2f), new Vector3(.45f, .9f, .45f));
+            b.Prop("metal_toolbox", new Vector3(3.4f, 6, -39.1f), -35f, .55f);
+            b.Solid(new Vector3(3.4f, 6.2f, -39.1f), new Vector3(.5f, .4f, .35f));
+            b.Prop("old_military_crate", new Vector3(4.8f, 6, -31.5f), 12f, 1.05f);
+            b.Solid(new Vector3(4.8f, 6.35f, -31.5f), new Vector3(1.0f, .7f, .7f));
+            b.Prop("old_military_crate", new Vector3(-4.9f, 6, -36.2f), 85f, 1.05f);
+            b.Solid(new Vector3(-4.9f, 6.35f, -36.2f), new Vector3(.7f, .7f, 1.0f));
 
             // Salvavidas y apliques en el mamparo de popa de la habilitación.
             b.Prop("lifebuoy", new Vector3(3.4f, 7.1f, -20.34f), 0, .8f);
