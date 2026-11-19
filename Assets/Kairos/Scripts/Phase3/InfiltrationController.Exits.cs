@@ -103,8 +103,8 @@ namespace Kairos
         void OpenPause()
         {
             SetOverlay(Mode.Menu);
-            var p = UI.Panel(overlay, new Vector2(.28f, .16f), new Vector2(.72f, .84f));
-            var s = UI.VStack(p.transform, 24, 8);
+            var p = UI.Panel(overlay, new Vector2(.26f, .24f), new Vector2(.74f, .76f));
+            var s = UI.VStack(p.transform, 24, 10);
 
             // Cabecera estilizada de Pausa (Alexander - S15-1)
             UI.Line(s, "KAIROS · OPERACIÓN EN PAUSA", 32, Pal.Sonar, true);

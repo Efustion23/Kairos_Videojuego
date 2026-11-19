@@ -99,11 +99,11 @@ namespace Kairos
             thermalVisorOverlay.transform.SetParent(canvasRoot, false);
 
             var topPanel = UI.Panel(thermalVisorOverlay.transform, new Vector2(.25f, .93f), new Vector2(.75f, .985f), default, default, new Color(.01f, .03f, .08f, .85f));
-            var topText = UI.Text(topPanel.transform, "● ÓPTICA TÉRMICA FLIR DRON · CONTRASTE TÉRMICO AZUL/ÁMBAR", 15, Pal.ThermHot, TMPro.TextAlignmentOptions.Center);
+            var topText = UI.Text(topPanel.transform, "OPTICA TERMICA FLIR DRON  ·  CONTRASTE AZUL (-18°C) / AMBAR (37°C)", 15, Pal.ThermHot, TMPro.TextAlignmentOptions.Center, true);
             topText.margin = new Vector4(6, 2, 6, 2);
 
             var scalePanel = UI.Panel(thermalVisorOverlay.transform, new Vector2(.02f, .02f), new Vector2(.28f, .10f), default, default, new Color(.01f, .04f, .09f, .88f));
-            var scaleText = UI.Text(scalePanel.transform, "<color=#2050FF>■ Frío (-18°C)</color>  |  <color=#FFD27A>■ Vital (37°C)</color>\nBodegas refrigeradas vs. Presencia humana", 13, Pal.Text, TMPro.TextAlignmentOptions.Center);
+            var scaleText = UI.Text(scalePanel.transform, "<color=#2050FF>[FRIO -18°C]</color>  |  <color=#FFD27A>[VITAL 37°C · 3 firmas]</color>\nBodegas refrigeradas vs. Presencia humana real", 13, Pal.Text, TMPro.TextAlignmentOptions.Center);
             scaleText.margin = new Vector4(4, 2, 4, 2);
         }
 

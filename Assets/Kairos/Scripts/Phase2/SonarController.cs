@@ -139,7 +139,7 @@ namespace Kairos
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
-        void EmitPoint(Vector3 p, Color c, float size = .22f, float life = 90f)
+        void EmitPoint(Vector3 p, Color c, float size = .15f, float life = 26f)
         {
             var e = new ParticleSystem.EmitParams { position = p, startColor = c, startSize = size, startLifetime = life, velocity = Vector3.zero, applyShapeToPosition = false };
             cloud.Emit(e, 1);
@@ -379,11 +379,12 @@ namespace Kairos
 
             // El casco se reconstruye con impactos reales; las bodegas, según el lado desde el que disparas.
             var from = boat.position + Vector3.up * 1.5f;
-            for (int i = 0; i < (crest ? 260 : 90); i++)
+            var hullCol = new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, .55f);
+            for (int i = 0; i < (crest ? 140 : 55); i++)
             {
                 var target = ship.TransformPoint(new Vector3(Random.Range(-7f, 7f), Random.Range(-4f, 11f), Random.Range(-46f, 46f)));
                 if (Physics.Raycast(from, (target - from).normalized, out var hit, PulseRange + 80f, 1 << Layers.HullShell))
-                    EmitPoint(hit.point, Pal.Sonar, .24f);
+                    EmitPoint(hit.point, hullCol, .16f, 24f);
             }
 
             var side = Mathf.Sign(ship.InverseTransformPoint(boat.position).x);
@@ -396,9 +397,40 @@ namespace Kairos
                 float sideF = Mathf.Sign(k.center.x) == side ? 1f : .6f;
                 scan[i] = Mathf.Min(1, scan[i] + q * rangeFactor * sideF);
                 if (scan[i] >= 1) C.scanSignals[i] |= Bit_Density;
-                int points = (int)(320 * q * sideF);
-                Color col = k.kind == 0 ? new Color(.25f, .62f, .78f) : k.kind == 1 ? Pal.Sonar : new Color(.3f, .7f, .65f);
-                for (int n = 0; n < points; n++) EmitPoint(SamplePoint(k, rnd), col, .18f);
+
+                // Estructura tenue del compartimento (bodega fría azul, maquinaria verde-azulado, habitable cian suave)
+                int structPoints = (int)(75 * q * sideF);
+                Color col = k.kind == 0 ? new Color(.18f, .44f, .78f, .38f)
+                    : k.kind == 1 ? new Color(.22f, .78f, .74f, .34f)
+                    : new Color(.25f, .60f, .58f, .38f);
+                for (int n = 0; n < structPoints; n++)
+                {
+                    if (k.kind == 1)
+                    {
+                        // Solo contorno de paredes de K4 para no confundir estructura con personas
+                        var half = k.size;
+                        var v = new Vector3(((float)rnd.NextDouble() - .5f) * half.x, ((float)rnd.NextDouble() - .5f) * half.y, ((float)rnd.NextDouble() - .5f) * half.z);
+                        switch (rnd.Next(3))
+                        {
+                            case 0: v.x = Mathf.Sign(v.x) * half.x * .5f; break;
+                            case 1: v.z = Mathf.Sign(v.z) * half.z * .5f; break;
+                            default: v.y = Mathf.Sign(v.y) * half.y * .5f; break;
+                        }
+                        EmitPoint(ship.TransformPoint(k.center + v), col, .12f, 24f);
+                    }
+                    else
+                    {
+                        EmitPoint(SamplePoint(k, rnd), col, .12f, 24f);
+                    }
+                }
+
+                // Exactamente 3 firmas biológicas nítidas en K4 (Ari, Moussa y Thant), sin nube falsa de cientos de puntos
+                if (k.kind == 1)
+                {
+                    var bioCol = new Color(Pal.ThermHot.r, Pal.ThermHot.g, Pal.ThermHot.b, .92f);
+                    foreach (var focus in personFoci)
+                        EmitPoint(ship.TransformPoint(focus), bioCol, .48f, 18f);
+                }
                 dense += k.densityValue * sideF; total += sideF;
             }
             Sfx.Play(dense / total > .62f ? Sfx.PingDense : Sfx.PingHollow, crest ? .9f : .5f);
