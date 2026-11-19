@@ -96,17 +96,28 @@ namespace Kairos.Pruebas
         {
             if (!enableRainSound) return;
 
+            generatedRainClip = GenerateProceduralRainNoise(2.0f);
+
             if (rainAudioSource == null)
             {
-                rainAudioSource = gameObject.AddComponent<AudioSource>();
+                var audioChild = new GameObject("Rain_Ambience_Audio");
+                audioChild.SetActive(false);
+                audioChild.transform.SetParent(transform, false);
+                rainAudioSource = audioChild.AddComponent<AudioSource>();
+                rainAudioSource.playOnAwake = false;
+                rainAudioSource.clip = generatedRainClip;
+                audioChild.SetActive(true);
+            }
+            else
+            {
+                rainAudioSource.playOnAwake = false;
+                rainAudioSource.clip = generatedRainClip;
             }
 
             rainAudioSource.loop = true;
             rainAudioSource.volume = rainAudioVolume * rainIntensity;
             rainAudioSource.spatialBlend = 0.2f; // Audio envolvente semi-ambiental
 
-            generatedRainClip = GenerateProceduralRainNoise(2.0f);
-            rainAudioSource.clip = generatedRainClip;
             if (Application.isPlaying)
             {
                 rainAudioSource.Play();
