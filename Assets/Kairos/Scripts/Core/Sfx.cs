@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Kairos
 {
-    /// Efectos sintetizados al vuelo: cada sonido da información de juego.
+    /// Efectos de juego: grabaciones CC0 en Resources/Sfx cuando existen; si no, síntesis al vuelo. El sonar siempre es sintético.
     public static class Sfx
     {
         const int Rate = 44100;
@@ -23,11 +23,15 @@ namespace Kairos
                 n -= fade;
             }
             var c = AudioClip.Create(name, n, 1, Rate, false);
+            c.hideFlags = HideFlags.DontSave; // procedural: ni se guarda en la escena ni la destruye el cambio de escena
             c.SetData(d, 0);
             return c;
         }
 
         static float Sin(float hz, float t) => Mathf.Sin(2 * Mathf.PI * hz * t);
+
+        /// Grabación CC0 (Kenney / OpenGameArt, ver LICENCIAS.txt) o null.
+        static AudioClip Rec(string name) => Resources.Load<AudioClip>("Sfx/" + name);
 
         static AudioClip radio, stepWet;
         /// Chasquido y ruido de radio: el guardia cambia de ronda.
@@ -36,17 +40,17 @@ namespace Kairos
 
         static AudioClip click, shutter, step, creak, grapple, plasma, alarm, sealedTone, knock, slip, stun, pingDense, pingHollow, pingAcoustic, ecoMetallic, hum, wind, voices, breath, rain, engine, seal;
 
-        public static AudioClip Click => click ??= Make("click", .05f, (t, u) => Sin(1400, t) * (1 - u) * .5f);
-        public static AudioClip Shutter => shutter ??= Make("shutter", .14f, (t, u) => N() * Mathf.Exp(-u * 9) * (u < .4f || u > .6f ? 1 : .1f) * .6f);
-        public static AudioClip Step => step ??= Make("step", .12f, (t, u) => (Sin(90, t) + N() * .4f) * Mathf.Exp(-u * 8) * .7f);
-        public static AudioClip Slip => slip ??= Make("slip", .4f, (t, u) => (Sin(70, t) + N() * .7f) * Mathf.Exp(-u * 5));
-        public static AudioClip Creak => creak ??= Make("creak", 1.8f, (t, u) => Mathf.Sin(2 * Mathf.PI * (60 + 30 * Mathf.Sin(t * 5)) * t + 3 * Sin(23, t)) * Mathf.Sin(Mathf.PI * u) * .7f);
-        public static AudioClip Grapple => grapple ??= Make("grapple", .5f, (t, u) => (Sin(900 - 700 * u, t) + N() * .3f) * Mathf.Exp(-u * 5) * .7f);
-        public static AudioClip Plasma => plasma ??= Make("plasma", .6f, (t, u) => (N() * .6f + Sin(180, t) * .4f) * (.6f + .4f * Sin(47, t)) * .6f);
+        public static AudioClip Click => click ??= Rec("click") ?? Make("click", .05f, (t, u) => Sin(1400, t) * (1 - u) * .5f);
+        public static AudioClip Shutter => shutter ??= Rec("shutter") ?? Make("shutter", .14f, (t, u) => N() * Mathf.Exp(-u * 9) * (u < .4f || u > .6f ? 1 : .1f) * .6f);
+        public static AudioClip Step => step ??= Rec("step") ?? Make("step", .12f, (t, u) => (Sin(90, t) + N() * .4f) * Mathf.Exp(-u * 8) * .7f);
+        public static AudioClip Slip => slip ??= Rec("slip") ?? Make("slip", .4f, (t, u) => (Sin(70, t) + N() * .7f) * Mathf.Exp(-u * 5));
+        public static AudioClip Creak => creak ??= Rec("creak") ?? Make("creak", 1.8f, (t, u) => Mathf.Sin(2 * Mathf.PI * (60 + 30 * Mathf.Sin(t * 5)) * t + 3 * Sin(23, t)) * Mathf.Sin(Mathf.PI * u) * .7f);
+        public static AudioClip Grapple => grapple ??= Rec("grapple") ?? Make("grapple", .5f, (t, u) => (Sin(900 - 700 * u, t) + N() * .3f) * Mathf.Exp(-u * 5) * .7f);
+        public static AudioClip Plasma => plasma ??= Rec("plasma") ?? Make("plasma", .6f, (t, u) => (N() * .6f + Sin(180, t) * .4f) * (.6f + .4f * Sin(47, t)) * .6f);
         public static AudioClip Alarm => alarm ??= Make("alarm", .9f, (t, u) => Sin(u < .5f ? 620 : 470, t) * .5f);
-        public static AudioClip Seal => seal ??= Make("seal", .35f, (t, u) => (Sin(880, t) + Sin(1320, t)) * .3f * Mathf.Exp(-u * 4));
-        public static AudioClip Knock => knock ??= Make("knock", .45f, (t, u) => (Sin(120, t) * .9f) * (Mathf.Exp(-((u * 3) % 1f) * 9)));
-        public static AudioClip Stun => stun ??= Make("stun", .4f, (t, u) => N() * Sin(60, t) * Mathf.Exp(-u * 4));
+        public static AudioClip Seal => seal ??= Rec("seal") ?? Make("seal", .35f, (t, u) => (Sin(880, t) + Sin(1320, t)) * .3f * Mathf.Exp(-u * 4));
+        public static AudioClip Knock => knock ??= Rec("knock") ?? Make("knock", .45f, (t, u) => (Sin(120, t) * .9f) * (Mathf.Exp(-((u * 3) % 1f) * 9)));
+        public static AudioClip Stun => stun ??= Rec("stun") ?? Make("stun", .4f, (t, u) => N() * Sin(60, t) * Mathf.Exp(-u * 4));
         /// Tono grave: masa densa. Tono hueco: espacio vacío o habitable.
         public static AudioClip PingDense => pingDense ??= Make("pingDense", 1.1f, (t, u) => Sin(320, t) * Mathf.Exp(-u * 6) * .8f);
         public static AudioClip PingHollow => pingHollow ??= Make("pingHollow", 1.3f, (t, u) => (Sin(980, t) * .7f + Sin(1960, t) * .25f) * Mathf.Exp(-u * 3.5f) * .8f);
@@ -83,6 +87,7 @@ namespace Kairos
             get
             {
                 if (wind != null) return wind;
+                if ((wind = Rec("wind")) != null) return wind;
                 float lp = 0;
                 return wind = Make("wind", 7f, (t, u) => { lp += (N() - lp) * (.03f + .02f * Mathf.Sin(t * 1.4f)); return lp * 3f; }, true);
             }
@@ -92,6 +97,7 @@ namespace Kairos
             get
             {
                 if (rain != null) return rain;
+                if ((rain = Rec("rain")) != null) return rain;
                 float hp = 0;
                 return rain = Make("rain", 4f, (t, u) => { float n = N(); float v = n - hp; hp = n * .7f; return v * .25f; }, true);
             }
