@@ -179,12 +179,11 @@ namespace Kairos
         void AddPin(int i)
         {
             var d = CaseData.Sectors[i];
-            bool unlocked = i == 0;
-            var go = Quad("sector" + i, unlocked ? Pal.Sonar : Pal.Dim, .06f, true, true);
+            var go = Quad("sector" + i, Pal.Sonar, .06f, true, true);
             go.transform.localPosition = LatLon(d.lat, d.lon, 1.02f);
             go.AddComponent<SectorTag>().sector = i;
-            string status = !unlocked ? "  [PRÓXIMAMENTE]" : (Game.S.completedSectors != null && i < Game.S.completedSectors.Length && Game.S.completedSectors[i] ? "  [COMPLETADO]" : "");
-            var label = UI.Text(labels, d.name + status, 22, unlocked ? Pal.Sonar : Pal.Dim);
+            string status = (Game.S.completedSectors != null && i < Game.S.completedSectors.Length && Game.S.completedSectors[i]) ? "  [COMPLETADO]" : "";
+            var label = UI.Text(labels, d.name + status, 22, Pal.Sonar);
             label.rectTransform.anchorMin = label.rectTransform.anchorMax = Vector2.zero;
             label.rectTransform.sizeDelta = new Vector2(460, 30);
             label.rectTransform.pivot = new Vector2(0, .5f);
@@ -418,12 +417,6 @@ namespace Kairos
             if (ms != null) { selected = ms.ship; Sfx.Play(Sfx.Click, .5f); Refresh(); return; }
             var st = hit.collider.GetComponent<SectorTag>();
             if (st == null || zoomed) return;
-            if (st.sector > 0)
-            {
-                toast.Show($"{CaseData.Sectors[st.sector].name}: próximamente en futuras actualizaciones.", Pal.DeckLight);
-                Sfx.Play(Sfx.Click, .4f);
-                return;
-            }
             if (st.sector != C.sector)
             {
                 Game.StartCase(st.sector);

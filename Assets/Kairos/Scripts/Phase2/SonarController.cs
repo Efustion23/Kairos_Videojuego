@@ -55,6 +55,7 @@ namespace Kairos
         void Start()
         {
             SyncSea();
+            SectorTheme.Apply(C.sector, ship);
             buoy = boat.gameObject.AddComponent<Buoy>();
             buoy.draft = .1f; buoy.tilt = Game.Has(1, 3) ? .35f : .8f;
             ResetBoat();

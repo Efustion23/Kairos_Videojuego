@@ -76,6 +76,12 @@ namespace Kairos
             path = new NavMeshPath();
             seaBase = CaseData.DouglasFor(C.sector, C.hours); // el mar de esta noche es el que marca el reloj del caso
             Ocean.SetSea(seaBase + .5f);
+            SectorTheme.Apply(C.sector, null, dangerLights);
+            if (C.sector > 0 && guards != null)
+            {
+                float waitMul = C.sector == 2 ? .75f : .85f;
+                foreach (var g in guards) { if (g == null) continue; g.minWaitTime *= waitMul; g.maxWaitTime *= waitMul; }
+            }
             exitZone = FindAnyObjectByType<ExitZone>().transform;
             ApplySavedState();
             BuildUI();

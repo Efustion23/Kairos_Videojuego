@@ -311,11 +311,11 @@ namespace Kairos
             {
                 int sec = i;
                 var d = CaseData.Sectors[i];
-                bool unlocked = i == 0;
-                bool current = unlocked && c.sector == i;
+                bool unlocked = true;
+                bool current = c.sector == i;
                 bool done = Game.S.completedSectors != null && i < Game.S.completedSectors.Length && Game.S.completedSectors[i];
-                Color col = !unlocked ? new Color(.45f, .52f, .58f) : current ? Pal.Sealed : done ? Pal.DeckLight : Pal.Sonar;
-                string badge = !unlocked ? "PRÓXIMAMENTE" : current ? "ACTIVO" : done ? "COMPLETADO" : "DISPONIBLE";
+                Color col = current ? Pal.Sealed : done ? Pal.DeckLight : Pal.Sonar;
+                string badge = current ? "ACTIVO" : done ? "COMPLETADO" : "DISPONIBLE";
 
                 var card = UI.Panel(secRow, Vector2.zero, Vector2.one, default, default, new Color(.02f, .048f, .075f, .94f));
                 var cFb = card.transform.Find("FrameBorder")?.GetComponent<Image>(); if (cFb != null) cFb.color = new Color(col.r, col.g, col.b, current ? .95f : .42f);
