@@ -3,47 +3,57 @@ using UnityEngine;
 
 namespace Kairos
 {
-    /// Ajusta en tiempo de ejecución el entorno, fondo oceánico, buque frigorífico/nodriza en horizonte,
-    /// iluminación de cubierta, paleta del casco y rótulos 3D para que los 3 sectores del GDD se diferencien de verdad.
+    /// Ajusta en tiempo de ejecución el entorno, iluminación, rótulos 3D y barcos 3D reales (Resources/Ships)
+    /// para que los 3 sectores oceánicos (Atlántico Sur, Golfo de Guinea, Océano Índico) se diferencien visualmente.
     public static class SectorTheme
     {
         public static void Apply(int sector, Transform shipRoot = null, Light[] deckLights = null)
         {
-            if (sector <= 0) return;
-
             var root = shipRoot != null ? shipRoot : GameObject.Find("HaiFeng77")?.transform;
             var targetName = CaseData.TargetFor(sector).name.ToUpperInvariant();
             var cam = Camera.main;
 
+            if (sector <= 0)
+            {
+                // SECTOR 1: ATLÁNTICO SUR (Milla 201) — flota real de barcos pesqueros iluminados en el horizonte cercano
+                SpawnRealHorizonFleet();
+                return;
+            }
+
             if (sector == 1)
             {
-                // SECTOR 2: GOLFO DE GUINEA (Kestrel Explorer — neblina cálida húmeda y focos sodio)
-                var fogCol = new Color(.14f, .14f, .10f);
+                // SECTOR 2: GOLFO DE GUINEA (Kestrel Explorer — arrastrero 62m, neblina cálida húmeda y transbordo con Atlantic Reef)
                 RenderSettings.fog = true;
-                RenderSettings.fogColor = fogCol;
-                RenderSettings.fogDensity = .0038f;
+                RenderSettings.fogColor = new Color(.14f, .14f, .10f);
+                RenderSettings.fogDensity = .0030f;
                 RenderSettings.ambientLight = new Color(.22f, .20f, .14f);
                 if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = new Color(.06f, .07f, .05f); }
                 TintDeckLights(deckLights, root, new Color(1f, .48f, .14f), 1.15f);
                 TintMoon(new Color(.95f, .86f, .68f), .72f);
                 TintShipPalette(root, new Color(.78f, .86f, .72f));
+
+                // En Fase 2 (Sonar), sustituir visualmente el casco por el arrastrero 3D real KestrelExplorer_3D
+                if (shipRoot != null) SwapSonarShipVisual(shipRoot, "Ships/KestrelExplorer_3D");
+                SpawnHorizonReefer("Atlantic Reef", "Ships/ReeferShip_3D", new Vector3(125f, 0f, 30f), -22f, new Color(1f, .65f, .25f));
             }
             else if (sector == 2)
             {
-                // SECTOR 3: OCÉANO ÍNDICO OCCIDENTAL (Oceanic Crown 9 — tormenta monzónica azul-acero y LED frío)
-                var fogCol = new Color(.04f, .09f, .18f);
+                // SECTOR 3: OCÉANO ÍNDICO OCCIDENTAL (Oceanic Crown 9 — tormenta monzónica azul-acero, LED frío y nodriza Mombasa Reefer)
                 RenderSettings.fog = true;
-                RenderSettings.fogColor = fogCol;
-                RenderSettings.fogDensity = .0034f;
+                RenderSettings.fogColor = new Color(.04f, .09f, .18f);
+                RenderSettings.fogDensity = .0028f;
                 RenderSettings.ambientLight = new Color(.14f, .22f, .34f);
                 if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = new Color(.015f, .035f, .075f); }
                 TintDeckLights(deckLights, root, new Color(.65f, .90f, 1f), 1.25f);
                 TintMoon(new Color(.64f, .82f, 1f), .95f);
                 TintShipPalette(root, new Color(.72f, .84f, 1.0f));
                 AddRedSecurityBeacons(root);
+
+                // En Fase 2 (Sonar), sustituir visualmente el casco por el barco 3D real OceanicCrown9_3D
+                if (shipRoot != null) SwapSonarShipVisual(shipRoot, "Ships/OceanicCrown9_3D");
+                SpawnHorizonReefer("Mombasa Reefer", "Ships/ReeferShip_3D", new Vector3(-135f, 0f, 45f), 28f, new Color(.65f, .90f, 1f));
             }
 
-            // Actualizar rótulos 3D del casco/puente con el nombre del buque del sector
             if (root != null)
             {
                 foreach (var tmp in root.GetComponentsInChildren<TMP_Text>(true))
@@ -51,6 +61,80 @@ namespace Kairos
                     if (tmp.text != null && tmp.text.ToUpperInvariant().Contains("HAI FENG"))
                         tmp.text = targetName;
                 }
+            }
+        }
+
+        /// En 02_Sonar reemplaza la malla visual de HaiFeng77 por el barco 3D real del sector, conservando el HullShell para el sonar.
+        static void SwapSonarShipVisual(Transform shipRoot, string resourcePath)
+        {
+            var prefab = Resources.Load<GameObject>(resourcePath);
+            if (prefab == null) return;
+
+            foreach (var r in shipRoot.GetComponentsInChildren<Renderer>(true))
+                r.enabled = false;
+
+            var inst = Object.Instantiate(prefab, shipRoot, false);
+            inst.name = prefab.name;
+            inst.transform.localPosition = Vector3.zero;
+            inst.transform.localRotation = Quaternion.identity;
+        }
+
+        static void SpawnHorizonReefer(string displayName, string resourcePath, Vector3 pos, float yaw, Color lightColor)
+        {
+            var fleet = GameObject.Find("Flota lejana");
+            if (fleet != null) fleet.SetActive(false);
+
+            var prefab = Resources.Load<GameObject>(resourcePath);
+            if (prefab == null) return;
+
+            var inst = Object.Instantiate(prefab, pos, Quaternion.Euler(0f, yaw, 0f));
+            inst.name = $"BuqueHorizonte_{displayName}";
+
+            var lampGo = new GameObject("LuzHorizonte");
+            lampGo.transform.SetParent(inst.transform, false);
+            lampGo.transform.localPosition = new Vector3(0f, 16f, 0f);
+            var l = lampGo.AddComponent<Light>();
+            l.type = LightType.Point;
+            l.color = lightColor;
+            l.range = 75f;
+            l.intensity = 45f;
+            l.shadows = LightShadows.None;
+        }
+
+        static void SpawnRealHorizonFleet()
+        {
+            if (GameObject.Find("FlotaRealMilla201") != null) return;
+            var trawler = Resources.Load<GameObject>("Ships/KestrelExplorer_3D");
+            var reefer = Resources.Load<GameObject>("Ships/ReeferShip_3D");
+            if (trawler == null && reefer == null) return;
+
+            var root = new GameObject("FlotaRealMilla201");
+            var placements = new (Vector3 pos, float yaw, bool useReefer)[]
+            {
+                (new Vector3(175f, 0f, 95f), -35f, false),
+                (new Vector3(-190f, 0f, 120f), 42f, false),
+                (new Vector3(210f, 0f, -110f), -125f, true),
+                (new Vector3(-165f, 0f, -145f), 115f, false),
+                (new Vector3(40f, 0f, 235f), 85f, true),
+                (new Vector3(-55f, 0f, -225f), -70f, false),
+            };
+
+            for (int i = 0; i < placements.Length; i++)
+            {
+                var p = placements[i];
+                var src = (p.useReefer && reefer != null) ? reefer : (trawler ?? reefer);
+                var v = Object.Instantiate(src, p.pos, Quaternion.Euler(0f, p.yaw, 0f), root.transform);
+                v.name = $"PesqueroMilla201_{i + 1:00}";
+                foreach (var c in v.GetComponentsInChildren<Collider>(true)) Object.Destroy(c);
+                var lamp = new GameObject("FocoPotero");
+                lamp.transform.SetParent(v.transform, false);
+                lamp.transform.localPosition = new Vector3(0f, 13f, 0f);
+                var l = lamp.AddComponent<Light>();
+                l.type = LightType.Point;
+                l.color = new Color(1f, .76f, .34f);
+                l.range = 60f;
+                l.intensity = 35f;
+                l.shadows = LightShadows.None;
             }
         }
 
