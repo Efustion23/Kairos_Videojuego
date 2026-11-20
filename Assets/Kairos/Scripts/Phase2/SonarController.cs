@@ -108,8 +108,6 @@ namespace Kairos
             cloud.Play();
         }
 
-        TrailRenderer[] wakeTrails;
-
         static Texture2D CreateSoftFoamTex()
         {
             const int s = 64;
@@ -134,7 +132,7 @@ namespace Kairos
             var foamTex = CreateSoftFoamTex();
             var foamMat = Mats.Glow(new Color(.82f, .94f, 1f, .52f), false, false, false, foamTex);
 
-            // 1. Espuma y bruma suave detrás de la popa (sin triángulos duros)
+            // Espuma y bruma suave detrás de la popa (textura difuminada, sin triángulos ni cintas)
             var go = new GameObject("EstelaLancha");
             go.transform.SetParent(boat, false);
             go.transform.localPosition = new Vector3(0, .12f, -3.2f);
@@ -159,29 +157,6 @@ namespace Kairos
             r.renderMode = ParticleSystemRenderMode.Billboard;
             r.sharedMaterial = foamMat;
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
-            // 2. Dos estelas continuas en V sobre la superficie del mar (babor y estribor)
-            var trailMat = Mats.Glow(new Color(.78f, .93f, 1f, .38f), false, false, false);
-            wakeTrails = new TrailRenderer[2];
-            for (int i = 0; i < 2; i++)
-            {
-                float sx = i == 0 ? -1.05f : 1.05f;
-                var tg = new GameObject(i == 0 ? "EstelaBabor" : "EstelaEstribor");
-                tg.transform.SetParent(boat, false);
-                tg.transform.localPosition = new Vector3(sx, .08f, -2.7f);
-                var tr = tg.AddComponent<TrailRenderer>();
-                tr.time = 3.0f;
-                tr.minVertexDistance = .35f;
-                tr.alignment = LineAlignment.TransformZ;
-                tg.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-                tr.widthCurve = new AnimationCurve(new Keyframe(0f, .28f), new Keyframe(.35f, .95f), new Keyframe(1f, 0f));
-                tr.colorGradient = grad;
-                tr.sharedMaterial = trailMat;
-                tr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                tr.receiveShadows = false;
-                tr.emitting = false;
-                wakeTrails[i] = tr;
-            }
         }
 
         void EmitPoint(Vector3 p, Color c, float size = .15f, float life = 26f)
@@ -323,8 +298,6 @@ namespace Kairos
             Shader.SetGlobalVector("_BoatDir", heading * Mathf.Sign(speed + .001f));
             engineSrc.pitch = .7f + Mathf.Abs(speed) / MaxSpeed;
             if (wakeFx != null) { var em = wakeFx.emission; em.rateOverTime = Mathf.Abs(speed) > 1.2f ? Mathf.Abs(speed) * 4.5f : 0f; }
-            if (wakeTrails != null)
-                foreach (var tr in wakeTrails) if (tr != null) tr.emitting = Mathf.Abs(speed) > 1.2f;
 
             if (Mathf.Abs(throttle) > 0)
             {

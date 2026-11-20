@@ -9,11 +9,7 @@ namespace Kairos
     {
         public static void Apply(int sector, Transform shipRoot = null, Light[] deckLights = null)
         {
-            if (sector <= 0)
-            {
-                SpawnSouthAtlanticSquidFleet();
-                return;
-            }
+            if (sector <= 0) return;
 
             var root = shipRoot != null ? shipRoot : GameObject.Find("HaiFeng77")?.transform;
             var targetName = CaseData.TargetFor(sector).name.ToUpperInvariant();
@@ -21,7 +17,7 @@ namespace Kairos
 
             if (sector == 1)
             {
-                // SECTOR 2: GOLFO DE GUINEA (Kestrel Explorer — Arrastrero industrial, neblina cálida húmeda y transbordo)
+                // SECTOR 2: GOLFO DE GUINEA (Kestrel Explorer — neblina cálida húmeda y focos sodio)
                 var fogCol = new Color(.14f, .14f, .10f);
                 RenderSettings.fog = true;
                 RenderSettings.fogColor = fogCol;
@@ -31,11 +27,10 @@ namespace Kairos
                 TintDeckLights(deckLights, root, new Color(1f, .48f, .14f), 1.15f);
                 TintMoon(new Color(.95f, .86f, .68f), .72f);
                 TintShipPalette(root, new Color(.78f, .86f, .72f));
-                ConfigureFleetAndReefer(sector, "Atlantic Reef", new Vector3(135f, 0f, 35f), new Color(1f, .68f, .32f));
             }
             else if (sector == 2)
             {
-                // SECTOR 3: OCÉANO ÍNDICO OCCIDENTAL (Oceanic Crown 9 — Palangrero de altura, tormenta monzónica azul-acero y nodriza)
+                // SECTOR 3: OCÉANO ÍNDICO OCCIDENTAL (Oceanic Crown 9 — tormenta monzónica azul-acero y LED frío)
                 var fogCol = new Color(.04f, .09f, .18f);
                 RenderSettings.fog = true;
                 RenderSettings.fogColor = fogCol;
@@ -46,7 +41,6 @@ namespace Kairos
                 TintMoon(new Color(.64f, .82f, 1f), .95f);
                 TintShipPalette(root, new Color(.72f, .84f, 1.0f));
                 AddRedSecurityBeacons(root);
-                ConfigureFleetAndReefer(sector, "Mombasa Reefer", new Vector3(-155f, 0f, 55f), new Color(.65f, .90f, 1f));
             }
 
             // Actualizar rótulos 3D del casco/puente con el nombre del buque del sector
@@ -119,73 +113,6 @@ namespace Kairos
                 l.range = 14f;
                 l.intensity = 6f;
                 l.shadows = LightShadows.None;
-            }
-        }
-
-        /// En Sector 2/3 oculta la flota lejana de poteros argentinos y coloca el frigorífico/nodriza correspondiente del GDD.
-        static void ConfigureFleetAndReefer(int sector, string reeferName, Vector3 pos, Color lightCol)
-        {
-            var fleet = GameObject.Find("Flota lejana");
-            if (fleet != null) fleet.SetActive(false);
-
-            var reefer = new GameObject($"BuqueNodriza_{reeferName}");
-            reefer.transform.position = pos;
-            reefer.transform.rotation = Quaternion.Euler(0, sector == 1 ? -18f : 22f, 0);
-
-            void Part(string n, Vector3 lp, Vector3 sc, Color c, bool glow = false)
-            {
-                var g = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                g.name = n;
-                Object.Destroy(g.GetComponent<Collider>());
-                g.transform.SetParent(reefer.transform, false);
-                g.transform.localPosition = lp;
-                g.transform.localScale = sc;
-                g.GetComponent<MeshRenderer>().material = glow ? Mats.Glow(c, true, true) : new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = c };
-            }
-
-            // Silueta de gran buque frigorífico / nodriza en el horizonte
-            Part("Casco", new Vector3(0, 4f, 0), new Vector3(18f, 9f, 92f), new Color(.08f, .10f, .12f));
-            Part("Superestructura", new Vector3(0, 13f, -26f), new Vector3(14f, 11f, 22f), new Color(.14f, .16f, .18f));
-            Part("PuenteLuz", new Vector3(0, 15.5f, -15f), new Vector3(11f, 1.4f, .5f), lightCol, true);
-            for (float z = -10f; z <= 32f; z += 14f)
-                Part("FocoCarga", new Vector3(0, 10.5f, z), new Vector3(12f, .8f, .8f), lightCol, true);
-        }
-
-        /// En Sector 1 (Atlántico Sur — Milla 201) refuerza el horizonte con una flota masiva de poteros iluminados ("ciudad flotante de luces").
-        static void SpawnSouthAtlanticSquidFleet()
-        {
-            if (GameObject.Find("FlotaPoterosMilla201") != null) return;
-            var root = new GameObject("FlotaPoterosMilla201");
-            var hullMat = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(.06f, .08f, .10f) };
-            var glowMat = Mats.Glow(new Color(1f, .76f, .36f), true, true);
-            var rnd = new System.Random(201);
-
-            for (int i = 0; i < 14; i++)
-            {
-                float angle = (i / 14f) * Mathf.PI * 2f + (float)rnd.NextDouble() * .25f;
-                float dist = 300f + (float)rnd.NextDouble() * 340f;
-                var vessel = new GameObject($"PoteroHorizonte_{i + 1:00}");
-                vessel.transform.SetParent(root.transform, false);
-                vessel.transform.position = new Vector3(Mathf.Cos(angle) * dist, 0f, Mathf.Sin(angle) * dist);
-                vessel.transform.rotation = Quaternion.Euler(0f, (float)rnd.NextDouble() * 360f, 0f);
-
-                var hull = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                Object.Destroy(hull.GetComponent<Collider>());
-                hull.transform.SetParent(vessel.transform, false);
-                hull.transform.localPosition = new Vector3(0f, 3.2f, 0f);
-                hull.transform.localScale = new Vector3(11f, 6.5f, 54f);
-                var hmr = hull.GetComponent<MeshRenderer>();
-                hmr.sharedMaterial = hullMat;
-                hmr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
-                var lights = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                Object.Destroy(lights.GetComponent<Collider>());
-                lights.transform.SetParent(vessel.transform, false);
-                lights.transform.localPosition = new Vector3(0f, 8.6f, 4f);
-                lights.transform.localScale = new Vector3(12f, 1.1f, 34f);
-                var lmr = lights.GetComponent<MeshRenderer>();
-                lmr.sharedMaterial = glowMat;
-                lmr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             }
         }
     }
