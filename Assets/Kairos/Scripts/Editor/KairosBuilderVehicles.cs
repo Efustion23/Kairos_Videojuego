@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -14,13 +15,23 @@ namespace Kairos.EditorTools
         static void BakeShipVisuals()
         {
             if (!AssetDatabase.IsValidFolder(ShipMeshDir)) AssetDatabase.CreateFolder(GenDir, "Ships");
-            foreach (var name in new[] { "KestrelExplorer_3D", "ReeferShip_3D" }) BakeShip(name);
+            foreach (var name in new[] { "KestrelExplorer_3D", "ReeferShip_3D", "CargoShip_3D" }) BakeShip(name);
         }
 
         static void BakeShip(string name)
         {
             var src = AssetDatabase.LoadAssetAtPath<GameObject>($"{VehicleSrcDir}/{name}.prefab");
             if (src == null) { Debug.LogWarning($"KAIROS: falta {VehicleSrcDir}/{name}.prefab"); return; }
+
+            // Ya horneado y sin cambios en su prefab ni en su .glb: no se repite (los modelos grandes tardan).
+            string outPath = $"{ShipsOut}/{name}.prefab";
+            var deps = AssetDatabase.GetDependencies(AssetDatabase.GetAssetPath(src), true);
+            if (File.Exists(outPath))
+            {
+                var baked = File.GetLastWriteTimeUtc(outPath); bool stale = false;
+                foreach (var d in deps) if (!d.EndsWith(".cs") && File.GetLastWriteTimeUtc(d) > baked) { stale = true; break; }
+                if (!stale) return;
+            }
             var inst = (GameObject)Object.Instantiate(src);
             var toLocal = inst.transform.worldToLocalMatrix;
 
@@ -54,6 +65,7 @@ namespace Kairos.EditorTools
                 var mesh = new Mesh { name = $"{name}_{i}", indexFormat = IndexFormat.UInt32 };
                 mesh.CombineMeshes(kv.Value.ToArray(), true, true);
                 mesh.RecalculateBounds();
+                MeshLodUtility.GenerateMeshLods(mesh, 6); // de lejos (la flota) se dibujan versiones con menos triángulos
                 string path = $"{ShipMeshDir}/{name}_{i}.asset";
                 var old = AssetDatabase.LoadAssetAtPath<Mesh>(path);
                 if (old != null) { EditorUtility.CopySerialized(mesh, old); Object.DestroyImmediate(mesh); mesh = old; } else AssetDatabase.CreateAsset(mesh, path);
@@ -64,7 +76,7 @@ namespace Kairos.EditorTools
                 i++;
             }
             for (; AssetDatabase.LoadAssetAtPath<Mesh>($"{ShipMeshDir}/{name}_{i}.asset") != null; i++) AssetDatabase.DeleteAsset($"{ShipMeshDir}/{name}_{i}.asset");
-            PrefabUtility.SaveAsPrefabAsset(root, $"{ShipsOut}/{name}.prefab");
+            PrefabUtility.SaveAsPrefabAsset(root, outPath);
             Object.DestroyImmediate(root);
             Debug.Log($"KAIROS: {name}: {parts.Length} piezas unidas en {byMat.Count} mallas ({dropped} piezas sueltas descartadas).");
         }
