@@ -220,7 +220,63 @@ namespace Kairos
                 testimony = "", testimonySafe = "",
                 help = "Thant golpea la escotilla con su ritmo de siempre: tus pasos no se oyen durante unos segundos." },
         };
-        public static PersonDef PersonDefOf(string id) => System.Array.Find(People, p => p.id == id);
+
+        public static readonly PersonDef[] PeopleSector2 =
+        {
+            new PersonDef { id = "rodel", name = "Kwame Mensah", origin = "Ghana", voice = "Habla en voz baja mientras revisa las redes de arrastre.", startTrust = 30, startsFree = true, willTestify = true, testimonyEvidence = "t_rodel",
+                intro = "—Apagaron el AIS antes de entrar en la reserva. ¿De verdad vienes a inspeccionar el Kestrel Explorer?",
+                plan = "—La escotilla de babor tiene clave: 4-7-1-9. Si sacas a los de abajo, te cubro desde cubierta.",
+                testimony = "«Pintaron una licencia falsa sobre el casco y nos obligaron a transbordar la pesca al Atlantic Reef.»",
+                testimonySafe = "Describe la falsificación de licencia y los transbordos ilegales en el Golfo de Guinea.",
+                help = "Kwame suelta un cabo metálico cerca del puente: la tripulación se distrae unos segundos." },
+            new PersonDef { id = "ari", name = "Ibrahim Diop", origin = "Senegal", voice = "Mantiene la calma y observa cada movimiento.", startTrust = 20, willTestify = true, testimonyEvidence = "t_ari",
+                intro = "—Nos prometieron faena costera con descanso. Llevamos meses encerrados en este arrastrero.",
+                plan = "—Explícame la ruta de salida. Si es segura, todos saldrán detrás de ti.",
+                testimony = "«Cuando preguntamos por la licencia de pesca, el oficial nos amenazó y nos encerró tras cada turno.»",
+                testimonySafe = "Describe intimidación y encierro durante los apagones de AIS. Descripción omitida por tus ajustes.",
+                help = "Ibrahim golpea una tubería del mamparo: atrae al guardia más cercano lejos del pasillo." },
+            new PersonDef { id = "moussa", name = "Samuel Osei", origin = "Ghana", voice = "Aprieta su libreta de jornales con la mano cansada.", startTrust = 15, willTestify = true, testimonyEvidence = "t_moussa",
+                intro = "—La agencia en Tema me cobró el embarque tres veces. ¿Tú también vienes de parte del armador?",
+                plan = "—Detrás de este mamparo está la puerta de servicio al pañol. Te la abro desde adentro.",
+                testimony = "«Descuentan cada comida y cada par de guantes; trabajamos sin ver un solo pago.»",
+                testimonySafe = "Describe servidumbre por deudas impuesta por la reclutadora en África Occidental.",
+                help = "Samuel abre la puerta de servicio: tienes un atajo hasta el pañol." },
+            new PersonDef { id = "thant", name = "Jean-Luc Koffi", origin = "Costa de Marfil", voice = "Responde con pocas palabras, mirando hacia la puerta.", startTrust = 25, willTestify = false,
+                intro = "—Solo quiero volver a Abiyán con los míos.",
+                plan = "—Saldré contigo, pero no firmaré ninguna declaración ante un tribunal.",
+                testimony = "", testimonySafe = "",
+                help = "Jean-Luc golpea la escotilla con ritmo constante: tapa tus pasos durante unos segundos." },
+        };
+
+        public static readonly PersonDef[] PeopleSector3 =
+        {
+            new PersonDef { id = "rodel", name = "Budi Santoso", origin = "Indonesia", voice = "Habla con voz ronca tras dos años en altamar.", startTrust = 30, startsFree = true, willTestify = true, testimonyEvidence = "t_rodel",
+                intro = "—Dos años sin pisar tierra en el Oceanic Crown 9. Creí que nadie llegaba tan lejos en el Índico.",
+                plan = "—La clave de la escotilla de babor es 4-7-1-9. Úsala antes de que vuelva el contramaestre.",
+                testimony = "«El buque nodriza Mombasa Reefer trae combustible y se lleva el atún; a nosotros nunca nos dejan bajar.»",
+                testimonySafe = "Describe dos años de aislamiento continuo asistido por buque nodriza en el Océano Índico.",
+                help = "Budi provoca un ruido seco en el comedor: la tripulación se distrae unos segundos." },
+            new PersonDef { id = "ari", name = "Aung Kyaw", origin = "Myanmar", voice = "Te mira fijamente, agotado pero firme.", startTrust = 20, willTestify = true, testimonyEvidence = "t_ari",
+                intro = "—Si vienes contra Tidewater Holdings, dime la verdad entera antes de movernos.",
+                plan = "—Cuando confirmes la salida, convenceré al resto de seguirte en silencio.",
+                testimony = "«El capitán recibe órdenes directas de Tidewater. Quien se niega a hacer doble turno queda castigado aquí abajo.»",
+                testimonySafe = "Describe represalias y coerción en la flota de Tidewater Holdings. Descripción omitida por tus ajustes.",
+                help = "Aung golpea el mamparo metálico: atrae al guardia más cercano lejos de tu ruta." },
+            new PersonDef { id = "moussa", name = "Mateo Cruz", origin = "Filipinas", voice = "Guarda una copia arrugada de su contrato.", startTrust = 15, willTestify = true, testimonyEvidence = "t_moussa",
+                intro = "—Firmé por un año y ya van dos. Dicen que debo el pasaje de regreso.",
+                plan = "—Conozco la puerta de servicio que da al pañol. Te la destrabo ahora.",
+                testimony = "«Retienen nuestros pasaportes en el puente y descuentan cualquier medicamento de un sueldo que nunca llega.»",
+                testimonySafe = "Describe retención de pasaportes y servidumbre por deudas en el Océano Índico.",
+                help = "Mateo abre la puerta de servicio: tienes un atajo hasta el pañol." },
+            new PersonDef { id = "thant", name = "Hassan Juma", origin = "Tanzania", voice = "Habla en voz baja y pausada.", startTrust = 25, willTestify = false,
+                intro = "—Solo quiero regresar a Zanzíbar y ver a mi familia.",
+                plan = "—Me iré contigo si es seguro, pero no voy a testificar contra Tidewater.",
+                testimony = "", testimonySafe = "",
+                help = "Hassan golpea la escotilla en el momento justo: tus pasos quedan cubiertos unos segundos." },
+        };
+
+        public static PersonDef[] PeopleFor(int sector) => sector == 1 ? PeopleSector2 : sector == 2 ? PeopleSector3 : People;
+        public static PersonDef PersonDefOf(string id) => System.Array.Find(PeopleFor(Game.S?.c?.sector ?? 0), p => p.id == id);
 
         /// Lo que fue de cada persona: se cuenta desde lo que ocurrió de verdad en esta partida.
         public static string Epilogue(PersonDef d, PersonState st, int verdict)
@@ -232,25 +288,25 @@ namespace Kairos
             switch (d.id)
             {
                 case "rodel":
-                    t.Add(st.dignified[1] ? "Rodel volvió a Iloilo con todos sus documentos." : "Rodel volvió a Iloilo con papeles provisionales.");
+                    t.Add(st.dignified[1] ? $"{d.name} volvió a {d.origin} con todos sus documentos." : $"{d.name} volvió a {d.origin} con papeles provisionales.");
                     t.Add(st.dignified[3] ? "Cobró el salario adeudado." : "Sigue reclamando sus salarios por su cuenta.");
                     if (testified) t.Add("Su testimonio quedó en el expediente.");
                     if (dignified >= 3) t.Add("Hoy forma a otros marineros sobre sus derechos.");
                     break;
                 case "ari":
-                    t.Add("Ari volvió a Bitung.");
+                    t.Add($"{d.name} regresó a {d.origin}.");
                     t.Add(!testified ? "Prefiere no hablar todavía de lo ocurrido, y esa decisión también es suya."
                         : verdict > 0 ? "Declaró ante el tribunal por decisión propia."
                         : "Dio su testimonio por decisión propia, aunque el caso no llegó a sentencia.");
                     if (dignified >= 3) t.Add("Hoy dirige una asociación de pescadores.");
                     break;
                 case "moussa":
-                    t.Add("Moussa volvió a Mbour con su familia.");
-                    t.Add(st.dignified[0] ? "Recibió atención médica en la mano." : "Su mano necesita un tratamiento que aún intenta costear.");
+                    t.Add($"{d.name} volvió a {d.origin} con su familia.");
+                    t.Add(st.dignified[0] ? "Recibió atención médica completa." : "Necesita un tratamiento médico que aún intenta costear.");
                     t.Add(verdict > 0 ? "La deuda quedó anulada por sentencia." : "Sin sentencia, su deuda sigue sin anularse en los papeles.");
                     break;
                 case "thant":
-                    t.Add("Thant está con su familia.");
+                    t.Add($"{d.name} está de vuelta en {d.origin} con su familia.");
                     t.Add(st.testimony == 2 ? "Eligió no testificar, y el proceso respetó esa decisión." : "No llegaron a pedirle que testificara.");
                     t.Add(st.dignified[4] ? "Cuenta con apoyo psicosocial." : "Volvió sin apoyo psicosocial.");
                     break;
@@ -294,7 +350,17 @@ namespace Kairos
             E("t_ari", "Testimonio de Ari Wibowo", 'A', "Testimonio con consentimiento y lector biométrico.", new[] { 4, 5 }, NoEdge, "Testimonio con consentimiento. Descripción omitida por tus ajustes."),
             E("t_moussa", "Testimonio de Moussa Diallo", 'A', "Testimonio con consentimiento y lector biométrico.", new[] { 0, 8 }, new[] { "0-2" }),
         };
-        public static EvidenceDef Evidence(string id) => System.Array.Find(EvidenceDefs, e => e.id == id);
+        public static EvidenceDef Evidence(string id)
+        {
+            var e = System.Array.Find(EvidenceDefs, x => x.id == id);
+            if (e != null && (id == "t_rodel" || id == "t_ari" || id == "t_moussa"))
+            {
+                var p = PersonDefOf(id.Substring(2));
+                if (p != null)
+                    return new EvidenceDef { id = e.id, title = $"Testimonio de {p.name}", cat = e.cat, desc = e.desc, descSafe = e.descSafe, indicators = e.indicators, edges = e.edges };
+            }
+            return e;
+        }
         // Lo que se puede perder nunca incluye lo necesario para llegar al beneficiario final.
         public static readonly string[] DumpedWhenDetected = { "e_turnos", "e_candados" };
         public static readonly string[] BurnOrder = { "e_candados", "e_turnos", "e_contratos", "e_deudas" };

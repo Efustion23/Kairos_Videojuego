@@ -76,6 +76,12 @@ namespace Kairos
             path = new NavMeshPath();
             seaBase = CaseData.DouglasFor(C.sector, C.hours); // el mar de esta noche es el que marca el reloj del caso
             Ocean.SetSea(seaBase + .5f);
+            SectorTheme.Apply(C.sector, null, dangerLights);
+            if (C.sector > 0 && guards != null)
+            {
+                float waitMul = C.sector == 2 ? .75f : .85f;
+                foreach (var g in guards) { if (g == null) continue; g.minWaitTime *= waitMul; g.maxWaitTime *= waitMul; }
+            }
             exitZone = FindAnyObjectByType<ExitZone>().transform;
             ApplySavedState();
             BuildUI();
@@ -381,6 +387,7 @@ namespace Kairos
             MarkHint("photo");
             Sfx.Play(Sfx.Shutter, .9f);
             Sfx.Play(Sfx.Seal, .9f);
+            if (fade != null) fade.color = new Color(.78f, .96f, 1f, .42f);
             var seal = C.evidence.Find(x => x.id == e.evidenceId);
             Toast($"<color=#6CFF8A>PRUEBA SELLADA ({e.Def.cat})</color>  {e.Def.title}\nSHA-256 {seal.sha.Substring(0, 16)}…", Pal.Text, 4.5f);
             e.gameObject.SetActive(false);

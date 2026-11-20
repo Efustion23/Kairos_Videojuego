@@ -37,32 +37,74 @@ namespace Kairos
         void OpenBriefcase()
         {
             SetOverlay(Mode.Menu);
-            var p = UI.Panel(overlay, new Vector2(.18f, .08f), new Vector2(.82f, .92f));
+            var p = UI.Panel(overlay, new Vector2(.14f, .06f), new Vector2(.86f, .94f));
             var s = UI.Scroll(p.transform, Vector2.zero, Vector2.one);
 
-            // Cabecera de Maletín Forense (Alexander - S14-1)
-            UI.Line(s, $"MALETÍN FORENSE KAIROS · {C.evidence.Count}/{CaseData.MaxEvidence}", 30, Pal.Sealed, true);
-            UI.Line(s, $"Expediente Oficial: {Game.Inspector}  |  Cadena de Custodia: <color=#3FE0D0>VERIFICADA</color>", 18, Pal.Dim);
+            // Cabecera de Maletín Forense Estanco (Alexander - S14-1)
+            int oitIds = CaseData.CountIndicators(C.evidence.ConvertAll(e => e.id));
+            UI.Line(s, $"MALETÍN ESTANCO KAIROS · {C.evidence.Count}/{CaseData.MaxEvidence} RANURAS", 30, Pal.Sealed, true);
+            UI.Line(s, $"Expediente Oficial: {Game.Inspector}  |  Cadena de Custodia: <color=#3FE0D0>SHA-256 VERIFICADA</color>  |  Indicadores OIT: <b>{oitIds}/11</b>", 17, Pal.Dim);
 
             var evBar = UI.NewBar(s, Pal.Sealed, 8);
             evBar.Set((float)C.evidence.Count / CaseData.MaxEvidence);
-            UI.Line(s, $"Índice de Carga Probatoria: <b>{(float)C.evidence.Count / CaseData.MaxEvidence * 100:0}%</b> para el Tribunal de la Fase 4", 17, Pal.Sonar);
+            UI.Line(s, $"Índice de Carga Probatoria: <b>{(float)C.evidence.Count / CaseData.MaxEvidence * 100:0}%</b> · Umbrales Tribunal: 4 Retención · 7 Congelación · 11 Condena", 16, Pal.Sonar);
+
+            // Cuadrícula 5x3 de 15 ranuras estancas con sello criptográfico
+            var gridGo = new GameObject("MaletinGrid", typeof(RectTransform), typeof(UnityEngine.UI.GridLayoutGroup), typeof(UnityEngine.UI.LayoutElement));
+            gridGo.transform.SetParent(s, false);
+            var glg = gridGo.GetComponent<UnityEngine.UI.GridLayoutGroup>();
+            glg.constraint = UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount;
+            glg.constraintCount = 5;
+            glg.cellSize = new Vector2(228, 92);
+            glg.spacing = new Vector2(8, 8);
+            glg.childAlignment = TextAnchor.UpperCenter;
+            var gridLe = gridGo.GetComponent<UnityEngine.UI.LayoutElement>();
+            gridLe.minHeight = 300;
+            gridLe.preferredHeight = 300;
+
+            for (int slot = 0; slot < CaseData.MaxEvidence; slot++)
+            {
+                bool filled = slot < C.evidence.Count;
+                Color slotBg = filled ? new Color(.04f, .16f, .14f, .95f) : new Color(.04f, .07f, .10f, .72f);
+                var cellGo = new GameObject($"Ranura_{slot + 1:00}", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+                cellGo.transform.SetParent(gridGo.transform, false);
+                cellGo.GetComponent<UnityEngine.UI.Image>().color = slotBg;
+                var outline = cellGo.AddComponent<UnityEngine.UI.Outline>();
+                outline.effectColor = filled ? Pal.Sealed : new Color(.22f, .30f, .36f, .6f);
+                outline.effectDistance = new Vector2(1.5f, -1.5f);
+
+                string cellText;
+                if (filled)
+                {
+                    var ev = C.evidence[slot];
+                    var d = CaseData.Evidence(ev.id);
+                    string shaShort = string.IsNullOrEmpty(ev.sha) ? "N/A" : ev.sha.Substring(0, Mathf.Min(12, ev.sha.Length));
+                    cellText = $"<size=12><color=#6CFF8A>#{slot + 1:00} · [{d.cat}] SELLADA</color></size>\n<b>{d.title}</b>\n<size=11><color=#3FE0D0>SHA-256: {shaShort}…</color></size>";
+                }
+                else
+                {
+                    cellText = $"<size=12><color=#5B6E78>#{slot + 1:00} · RANURA ESTANCA</color></size>\n<size=13><color=#4B5D66>Vacía</color></size>";
+                }
+                var txt = UI.Text(cellGo.transform, cellText, 14, filled ? Pal.Text : Pal.Dim, TMPro.TextAlignmentOptions.Center);
+                txt.margin = new Vector4(6, 4, 6, 4);
+            }
 
             if (C.evidence.Count == 0)
-                UI.Line(s, "\nMaletín vacío. Explora el buque, acércate a documentos o bitácoras y mantén pulsado E para fotografiar y sellar digitalmente.", 21, Pal.Dim);
+                UI.Line(s, "\nMaletín vacío. Explora el buque, acércate a documentos o bitácoras y mantén pulsado E para fotografiar y sellar digitalmente.", 19, Pal.Dim);
             else
             {
-                UI.Line(s, "\n<b>Pruebas Forenses Aseguradas:</b>", 21, Pal.Text);
+                UI.Line(s, "\n<b>Detalle Criptográfico de Pruebas Aseguradas:</b>", 20, Pal.Text);
                 foreach (var ev in C.evidence)
                 {
                     var d = CaseData.Evidence(ev.id);
-                    string catTag = d.cat == 'C' ? "CONTRATO" : d.cat == 'L' ? "BITÁCORA" : d.cat == 'T' ? "TESTIMONIO" : "FORENSE";
-                    UI.Line(s, $"<color=#3FE0D0>◄ {catTag} ►</color> <b>{d.title}</b>\n{(Game.S.omitSensitive ? d.descSafe : d.desc)}\n<size=15><color=#6CFF8A>■ SELLO SHA-256: {ev.sha.Substring(0, 20)}…</color>  ·  <color=#8DA2AB>{ev.stamp}</color></size>", 19);
+                    string catTag = d.cat == 'A' ? "CLAVE" : d.cat == 'B' ? "CORROBORACIÓN" : "TESTIMONIO";
+                    string shaDisplay = string.IsNullOrEmpty(ev.sha) ? "N/A" : ev.sha.Substring(0, Mathf.Min(20, ev.sha.Length));
+                    UI.Line(s, $"<color=#3FE0D0>[{catTag}]</color> <b>{d.title}</b> — {(Game.S.omitSensitive ? d.descSafe : d.desc)}\n<size=14><color=#6CFF8A>[OK] SELLO SHA-256: {shaDisplay}…</color>  ·  <color=#8DA2AB>{ev.stamp}</color></size>", 17);
                 }
             }
 
-            UI.Line(s, "\nOpciones de Extracción y Salida", 24, Pal.DeckLight, true);
-            UI.Line(s, "• Vía Popa: Regresar a la lancha semirrígida (sigilo total y cero sospecha).\n• Vía Puente: Neutralizar al capitán y tomar la consola de navegación para incautación completa.\n• Vía Patrullera: Extracción de emergencia en 60 s (alerta al buque).", 18, Pal.Dim);
+            UI.Line(s, "\nOpciones de Extracción y Salida", 22, Pal.DeckLight, true);
+            UI.Line(s, "- Vía Popa: Regresar a la lancha semirrígida (sigilo total y cero sospecha).\n- Vía Puente: Neutralizar al capitán y tomar la consola de navegación para incautación completa.\n- Vía Patrullera: Extracción de emergencia en 60 s (alerta al buque).", 17, Pal.Dim);
             if (patrolT < 0)
                 UI.Btn(s, "Llamar a la patrullera aliada de apoyo", () => { CloseOverlay(); CallPatrol(); }, Pal.DeckLight, 20, 44);
             UI.Btn(s, "Cerrar Maletín (Tab o Esc)", CloseOverlay, Pal.Dim, 18, 40);
@@ -71,8 +113,8 @@ namespace Kairos
         void OpenPause()
         {
             SetOverlay(Mode.Menu);
-            var p = UI.Panel(overlay, new Vector2(.28f, .16f), new Vector2(.72f, .84f));
-            var s = UI.VStack(p.transform, 24, 8);
+            var p = UI.Panel(overlay, new Vector2(.26f, .24f), new Vector2(.74f, .76f));
+            var s = UI.VStack(p.transform, 24, 10);
 
             // Cabecera estilizada de Pausa (Alexander - S15-1)
             UI.Line(s, "KAIROS · OPERACIÓN EN PAUSA", 32, Pal.Sonar, true);
@@ -83,7 +125,7 @@ namespace Kairos
 
             // Guía de Controles y Usabilidad
             UI.Line(s, "\n<b>Controles de Operación:</b>", 19, Pal.DeckLight);
-            UI.Line(s, "• <color=#3FE0D0>WASD</color>: Desplazamiento táctico  |  <color=#3FE0D0>Shift</color>: Correr (alerta acústica)\n• <color=#3FE0D0>[E]</color>: Interactuar / Fotografiar prueba  |  <color=#3FE0D0>[F]</color>: Visor térmico-acústico\n• <color=#3FE0D0>[Q]</color>: Dispositivo táctico (Aturdir/Bloqueador)  |  <color=#3FE0D0>[Tab]</color>: Maletín forense\n• <color=#3FE0D0>Clic Derecho</color>: Teleobjetivo de cámara forense", 17, Pal.Dim);
+            UI.Line(s, "- <color=#3FE0D0>WASD</color>: Desplazamiento  |  <color=#3FE0D0>[C / Ctrl]</color>: Agacharse (sigilo)  |  <color=#3FE0D0>Shift</color>: Correr\n- <color=#3FE0D0>[E]</color>: Usar / Cortar / Fotografiar  |  <color=#3FE0D0>[F]</color>: Visor térmico-acústico\n- <color=#3FE0D0>[Q]</color>: Dispositivo táctico (Aturdir/Bloqueador)  |  <color=#3FE0D0>[Tab]</color>: Maletín forense\n- <color=#3FE0D0>Clic Derecho</color>: Teleobjetivo de cámara forense", 17, Pal.Dim);
 
             UI.Line(s, " ", 8);
             UI.Btn(s, "Reanudar Misión", CloseOverlay, Pal.Sealed, 22, 48);
