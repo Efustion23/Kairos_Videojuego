@@ -165,6 +165,7 @@ namespace Kairos.EditorTools
             skyMat = null;
             boatPrefab = null;
             var shipPrefab = BuildShip();
+            BakePoteroFleetShip(shipPrefab);
 
             var scenes = new List<EditorBuildSettingsScene>();
             BuildMenuScene(shipPrefab, scenes);
