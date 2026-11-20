@@ -247,7 +247,7 @@ namespace Kairos.EditorTools
             {
                 var go = new GameObject("Geo_" + kv.Key.name, typeof(MeshFilter), typeof(MeshRenderer));
                 go.transform.SetParent(b.root.transform, false);
-                go.isStatic = prefix == "HaiFeng";
+                go.isStatic = System.Array.IndexOf(ShipPrefix, prefix) >= 0; // los barcos de la Fase 3, no la lancha
                 var mesh = kv.Value.ToMesh(prefix + "_" + kv.Key.name);
                 AssetDatabase.CreateAsset(mesh, $"{GenDir}/{prefix}_Geo{idx++}.asset");
                 go.GetComponent<MeshFilter>().sharedMesh = mesh;

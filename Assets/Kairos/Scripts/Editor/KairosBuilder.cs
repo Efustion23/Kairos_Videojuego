@@ -171,7 +171,9 @@ namespace Kairos.EditorTools
             BuildMenuScene(shipPrefab, scenes);
             BuildRastreoScene(scenes);
             BuildSonarScene(shipPrefab, scenes);
-            BuildInfiltrationScene(shipPrefab, scenes);
+            BuildInfiltrationScene(shipPrefab, scenes, 0);
+            BuildInfiltrationScene(BuildShip(1), scenes, 1);
+            BuildInfiltrationScene(BuildShip(2), scenes, 2);
             BuildJuicioScene(scenes);
             EditorBuildSettings.scenes = scenes.ToArray();
 
@@ -362,9 +364,16 @@ namespace Kairos.EditorTools
             return d;
         }
 
-        static void BuildInfiltrationScene(GameObject shipPrefab, List<EditorBuildSettingsScene> list)
+        /// Sector del barco que se está generando: elige la tripulación y sus modelos.
+        static int buildSector;
+
+        /// Fase 3 de un sector: mismo esqueleto de barco, pero rondas, celdas y pruebas en otro orden
+        /// para que cada caso se juegue distinto. El Sector 3 suma un vigía en la proa.
+        static void BuildInfiltrationScene(GameObject shipPrefab, List<EditorBuildSettingsScene> list, int sector = 0)
         {
-            var s = NewScene("03_Infiltracion");
+            buildSector = sector;
+            string sceneName = Game.InfiltrationScene(sector);
+            var s = NewScene(sceneName);
             var cam = MainCamera();
             NightWorld(.75f, 4.5f, new Color(.24f, .29f, .34f));
             var ship = (GameObject)PrefabUtility.InstantiatePrefab(shipPrefab);
@@ -386,29 +395,46 @@ namespace Kairos.EditorTools
             agent.cam = cam; agent.motion = motion;
 
             // Guardias: rondas en bucle con pausas tácticas en cubierta y huecos para colarse.
+            // Sector 2: las mismas rondas al revés. Sector 3: empiezan por la mitad.
+            Vector3[] R(Vector3[] r)
+            {
+                if (sector == 1) { var c = (Vector3[])r.Clone(); System.Array.Reverse(c); return c; }
+                if (sector == 2) { var c = new Vector3[r.Length]; for (int i = 0; i < r.Length; i++) c[i] = r[(i + r.Length / 2) % r.Length]; return c; }
+                return r;
+            }
+            GuardAI G(string name, Material hat, Vector3[] route) { var r = R(route); return Guard(gameplay, name, r[0] + Vector3.up * .05f, hat, r); }
             var guards = new List<GuardAI>();
-            var contramaestre = Guard(gameplay, "Contramaestre", new Vector3(-5.5f, 6.05f, -24), bulb, new[] {
+            var contramaestre = G("Contramaestre", bulb, new[] {
                 new Vector3(-5.5f, 6, -24), new Vector3(-5.8f, 6, -6), new Vector3(-1.15f, 6, 8), new Vector3(-1.6f, 6, 28),
                 new Vector3(2.2f, 6, 33), new Vector3(5.6f, 6, 12), new Vector3(2.2f, 6, 4), new Vector3(-5.5f, 6, -12),
                 new Vector3(-2.5f, 6, -28), new Vector3(2.8f, 6, -27) });
             contramaestre.minWaitTime = 2.0f; contramaestre.maxWaitTime = 3.6f;
             guards.Add(contramaestre);
 
-            var bodega = Guard(gameplay, "Guardia de bodega", new Vector3(0, 3.05f, -26), darkMetal, new[] {
+            var bodega = G("Guardia de bodega", darkMetal, new[] {
                 new Vector3(0, 3, -26), new Vector3(3.6f, 3, -6), new Vector3(0, 3, 0), new Vector3(0, 3, 19), new Vector3(3.2f, 3, 12), new Vector3(0, 3, 8), new Vector3(-3.5f, 3, -20), new Vector3(0, 3, -12) });
             bodega.minWaitTime = 1.5f; bodega.maxWaitTime = 2.8f;
             guards.Add(bodega);
 
-            var habilitacion = Guard(gameplay, "Guardia de habilitación", new Vector3(0, 6.05f, -18), darkMetal, new[] {
+            var habilitacion = G("Guardia de habilitación", darkMetal, new[] {
                 new Vector3(0, 6, -18), new Vector3(0, 6, -2), new Vector3(3.2f, 6, -8), new Vector3(1.6f, 6, 4), new Vector3(5.8f, 6, 3), new Vector3(0, 6, -22), new Vector3(0, 6, -10) });
             habilitacion.minWaitTime = 1.6f; habilitacion.maxWaitTime = 3.0f;
             guards.Add(habilitacion);
 
-            var captain = Guard(gameplay, "Capitán", new Vector3(0, 9.15f, -7), coat, new[] {
+            var captain = G("Capitán", coat, new[] {
                 new Vector3(0, 9.1f, -7), new Vector3(-2, 9.1f, -11), new Vector3(2.5f, 9.1f, -9) });
             captain.minWaitTime = 2.2f; captain.maxWaitTime = 4.0f;
             captain.viewRange = 9;
             guards.Add(captain);
+
+            if (sector == 2)
+            {
+                // Índico: aislamiento extremo, un vigía más recorre la proa.
+                var vigia = G("Vigía de proa", darkMetal, new[] {
+                    new Vector3(0, 6, 6), new Vector3(-1.2f, 6, 24), new Vector3(0, 6, 33), new Vector3(1.4f, 6, 14) });
+                vigia.minWaitTime = 2.4f; vigia.maxWaitTime = 4.2f;
+                guards.Add(vigia);
+            }
 
             // Cámara del barco: vigila la cubierta de popa; el pasillo inferior queda libre.
             var cam1 = new GameObject("Camara popa").AddComponent<SecurityCam>();
@@ -429,32 +455,39 @@ namespace Kairos.EditorTools
             };
 
             // Personas
+            var cellA = new Vector3(-3.3f, 3.05f, 5f); var cellB = new Vector3(-3.2f, 3.05f, 1f);
+            if (sector == 1) (cellA, cellB) = (cellB, cellA);
             var people = new List<PersonNpc>
             {
                 Person(gameplay, "rodel", new Vector3(-3f, 6.05f, -9.5f), 40, skinA),
-                Person(gameplay, "ari", new Vector3(-3.3f, 3.05f, 5f), 110, skinC),
+                Person(gameplay, "ari", sector == 2 ? new Vector3(-3.8f, 3.05f, 7.5f) : cellA, 110, skinC),
                 Person(gameplay, "moussa", new Vector3(-3.8f, 3.05f, -2.5f), 70, skinB),
-                Person(gameplay, "thant", new Vector3(-3.2f, 3.05f, 1f), 100, skinD),
+                Person(gameplay, "thant", cellB, 100, skinD),
             };
 
             // Pruebas
             Surface("Doc", 256, 4, Document, out var docC, out var docN);
             var paper = Lit("M_Paper", Color.white, 1f, 0, docC, null, docN);
+            // Huecos para documentos: T1/T2 mesa del oficial, T3 mesa del capitán, T4 comedor, W1/W2 paredes.
+            (Vector3 p, Vector3 sz) T1 = (new Vector3(2.9f, 6.95f, -18.8f), new Vector3(.5f, .08f, .7f)), T2 = (new Vector3(4.1f, 6.95f, -18.8f), new Vector3(.7f, .05f, .6f)),
+                T3 = (new Vector3(-3.5f, 6.95f, -18.8f), new Vector3(.7f, .1f, .5f)), T4 = (new Vector3(-3.2f, 6.85f, -5f), new Vector3(.6f, .06f, .9f)),
+                W1 = (new Vector3(4.86f, 7.5f, -7f), new Vector3(.06f, .9f, .7f)), W2 = (new Vector3(6.66f, 4.3f, -21f), new Vector3(.06f, .7f, .5f));
+            var docs = sector == 1
+                ? new[] { ("e_deudas", T4), ("e_manifiesto", T1), ("e_registro", T3), ("e_contratos", T2), ("e_turnos", W1), ("e_facturas", W2) }
+                : sector == 2
+                    ? new[] { ("e_deudas", T2), ("e_manifiesto", T1), ("e_registro", T4), ("e_contratos", T3), ("e_turnos", W1), ("e_facturas", W2) }
+                    : new[] { ("e_deudas", T1), ("e_manifiesto", T2), ("e_registro", T3), ("e_contratos", T4), ("e_turnos", W1), ("e_facturas", W2) };
             var ev = new List<EvidenceProp>
             {
                 Evidence(gameplay, "e_celda", new Vector3(-6.3f, 4.2f, 3.5f), new Vector3(.08f, .8f, 1.2f), rust),
                 Evidence(gameplay, "e_pasaportes", new Vector3(-3.95f, 7.35f, -14f), new Vector3(.3f, .25f, .5f), paper),
-                Evidence(gameplay, "e_deudas", new Vector3(2.9f, 6.95f, -18.8f), new Vector3(.5f, .08f, .7f), paper),
-                Evidence(gameplay, "e_contratos", new Vector3(-3.2f, 6.85f, -5f), new Vector3(.6f, .06f, .9f), paper),
-                // En el camarote del oficial: el camino principal no obliga a pasar por el capitán.
-                Evidence(gameplay, "e_manifiesto", new Vector3(4.1f, 6.95f, -18.8f), new Vector3(.7f, .05f, .6f), paper),
-                Evidence(gameplay, "e_registro", new Vector3(-3.5f, 6.95f, -18.8f), new Vector3(.7f, .1f, .5f), paper),
-                Evidence(gameplay, "e_turnos", new Vector3(4.86f, 7.5f, -7f), new Vector3(.06f, .9f, .7f), paper),
                 Evidence(gameplay, "e_candados", new Vector3(-1.05f, 4.3f, 1.05f), new Vector3(.15f, .35f, .3f), darkMetal),
-                Evidence(gameplay, "e_facturas", new Vector3(6.66f, 4.3f, -21f), new Vector3(.06f, .7f, .5f), paper),
                 Evidence(gameplay, "e_radio", new Vector3(-1.9f, 9.95f, -5.8f), new Vector3(.32f, .28f, .26f), darkMetal),
                 Evidence(gameplay, "e_plotter", new Vector3(1.9f, 9.95f, -5.8f), new Vector3(.36f, .28f, .22f), darkMetal),
             };
+            // El manifiesto queda siempre en el camarote del oficial y las facturas en la sala de máquinas:
+            // los objetivos guiados de la Fase 3 llevan ahí.
+            foreach (var (id, slot) in docs) ev.Add(Evidence(gameplay, id, slot.p, slot.sz, paper));
 
             // Consola del puente y salida
             var console = new GameObject("Consola") { layer = Layers.Interact };
@@ -501,7 +534,7 @@ namespace Kairos.EditorTools
             ctrl.dangerLights = lights.ToArray();
             fog.deckFloodlights.AddRange(lights);
 
-            SaveScene(s, "03_Infiltracion", list);
+            SaveScene(s, sceneName, list);
         }
 
         static void BuildJuicioScene(List<EditorBuildSettingsScene> list)

@@ -138,13 +138,16 @@ namespace Kairos
             return t >= 6f && t < 20f ? hours + 20f - t : hours;
         }
 
+        /// Cada sector aborda su propio barco: potero (Sector 1), arrastrero (Sector 2) o palangrero (Sector 3).
+        public static string InfiltrationScene(int sector) => sector <= 0 ? "03_Infiltracion" : $"03_Infiltracion_S{sector + 1}";
+
         public static void GoToPhase(int phase)
         {
             C.phase = phase;
             if (phase == 2 || phase == 3) C.hours = NextNight(C.hours);
             Write();
             Time.timeScale = 1;
-            SceneManager.LoadScene(PhaseScenes[phase]);
+            SceneManager.LoadScene(phase == 3 ? InfiltrationScene(C.sector) : PhaseScenes[phase]);
         }
 
         public static void GoToMenu()
