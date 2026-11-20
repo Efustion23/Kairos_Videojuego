@@ -189,8 +189,16 @@ namespace Kairos.EditorTools
             }
         }
 
-        static GameObject BuildShip()
+        /// Barcos de la Fase 3. Comparten el esqueleto (pasillos, celdas, habilitación y puente) para que la IA,
+        /// las puertas y las pruebas funcionen igual; cambia el aparejo de cubierta según la pesquería.
+        /// 0: Hai Feng 77 (potero) · 1: Kestrel Explorer (arrastrero) · 2: Oceanic Crown 9 (palangrero)
+        static readonly string[] ShipPrefix = { "HaiFeng", "Kestrel", "Crown" };
+        static readonly string[] ShipPrefabName = { "HaiFeng77", "KestrelExplorer", "OceanicCrown9" };
+
+        static GameObject BuildShip(int kind = 0)
         {
+            string prefix = ShipPrefix[kind];
+            // La raíz se llama siempre HaiFeng77: SectorTheme y los rótulos la buscan por ese nombre.
             var b = new ShipBuild { root = new GameObject("HaiFeng77") };
             b.colliders = new GameObject("Colliders").transform;
             b.colliders.SetParent(b.root.transform, false);
@@ -200,7 +208,7 @@ namespace Kairos.EditorTools
             var hullGo = new GameObject("Hull", typeof(MeshFilter), typeof(MeshRenderer)) { layer = Layers.HullShell };
             hullGo.transform.SetParent(b.root.transform, false);
             var hm = HullMesh();
-            AssetDatabase.CreateAsset(hm, $"{GenDir}/HaiFeng_Hull.asset");
+            AssetDatabase.CreateAsset(hm, $"{GenDir}/{prefix}_Hull.asset");
             hullGo.GetComponent<MeshFilter>().sharedMesh = hm;
             hullGo.GetComponent<MeshRenderer>().sharedMaterials = new[] { rust, paint };
             hullGo.AddComponent<MeshCollider>().sharedMesh = hm;
@@ -208,7 +216,7 @@ namespace Kairos.EditorTools
             var deckGo = new GameObject("Deck", typeof(MeshFilter), typeof(MeshRenderer)) { layer = Layers.ShipSolid };
             deckGo.transform.SetParent(b.root.transform, false);
             var dm = DeckMesh();
-            AssetDatabase.CreateAsset(dm, $"{GenDir}/HaiFeng_Deck.asset");
+            AssetDatabase.CreateAsset(dm, $"{GenDir}/{prefix}_Deck.asset");
             deckGo.GetComponent<MeshFilter>().sharedMesh = dm;
             deckGo.GetComponent<MeshRenderer>().sharedMaterial = deck;
             deckGo.AddComponent<MeshCollider>().sharedMesh = dm;
@@ -357,21 +365,16 @@ namespace Kairos.EditorTools
             b.Box(darkMetal, new Vector3(0, 6.8f, -41), new Vector3(3, 1.6f, 1.6f));
             b.Box(crate, new Vector3(4.8f, 6.5f, -25), new Vector3(2f, 1f, 3f));
 
-            // Proa: tapas de bodega y racks de luces de potero.
+            // Proa: tapas de bodega y cajas (las mismas coberturas en los tres barcos).
             b.Box(rust, new Vector3(-3.6f, 6.45f, 10), new Vector3(3.6f, .9f, 6));
             b.Box(rust, new Vector3(3.6f, 6.45f, 16), new Vector3(3.6f, .9f, 6));
             b.Box(crate, new Vector3(-3.8f, 6.7f, 19), new Vector3(2.2f, 1.4f, 2.4f));
             b.Box(crate, new Vector3(3.8f, 6.7f, 6.5f), new Vector3(2.2f, 1.4f, 2.4f));
             b.Box(crate, new Vector3(3f, 6.6f, 31), new Vector3(2.2f, 1.2f, 2.2f));
             b.Box(crate, new Vector3(-2.5f, 6.6f, 34), new Vector3(2f, 1.2f, 2f));
-            for (float z = -18; z <= 36; z += 9)
-            {
-                if (z < 3) continue;
-                b.Box(darkMetal, new Vector3(0, 8.2f, z), new Vector3(.22f, 4.4f, .22f));
-                b.Box(darkMetal, new Vector3(0, 10.3f, z), new Vector3(Mathf.Min(9, Beam(z) * 1.6f), .14f, .14f), null, false);
-                for (float x = -3.6f; x <= 3.61f; x += 1.2f)
-                    if (Mathf.Abs(x) < Beam(z) * .78f) b.Box(bulb, new Vector3(x, 10.15f, z), new Vector3(.3f, .18f, .3f), null, false);
-            }
+            if (kind == 0) PoteroGear(b);
+            else if (kind == 1) TrawlerGear(b);
+            else LonglinerGear(b);
 
             // Focos de cubierta: zonas de peligro. El color avisa.
             // Usamos Point sin sombras para el relleno + Spot cenital con sombras (1 mapa vs 6 en URP) para evitar downsampling del atlas.
@@ -385,12 +388,68 @@ namespace Kairos.EditorTools
             b.Spot("Foco Mastil", new Vector3(0, 12.5f, -2.5f), new Vector3(72, 0, 0), amber, 40, 70, 12);
 
             ShipDetails(b);
-            Combine(b, "HaiFeng"); // una malla por material, como un único asset cada una
+            Combine(b, prefix); // una malla por material, como un único asset cada una
 
-            var prefabPath = $"{Root}/Prefabs/HaiFeng77.prefab";
+            var prefabPath = $"{Root}/Prefabs/{ShipPrefabName[kind]}.prefab";
             PrefabUtility.SaveAsPrefabAsset(b.root, prefabPath);
             Object.DestroyImmediate(b.root);
             return AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+        }
+
+        /// Potero (Sector 1): racks de luces sobre la proa para atraer al calamar.
+        static void PoteroGear(ShipBuild b)
+        {
+            for (float z = -18; z <= 36; z += 9)
+            {
+                if (z < 3) continue;
+                b.Box(darkMetal, new Vector3(0, 8.2f, z), new Vector3(.22f, 4.4f, .22f));
+                b.Box(darkMetal, new Vector3(0, 10.3f, z), new Vector3(Mathf.Min(9, Beam(z) * 1.6f), .14f, .14f), null, false);
+                for (float x = -3.6f; x <= 3.61f; x += 1.2f)
+                    if (Mathf.Abs(x) < Beam(z) * .78f) b.Box(bulb, new Vector3(x, 10.15f, z), new Vector3(.3f, .18f, .3f), null, false);
+            }
+        }
+
+        /// Arrastrero (Sector 2): pórtico en A a popa con el tambor de red y las puertas de arrastre, cables al agua
+        /// y maquinillas junto a la habilitación. Todo por encima o a los lados: la cubierta se recorre igual que en el Hai Feng.
+        static void TrawlerGear(ShipBuild b)
+        {
+            foreach (var x in new[] { -5.6f, 5.6f })
+            {
+                b.Box(orange, new Vector3(x, 9.8f, -43.2f), new Vector3(.45f, 7.6f, .45f), new Vector3(0, 0, x > 0 ? -6 : 6), false); // patas del pórtico
+                b.Box(rust, new Vector3(x * 1.17f, 8.1f, -43.8f), new Vector3(.25f, 2.4f, 3.4f), new Vector3(0, 0, x > 0 ? 12 : -12), false); // puertas de arrastre
+                b.Pipe(darkMetal, new Vector3(x * .9f, 13.4f, -43.2f), new Vector3(x * .6f, 1f, -50f), .04f, 4); // cables al agua
+            }
+            b.Box(orange, new Vector3(0, 13.6f, -43.2f), new Vector3(11.8f, .55f, .55f), null, false); // travesaño
+            b.Pipe(netMat, new Vector3(-3.4f, 11.6f, -42.4f), new Vector3(3.4f, 11.6f, -42.4f), 1.1f, 14); // tambor con la red
+            b.Pipe(darkMetal, new Vector3(-3.7f, 11.6f, -42.4f), new Vector3(3.7f, 11.6f, -42.4f), .18f, 8);
+            foreach (var x in new[] { -2.3f, 2.3f })
+            {
+                b.Box(darkMetal, new Vector3(x, 6.55f, -22.6f), new Vector3(1.2f, 1.1f, 1.6f)); // maquinillas de arrastre
+                b.Pipe(rope, new Vector3(x, 7.2f, -23.3f), new Vector3(x, 7.2f, -21.9f), .42f, 10);
+            }
+            b.Box(netMat, new Vector3(-5.6f, 6.35f, 14f), new Vector3(1.4f, .7f, 5f), null, false); // red de repuesto junto a la borda
+            b.Box(rust, new Vector3(0, 8.6f, 24f), new Vector3(.22f, 5.2f, .22f), null, false);   // mástil de proa
+        }
+
+        /// Palangrero (Sector 3): halador de línea a estribor, mesas de carnada, cajas de anzuelos y boyas de palangre.
+        static void LonglinerGear(ShipBuild b)
+        {
+            b.Box(darkMetal, new Vector3(6.1f, 6.9f, 9f), new Vector3(.9f, 1.8f, 1f));                       // halador (fuera de las rondas)
+            b.Pipe(steel, new Vector3(6.1f, 7.9f, 8.5f), new Vector3(6.1f, 7.9f, 9.5f), .38f, 12);               // rodillo
+            b.Pipe(rope, new Vector3(6.4f, 7.9f, 9f), new Vector3(7.2f, 5f, 9f), .03f, 4);                // línea al agua
+            foreach (var z in new[] { 22f, 26.5f })
+            {
+                b.Box(steel, new Vector3(-5.1f, 7f, z), new Vector3(1.1f, .08f, 3f), null, false);             // mesa de carnada
+                b.Box(darkMetal, new Vector3(-5.1f, 6.48f, z), new Vector3(.9f, .95f, 2.6f));
+            }
+            for (float z = -12; z <= -2; z += 2.5f)
+                b.Box(yellow, new Vector3(-6.05f, 6.3f, z), new Vector3(.7f, .6f, 1f), null, false);           // cajas de anzuelos
+            for (float z = 8; z <= 30; z += 5.5f)
+            {
+                b.Ellipsoid(orange, new Vector3(5.9f, 7.2f, z), new Vector3(.32f, .32f, .32f));                // boyas de palangre
+                b.Box(darkMetal, new Vector3(5.9f, 8.2f, z), new Vector3(.04f, 1.6f, .04f), null, false);       // banderolas
+            }
+            b.Box(darkMetal, new Vector3(0, 7.4f, -44.2f), new Vector3(.6f, .25f, 2.6f), new Vector3(-28, 0, 0), false); // tolva de calado
         }
     }
 }
