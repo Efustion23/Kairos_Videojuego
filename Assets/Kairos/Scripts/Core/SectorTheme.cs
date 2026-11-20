@@ -29,7 +29,7 @@ namespace Kairos
                 TintMoon(new Color(.82f, .90f, 1f), .85f);
                 TintDeckLights(deckLights, root, new Color(1f, .88f, .68f), 1.08f);
 
-                if (shipRoot != null) SwapSonarShipVisual(shipRoot, "Ships/OceanicCrown9_3D");
+                // El objetivo del Sector 1 es el Hai Feng 77 del generador: su casco coincide con el sonar y con el interior de la Fase 3.
                 SpawnSector1Fleet();
             }
             else if (sector == 1)
@@ -119,6 +119,21 @@ namespace Kairos
             inst.name = prefab.name;
             inst.transform.localPosition = Vector3.zero;
             inst.transform.localRotation = Quaternion.identity;
+
+            // Manga real del barco nuevo (su pieza de mayor planta) frente a los 14 m del Hai Feng:
+            // el casco que lee el sonar y el choque de la lancha la siguen.
+            float beam = 14f, best = 0f;
+            foreach (var r in inst.GetComponentsInChildren<Renderer>())
+            {
+                var size = shipRoot.InverseTransformVector(r.bounds.size);
+                float area = Mathf.Abs(size.x * size.z);
+                if (area > best) { best = area; beam = Mathf.Abs(size.x); }
+            }
+            float beamScale = Mathf.Clamp(beam / 14f, .7f, 2f);
+            var hull = shipRoot.Find("Hull");
+            if (hull != null) hull.localScale = Vector3.Scale(hull.localScale, new Vector3(beamScale, 1f, 1f));
+            var sonar = Object.FindFirstObjectByType<SonarController>();
+            if (sonar != null) sonar.beamScale = beamScale;
         }
 
         static void HideLegacyFleet()
@@ -131,6 +146,7 @@ namespace Kairos
         {
             var prefab = Resources.Load<GameObject>(resourcePath);
             if (prefab == null) return;
+            pos *= 3f; // a 270-500 m del objetivo: flota en el horizonte que no se cruza con la lancha ni tapa al blanco
             var v = Object.Instantiate(prefab, pos, Quaternion.Euler(0f, yaw, 0f), parent);
             v.name = name;
             foreach (var c in v.GetComponentsInChildren<Collider>(true)) Object.Destroy(c);
@@ -146,6 +162,7 @@ namespace Kairos
             l.shadows = LightShadows.None;
         }
 
+        // Flotas solo con los modelos livianos (Kestrel, carguero, frigorífico): Rita y el carguero pesquero pasan del millón de triángulos.
         static void SpawnSector1Fleet()
         {
             if (GameObject.Find("FlotaSector") != null) return;
@@ -153,10 +170,10 @@ namespace Kairos
             var root = new GameObject("FlotaSector").transform;
             var gold = new Color(1f, .78f, .32f);
             SpawnVessel(root, "PoteroMilla201_01", "Ships/KestrelExplorer_3D", new Vector3(95f, 0f, 55f), -35f, gold, 65f, 15f);
-            SpawnVessel(root, "PoteroMilla201_02", "Ships/FishingBoatRita_3D", new Vector3(-105f, 0f, 65f), 42f, gold, 55f, 12f);
-            SpawnVessel(root, "TransbordoMilla201_03", "Ships/HaiFeng77_3D", new Vector3(135f, 0f, -85f), -125f, gold, 65f, 14f);
+            SpawnVessel(root, "PoteroMilla201_02", "Ships/KestrelExplorer_3D", new Vector3(-105f, 0f, 65f), 42f, gold, 55f, 12f);
+            SpawnVessel(root, "TransbordoMilla201_03", "Ships/CargoShip_3D", new Vector3(135f, 0f, -85f), -125f, gold, 65f, 14f);
             SpawnVessel(root, "ReeferMilla201_04", "Ships/ReeferShip_3D", new Vector3(-125f, 0f, -105f), 110f, gold, 70f, 18f);
-            SpawnVessel(root, "PoteroMilla201_05", "Ships/FishingBoatRita_3D", new Vector3(30f, 0f, 145f), 82f, gold, 55f, 12f);
+            SpawnVessel(root, "PoteroMilla201_05", "Ships/KestrelExplorer_3D", new Vector3(30f, 0f, 145f), 82f, gold, 55f, 12f);
         }
 
         static void SpawnSector2Fleet()
@@ -167,8 +184,8 @@ namespace Kairos
             var amber = new Color(1f, .58f, .20f);
             // Nodriza Atlantic Reef muy visible haciendo transbordo cercano + pesqueros costeros
             SpawnVessel(root, "BuqueHorizonte_AtlanticReef", "Ships/CargoShip_3D", new Vector3(88f, 0f, 22f), -18f, amber, 80f, 20f);
-            SpawnVessel(root, "PesqueroGuinea_Rita", "Ships/FishingBoatRita_3D", new Vector3(-82f, 0f, 48f), 32f, amber, 55f, 12f);
-            SpawnVessel(root, "TransbordoGuinea_02", "Ships/HaiFeng77_3D", new Vector3(-115f, 0f, -72f), 125f, amber, 60f, 14f);
+            SpawnVessel(root, "PesqueroGuinea_Rita", "Ships/KestrelExplorer_3D", new Vector3(-82f, 0f, 48f), 32f, amber, 55f, 12f);
+            SpawnVessel(root, "TransbordoGuinea_02", "Ships/ReeferShip_3D", new Vector3(-115f, 0f, -72f), 125f, amber, 60f, 14f);
         }
 
         static void SpawnSector3Fleet()
@@ -179,7 +196,6 @@ namespace Kairos
             var cyan = new Color(.55f, .90f, 1f);
             // Nodriza Mombasa Reefer + escoltas en tormenta monzónica
             SpawnVessel(root, "BuqueHorizonte_MombasaReefer", "Ships/ReeferShip_3D", new Vector3(-95f, 0f, 38f), 26f, cyan, 80f, 18f);
-            SpawnVessel(root, "EscoltaIndico_01", "Ships/OceanicCrown9_3D", new Vector3(110f, 0f, -45f), -140f, cyan, 65f, 15f);
             SpawnVessel(root, "EscoltaIndico_02", "Ships/KestrelExplorer_3D", new Vector3(55f, 0f, 125f), -65f, cyan, 65f, 15f);
         }
 

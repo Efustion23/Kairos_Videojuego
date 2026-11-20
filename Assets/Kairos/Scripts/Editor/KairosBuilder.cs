@@ -158,6 +158,7 @@ namespace Kairos.EditorTools
             EnsureLayers();
             foreach (var dir in new[] { Root + "/Generated", Root + "/Prefabs", Root + "/Scenes", Root + "/Resources" })
                 if (!AssetDatabase.IsValidFolder(dir)) AssetDatabase.CreateFolder(Root, System.IO.Path.GetFileName(dir));
+            BakeShipVisuals();
 
             BuildMaterials();
             BuildProfile();

@@ -40,6 +40,12 @@ OBJETOS 3D (Assets/Kairos/Models/Props), CC0, Poly Haven: https://polyhaven.com/
 - clipboard (manifiesto, planilla de turnos y facturas): ProgrammerOnCoffee
 - office_notepads (contratos falsos): Ulan Cabanilla
 
+BARCOS 3D (Assets/Kairos/Models/Vehicles), CC BY 4.0, Sketchfab
+- motorboat (lancha de la Fase 2): Remi Remix https://sketchfab.com/3d-models/motorboat-e534f2b396a847289a0afeb8744fba88
+- jensen-class_stern_trawler_boat__62_m (Kestrel Explorer y flota): floor2727 https://sketchfab.com/3d-models/jensen-class-stern-trawler-boat-62-m-f5bcbc03dfa0453189403951112422ad
+- oceania_passenger_ship (frigoríficos Atlantic Reef y Mombasa Reefer): martyn169 https://sketchfab.com/3d-models/oceania-passenger-ship-1a861f33b3924d4b86dcbe7c7d1c0884
+- cargo_ship (Oceanic Crown 9 y flota): hungry_drifter (Sketchfab, CC BY 4.0)
+
 PERSONAJES 3D Y ANIMACIONES (Assets/Kairos/Models)
 - Modelos 3D humanoid (Inspectora KAIROS, Rodel Santos, Ari Wibowo, Moussa Diallo, Thant Zin, Guardias y Capitán): generados por el equipo con Tripo AI (https://www.tripo3d.ai); su uso sigue los términos del plan de la cuenta con la que se generaron.
 - Esqueleto Humanoid y clips de animación (Assets/Kairos/Models/Protagonista/Clips): Adobe Mixamo, uso libre permitido en producciones interactivas empaquetadas según sus términos de servicio.

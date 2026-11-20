@@ -317,6 +317,9 @@ namespace Kairos
             cam.transform.SetPositionAndRotation(targetPos, rot);
         }
 
+        /// Manga del barco del sector respecto a los 14 m del Hai Feng: la fija SectorTheme al cambiar el modelo.
+        [HideInInspector] public float beamScale = 1f;
+
         /// Evita que la lancha atraviese el casco del Hai Feng 77 (90 m de eslora, 14 m de manga).
         void KeepBoatOutsideShipHull()
         {
@@ -325,7 +328,7 @@ namespace Kairos
             const float halfLen = 47.5f;
             if (Mathf.Abs(local.z) >= halfLen) return;
             float zClamped = Mathf.Clamp(local.z, -45f, 45f);
-            float beam = zClamped < 15f ? 7f : 7f * Mathf.Sqrt(Mathf.Max(0f, 1f - Mathf.Pow((zClamped - 15f) / 30f, 2f)));
+            float beam = (zClamped < 15f ? 7f : 7f * Mathf.Sqrt(Mathf.Max(0f, 1f - Mathf.Pow((zClamped - 15f) / 30f, 2f)))) * beamScale;
             float halfW = beam + 2.5f;
             if (Mathf.Abs(local.x) >= halfW) return;
 

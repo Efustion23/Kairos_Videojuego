@@ -38,7 +38,10 @@ namespace Kairos
                 "Mateusz Sadek: Vintage Radio Transceiver",
                 "Arrangemonk: Classic Laptop",
                 "ProgrammerOnCoffee: Clipboard",
-                "Ultra Magnus: Motorboat (CC Attribution, vía Sketchfab)",
+                "Remi Remix: Motorboat (CC BY 4.0, vía Sketchfab)",
+                "floor2727: Jensen-class Stern Trawler, 62 m (CC BY 4.0, vía Sketchfab)",
+                "martyn169: Oceania Passenger Ship (CC BY 4.0, vía Sketchfab)",
+                "hungry_drifter: Cargo Ship (CC BY 4.0, vía Sketchfab)",
             }),
             ("Personajes y Animación", "Modelos 3D propios / Tripo AI · Rigging y clips de Adobe Mixamo", new[]
             {
