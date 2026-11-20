@@ -16,7 +16,8 @@ namespace Kairos
         float yaw, pitch = 8f, velY, slipT, stumble, breathT, focus, roll, camVelY;
         int lastStep;
         Vector3 moveVel, camAnchor, camVelXZ;
-        bool camReady;
+        bool camReady, bodyHidden;
+        Renderer[] bodyRenderers;
         public bool Aiming { get; private set; }
         public bool Running { get; private set; }
         public bool Crouching { get; private set; }
@@ -50,12 +51,13 @@ namespace Kairos
         }
 
         /// Mira a un punto, con la cámara detrás: en una conversación se ve a las dos personas.
-        public void FaceTo(Vector3 point)
+        /// camYaw gira solo la cámara: en un diálogo deja a la persona en la mitad libre de la pantalla.
+        public void FaceTo(Vector3 point, float camYaw = 0)
         {
             var dir = point - transform.position; dir.y = 0;
             if (dir.sqrMagnitude < .01f) return;
             transform.rotation = Quaternion.LookRotation(dir);
-            yaw = transform.eulerAngles.y;
+            yaw = transform.eulerAngles.y + camYaw;
             pitch = 8f;
             moveVel = Vector3.zero;
         }
@@ -272,6 +274,15 @@ namespace Kairos
             if (Physics.SphereCast(head, .18f, to.normalized, out var hit, to.magnitude, Layers.SolidMask))
                 desired = head + to.normalized * Mathf.Max(hit.distance - .05f, .25f);
             cam.transform.SetPositionAndRotation(desired, rot);
+
+            // En pasillos estrechos la cámara queda pegada a la cabeza: se oculta el cuerpo para ver lo que hay delante.
+            bool hide = !Aiming && (desired - head).sqrMagnitude < 1f;
+            if (hide != bodyHidden)
+            {
+                bodyHidden = hide;
+                bodyRenderers ??= GetComponentsInChildren<Renderer>();
+                foreach (var r in bodyRenderers) r.forceRenderingOff = hide;
+            }
         }
     }
 }

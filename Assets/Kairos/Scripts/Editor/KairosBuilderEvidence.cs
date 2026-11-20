@@ -32,8 +32,26 @@ namespace Kairos.EditorTools
             void HideBox() => e.GetComponent<MeshRenderer>().enabled = false;
             Color cyanGlowCol = new Color(0.18f, 0.96f, 1.0f, 1.0f);
 
+            // Modelo CC0 escalado para que su lado mayor mida 'size' metros; 'wall' lo pone de pie mirando al centro del barco.
+            void Model(string id, float size, float yaw = 0, bool wall = false)
+            {
+                HideBox();
+                var go = (GameObject)PrefabUtility.InstantiatePrefab(PropPrefab(id), holder);
+                var b = new Bounds(); bool first = true;
+                foreach (var r in go.GetComponentsInChildren<Renderer>()) { if (first) { b = r.bounds; first = false; } else b.Encapsulate(r.bounds); }
+                go.transform.localScale = Vector3.one * (size / Mathf.Max(b.size.x, b.size.z, .001f));
+                go.transform.localRotation = wall ? Quaternion.Euler(0, 0, Mathf.Sign(e.transform.position.x) * 90) * Quaternion.Euler(0, yaw, 0) : Quaternion.Euler(0, yaw, 0);
+                go.transform.localPosition = wall ? Vector3.zero : Vector3.down * scale.y * .5f; // apoyado en la mesa
+            }
+
             switch (e.evidenceId)
             {
+                case "e_radio": Model("vintage_radio_transceiver", .5f, 180); break;
+                case "e_plotter": Model("classic_laptop", .36f, 180); break;
+                case "e_manifiesto": Model("clipboard", .4f, 15); break;
+                case "e_contratos": Model("office_notepads", .45f, -20); break;
+                case "e_turnos":
+                case "e_facturas": Model("clipboard", .42f, 90, true); break;
                 case "e_deudas":
                 case "e_registro":
                     HideBox();
@@ -53,27 +71,6 @@ namespace Kairos.EditorTools
                     Part(holder, PrimitiveType.Cylinder, darkMetal, new Vector3(0, .1f, -.04f), new Vector3(.018f, .05f, .018f));
                     Part(holder, PrimitiveType.Cylinder, darkMetal, new Vector3(0, .1f, .04f), new Vector3(.018f, .05f, .018f));
                     Part(holder, PrimitiveType.Cube, darkMetal, new Vector3(0, .15f, 0), new Vector3(.018f, .02f, .1f));
-                    break;
-                case "e_radio":
-                    HideBox();
-                    var radioChassis = EvidenceGlowMat("radio_chassis", new Color(.14f, .15f, .16f), new Color(1f, .55f, .12f, 1f));
-                    var radioDial = EvidenceGlowMat("radio_dial", new Color(.35f, .38f, .40f), cyanGlowCol);
-                    Part(holder, PrimitiveType.Cube, radioChassis, Vector3.zero, new Vector3(.28f, .14f, .22f));
-                    Part(holder, PrimitiveType.Cube, screenMat, new Vector3(-.05f, .02f, .112f), new Vector3(.12f, .05f, .01f));
-                    var dial = Part(holder, PrimitiveType.Cylinder, radioDial, new Vector3(.08f, .01f, .115f), new Vector3(.045f, .015f, .045f));
-                    dial.localRotation = Quaternion.Euler(90, 0, 0);
-                    Part(holder, PrimitiveType.Cylinder, radioDial, new Vector3(-.10f, .18f, -.07f), new Vector3(.015f, .16f, .015f));
-                    Part(holder, PrimitiveType.Cube, rubber, new Vector3(.16f, 0f, .02f), new Vector3(.04f, .05f, .13f));
-                    break;
-                case "e_plotter":
-                    HideBox();
-                    var plotterBody = EvidenceGlowMat("plotter_body", new Color(.18f, .20f, .22f), cyanGlowCol);
-                    var plotterScreen = EvidenceGlowMat("plotter_screen", new Color(.05f, .38f, .34f), new Color(.2f, .98f, .8f, 1f));
-                    var housing = Part(holder, PrimitiveType.Cube, plotterBody, new Vector3(0, .04f, 0), new Vector3(.32f, .22f, .08f));
-                    housing.localRotation = Quaternion.Euler(-15f, 0, 0);
-                    var lcd = Part(holder, PrimitiveType.Cube, plotterScreen, new Vector3(-.02f, .045f, .044f), new Vector3(.23f, .16f, .01f));
-                    lcd.localRotation = Quaternion.Euler(-15f, 0, 0);
-                    Part(holder, PrimitiveType.Cube, darkMetal, new Vector3(0, -.08f, -.02f), new Vector3(.22f, .04f, .14f));
                     break;
                 default:
                     var mr = e.GetComponent<MeshRenderer>();

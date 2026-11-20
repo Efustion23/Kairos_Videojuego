@@ -138,6 +138,7 @@ namespace Kairos.Pruebas
             }
 
             var clip = AudioClip.Create(name, totalSamples, 1, sampleRate, false);
+            clip.hideFlags = HideFlags.DontSave; // procedural: ni se guarda en la escena ni la destruye el cambio de escena
             clip.SetData(data, 0);
             return clip;
         }

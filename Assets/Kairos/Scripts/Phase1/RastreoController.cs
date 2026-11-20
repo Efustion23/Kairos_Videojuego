@@ -462,7 +462,7 @@ namespace Kairos
                 m.go.transform.rotation = cam.transform.rotation;
                 m.halo.transform.rotation = cam.transform.rotation;
                 m.ring.transform.rotation = cam.transform.rotation * Quaternion.Euler(0, 0, 45);
-                m.label.rectTransform.anchoredPosition = (Vector2)cam.WorldToScreenPoint(m.go.transform.position) / scale + new Vector2(26, 0);
+                m.label.rectTransform.anchoredPosition = (Vector2)cam.WorldToScreenPoint(m.go.transform.position) / scale + new Vector2(40, 0);
             }
         }
     }

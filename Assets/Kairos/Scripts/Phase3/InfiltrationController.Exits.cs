@@ -7,6 +7,7 @@ namespace Kairos
         void SetOverlay(Mode m)
         {
             mode = m;
+            PlaceToast(m == Mode.Dialog);
             UI.Clear(overlay);
             overlay.gameObject.SetActive(true);
             Time.timeScale = 0;
@@ -15,8 +16,17 @@ namespace Kairos
 
         void CloseOverlayKeep() { UI.Clear(overlay); }
 
+        /// En un diálogo el panel ocupa la derecha: los avisos van a la mitad libre.
+        void PlaceToast(bool aside)
+        {
+            var r = (RectTransform)toast.transform;
+            r.anchorMin = new Vector2(aside ? .02f : .2f, .68f);
+            r.anchorMax = new Vector2(aside ? .5f : .8f, .84f);
+        }
+
         public void CloseOverlay()
         {
+            PlaceToast(false);
             UI.Clear(overlay);
             overlay.gameObject.SetActive(false);
             Time.timeScale = 1;

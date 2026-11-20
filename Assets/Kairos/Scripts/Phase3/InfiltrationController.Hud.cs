@@ -66,12 +66,13 @@ namespace Kairos
             boardingText = UI.Line(bs, "", 23);
             boardBar = UI.NewBar(bs, Pal.DeckLight, 22);
 
-            toast = UI.Toasts.Create(canvas.transform, new Vector2(.2f, .68f), new Vector2(.8f, .84f));
-            saveToast = UI.Toasts.Create(canvas.transform, new Vector2(.72f, .78f), new Vector2(1, .84f));
             fade = UI.Fullscreen(canvas.transform, new Color(0, 0, 0, 0));
             fade.raycastTarget = false;
             overlay = UI.Rect(canvas.transform, "Overlay", Vector2.zero, Vector2.one);
             overlay.gameObject.SetActive(false);
+            // Encima del overlay: en un diálogo, la clave o el botiquín se leen enteros.
+            toast = UI.Toasts.Create(canvas.transform, new Vector2(.2f, .68f), new Vector2(.8f, .84f));
+            saveToast = UI.Toasts.Create(canvas.transform, new Vector2(.72f, .78f), new Vector2(1, .84f));
 
             hudPanels = new[] { tl.gameObject, tr.gameObject, bl.gameObject };
             reticle.SetActive(false); holdRoot.SetActive(false); hintRoot.SetActive(false); objMarker.gameObject.SetActive(false);

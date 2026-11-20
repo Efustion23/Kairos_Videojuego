@@ -15,7 +15,7 @@ namespace Kairos
         {
             DialogWith = npc;
             SetOverlay(Mode.Dialog);
-            player.FaceTo(npc.transform.position);
+            player.FaceTo(npc.transform.position, 20f); // el panel tapa la derecha
             var toPlayer = player.transform.position - npc.transform.position; toPlayer.y = 0;
             if (toPlayer.sqrMagnitude > .01f) npc.transform.rotation = Quaternion.LookRotation(toPlayer);
             var p = UI.Panel(overlay, new Vector2(.52f, .08f), new Vector2(.98f, .92f)); // a un lado: los personajes siguen a la vista

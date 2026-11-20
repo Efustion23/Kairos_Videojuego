@@ -17,11 +17,17 @@ namespace Kairos
                 "congusbongus: Abandoned passages",
                 "Graciano Choc (Bz.gamedev): GameOver or Underwater",
             }),
+            ("Efectos de sonido", "CC0, vía Kenney y OpenGameArt", new[]
+            {
+                "Kenney: Interface Sounds, Impact Sounds, RPG Audio, Sci-Fi Sounds",
+                "kresiek-the-furry: AMB Rain Loop 1",
+                "sketchman3: wind whoosh loop",
+            }),
             ("Objetos 3D", "CC0, vía Poly Haven", new[]
             {
                 "Serhii Khromov: Barrel 03",
                 "Fabi_G: Plastic Crate 02",
-                "Ulan Cabanilla: Medical Box, Metal Stool 02, Metal Office Desk, Plastic Jerrycan, Metal Jerrycan Green",
+                "Ulan Cabanilla: Medical Box, Metal Stool 02, Metal Office Desk, Plastic Jerrycan, Metal Jerrycan Green, Office Notepads",
                 "Aron Łyczek: Dining Table",
                 "James Ray Cock: Utility Box 01",
                 "Kuutti Siitonen: Industrial Wall Lamp",
@@ -29,6 +35,9 @@ namespace Kairos
                 "Slinc: Propane Tank",
                 "DaDrood: Binder Notebook",
                 "Poly Haven PBR Props: Ocean Buoy, Metal Toolbox, Old Military Crate",
+                "Mateusz Sadek: Vintage Radio Transceiver",
+                "Arrangemonk: Classic Laptop",
+                "ProgrammerOnCoffee: Clipboard",
             }),
             ("Personajes y Animación", "Modelos 3D propios / Tripo AI · Rigging y clips de Adobe Mixamo", new[]
             {
@@ -37,7 +46,7 @@ namespace Kairos
             }),
             ("Audio Procedural y Shaders", "Autoría propia del equipo KAIROS (C# DSP y HLSL URP)", new[]
             {
-                "Síntesis acústica de sonar, eco metálico, radio VHF/UHF, lluvia marina y música adaptativa",
+                "Síntesis acústica de sonar, eco metálico, radio VHF/UHF, alarma y ambientes del barco",
                 "Shaders URP: Océano nocturno, estela de lancha, barrido radial de sonar y resaltado forense",
             }),
             ("Tipografía", "SIL Open Font License", new[] { "Liberation Sans" }),

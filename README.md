@@ -80,9 +80,9 @@ Kairos_Videojuego/
 ├── Assets/
 │   ├── Kairos/
 │   │   ├── Generated/        # Mallas y assets procedurales
-│   │   ├── Models/           # Modelos 3D (Props CC0 Poly Haven, barcos, protagonista)
+│   │   ├── Models/           # Modelos 3D (props CC0 de Poly Haven y personajes)
 │   │   ├── Prefabs/          # Prefabs modulares de salas, props y actores
-│   │   ├── Resources/        # Audio CC0, datos y fuentes tipográficas
+│   │   ├── Resources/        # Música y efectos CC0 (Sfx/), materiales y datos
 │   │   ├── Scenes/           # Escenas de Unity (Fases y sandboxes individuales)
 │   │   ├── Scripts/          # Código fuente en C# dividido por fases
 │   │   │   ├── Common/       # Singletons, utilidades e interfaces
@@ -103,6 +103,12 @@ Kairos_Videojuego/
 ├── .gitignore                # Ignorado inteligente de Library, Temp e IDEs
 └── README.md
 ```
+
+---
+
+## 🎮 Descargar y jugar
+
+La versión para Windows está en [Releases](https://github.com/Efustion23/Kairos_Videojuego/releases/latest): descarga el `.zip`, descomprímelo y abre `KAIROS.exe`. No necesita instalación. Pulsa **F3** en cualquier momento para ver los FPS.
 
 ---
 
