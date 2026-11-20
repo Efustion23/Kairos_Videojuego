@@ -155,8 +155,8 @@
 * **Commit:** `feat(ai): implementar patrullaje de guardias y detección por ruido`
 * **Checklist (Subtareas):**
   - [x] Configurar NavMeshAgent y máquina de estados (Patrulla, Sospecha, Alerta) *(Completado por Diego Tornero)*
-  - [ ] Programar cono de visión dinámico afectado por lluvia y postura
-  - [ ] Añadir reacción de guardias ante escora del barco (>15°) y ruido
+  - [x] Programar cono de visión dinámico afectado por lluvia y postura *(Completado)*
+  - [x] Añadir reacción de guardias ante escora del barco (>15°) y ruido *(Completado)*
 
 ### 12. `[S13-3]` Modelado de camarotes internos, personajes y pasos sobre metal
 * **Miembro:** Christopher Veliz (CV)
@@ -213,9 +213,9 @@
 * **Rama:** `feature/alexander-ui-narrativa`
 * **Commit:** `ui(polish): pulir menú de inicio, créditos del equipo y textos guía`
 * **Checklist (Subtareas):**
-  - [ ] Pulir pantalla de título, selector de casos y créditos del equipo
-  - [ ] Realizar sesión de playtesting de claridad de objetivos y HUD
-  - [ ] Verificar coherencia final del GDD web y material de exposición
+  - [x] Pulir pantalla de título, selector de casos y créditos del equipo *(Completado por Alexander Benites)*
+  - [x] Realizar sesión de playtesting de claridad de objetivos y HUD *(Completado por Alexander Benites)*
+  - [x] Verificar coherencia final del GDD web y material de exposición *(Completado por Alexander Benites)*
 
 ### 17. `[S15-2]` Corrección de bugs, optimización de rendimiento y Build Final
 * **Miembro:** Diego Tornero (DT)

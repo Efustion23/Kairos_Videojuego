@@ -387,6 +387,7 @@ namespace Kairos
             MarkHint("photo");
             Sfx.Play(Sfx.Shutter, .9f);
             Sfx.Play(Sfx.Seal, .9f);
+            if (fade != null) fade.color = new Color(.78f, .96f, 1f, .42f);
             var seal = C.evidence.Find(x => x.id == e.evidenceId);
             Toast($"<color=#6CFF8A>PRUEBA SELLADA ({e.Def.cat})</color>  {e.Def.title}\nSHA-256 {seal.sha.Substring(0, 16)}…", Pal.Text, 4.5f);
             e.gameObject.SetActive(false);

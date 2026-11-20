@@ -41,8 +41,8 @@ namespace Kairos
         {
             var c = accent ?? Pal.Sonar;
             var p = UI.Panel(parent, Vector2.zero, Vector2.one, default, default, bg ?? new Color(.035f, .095f, .135f, .92f));
-            var o = p.GetComponent<Outline>();
-            if (o != null) o.effectColor = new Color(c.r, c.g, c.b, .40f);
+            var fb = p.transform.Find("FrameBorder")?.GetComponent<Image>();
+            if (fb != null) fb.color = new Color(c.r, c.g, c.b, .48f);
             var filo = p.transform.Find("Filo")?.GetComponent<Image>();
             if (filo != null) filo.color = new Color(c.r, c.g, c.b, .85f);
             var v = p.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -57,18 +57,23 @@ namespace Kairos
         void ShowTitle()
         {
             Screen();
-            UI.SideShade(root, .62f);
-            var col = UI.VStack(root, 64, 12, new Vector2(0, 0), new Vector2(.40f, 1));
+            UI.SideShade(root, .64f);
+            var col = UI.VStack(root, 64, 12, new Vector2(0, 0), new Vector2(.42f, 1));
             col.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleLeft;
+            UI.Line(col, "UNIDAD INTERNACIONAL DE INSPECCION MARITIMA  ·  v1.0", 14, Pal.Sonar, true);
             UI.Line(col, "KAIROS", 104, Pal.Sonar, true).characterSpacing = 20;
             UI.Line(col, "SOMBRAS EN ALTAMAR", 28, Pal.Text).characterSpacing = 5;
+            var div = UI.Rect(col, "Div", Vector2.zero, Vector2.one);
+            var divImg = div.gameObject.AddComponent<Image>(); divImg.color = new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, .55f); divImg.raycastTarget = false;
+            var divLe = div.gameObject.AddComponent<LayoutElement>(); divLe.minHeight = 2; divLe.preferredHeight = 2;
             UI.Line(col, "Investigación marítima, sigilo sin armas y justicia documental.", 19, Pal.Dim);
-            UI.Line(col, " ", 18);
+            UI.Line(col, " ", 14);
             if (Game.HasSave) UI.Btn(col, "Continuar partida", () => ShowBase(), Pal.Sealed, 24, 56);
             UI.Btn(col, "Nueva partida", () => { Game.NewGame(); ShowWarning(); }, Pal.Sonar, 24, 56);
             UI.Btn(col, "Cómo jugar", ShowTitleGuide, Pal.DeckLight, 22, 50);
+            UI.Btn(col, "Créditos del equipo", () => { ShowBase(3); TabOptions(2); }, Pal.Sonar, 20, 48);
             UI.Btn(col, "Salir", Application.Quit, Pal.Dim, 20, 46);
-            UI.Line(col, " ", 12);
+            UI.Line(col, " ", 10);
             UI.Line(col, "Alexander Benites · Diego Tornero · Christopher Veliz", 14, Pal.Dim);
         }
 
@@ -98,7 +103,7 @@ namespace Kairos
             var s = UI.VStack(p.transform, 34, 14);
             s.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
             UI.Line(s, "Aviso de contenido", 34, Pal.DeckLight, true);
-            UI.Line(s, "• Trata sobre pesca ilegal y trabajo forzado en altamar.\n• Sin violencia gráfica: todo se investiga con pruebas y testimonios.\n• Buques, empresas y personajes son ficticios.", 21);
+            UI.Line(s, "- Trata sobre pesca ilegal y trabajo forzado en altamar.\n- Sin violencia gráfica: todo se investiga con pruebas y testimonios.\n- Buques, empresas y personajes son ficticios.", 21);
             var toggle = UI.Btn(s, "", null, Pal.Sonar, 21, 50);
             void Label() => UI.SetLabel(toggle, "Omitir descripciones sensibles: " + (Game.S.omitSensitive ? "SÍ" : "NO"));
             toggle.onClick.AddListener(() => { Game.S.omitSensitive = !Game.S.omitSensitive; Label(); });
@@ -202,8 +207,8 @@ namespace Kairos
         static readonly string[] PhaseTips =
         {
             "",
-            "Objetivo ahora: abre el Sector 1 en el globo, analiza capas satelitales y alcanza IR ≥ 60.",
-            "Objetivo ahora: acércate en lancha, lanza pulsos en la barra verde y marca dónde hay personas (≥ 70 %).",
+            "Objetivo ahora: abre el sector elegido en el globo, analiza capas satelitales y alcanza IR >= 60.",
+            "Objetivo ahora: acércate en lancha, lanza pulsos en la barra verde y marca dónde hay personas (>= 70 %).",
             "Objetivo ahora: aborda en el valle verde, recoge al menos 1 prueba A y rescata a la tripulación.",
             "Objetivo ahora: conecta las pruebas en el grafo hasta Tidewater Austral y ejecuta la sentencia.",
             "Objetivo ahora: asigna recursos de repatriación digna para cerrar el caso.",
@@ -366,8 +371,8 @@ namespace Kairos
                 void One(string num, string title, string goal, string body, Color col)
                 {
                     var p = UI.Panel(row, Vector2.zero, Vector2.one, default, default, new Color(.035f, .095f, .135f, .92f));
-                    var o = p.GetComponent<Outline>();
-                    if (o != null) o.effectColor = new Color(col.r, col.g, col.b, .5f);
+                    var fb = p.transform.Find("FrameBorder")?.GetComponent<Image>();
+                    if (fb != null) fb.color = new Color(col.r, col.g, col.b, .48f);
                     var filo = p.transform.Find("Filo")?.GetComponent<Image>();
                     if (filo != null) filo.color = new Color(col.r, col.g, col.b, .9f);
                     var v = UI.VStack(p.transform, 16, 6);
@@ -380,26 +385,26 @@ namespace Kairos
             }
 
             PairRow(
-                "01", "Rastreo Satelital", "Meta: IR ≥ 60",
-                "• Clic en Sector 1 y luego en Hai Feng 77.\n• Compra capas (VMS, VIIRS, SAR, Óptica) con tus 60 AB/día.\n• Al llegar a 60 de IR, despliega la lancha.",
+                "01", "Rastreo Satelital", "Meta: IR >= 60",
+                "- Selecciona cualquiera de los 3 sectores oceánicos y su buque objetivo.\n- Activa capas (AIS, VMS, VIIRS, SAR, Óptica) con tu ancho de banda.\n- Al llegar a 60 de IR, despliega la lancha hacia el sector.",
                 Pal.Sonar,
-                "02", "Escaneo con Sonar", "Meta: Confianza ≥ 70 %",
-                "• Acércate a <350 m y pulsa Espacio en la barra verde.\n• Usa H (hidrófono) y T (dron térmico).\n• Marca «Aquí hay personas» en el compartimento hueco.",
+                "02", "Escaneo con Sonar", "Meta: Confianza >= 70 %",
+                "- Acércate a <350 m y pulsa Espacio en la barra verde.\n- Usa H (hidrófono) y T (dron térmico).\n- Marca «Aquí hay personas» en el compartimento hueco.",
                 Pal.Sonar);
 
             PairRow(
-                "03", "Infiltración Sigilosa", "Meta: ≥ 1 prueba A y rescate",
-                "• Aborda con E cuando la barra esté en verde.\n• Evita focos ámbar y conos de guardias; usa F (visor).\n• Mantén E para cortar/fotografiar y habla con respeto.",
+                "03", "Infiltración Sigilosa", "Meta: >= 1 prueba A y rescate",
+                "- Aborda con E cuando la barra esté en verde.\n- Pulsa C / Ctrl para agacharte y evitar focos ámbar y conos; usa F (visor).\n- Mantén E para cortar/fotografiar y habla con respeto.",
                 Pal.Sealed,
                 "04", "Juicio y Rescate", "Meta: Sentencia",
-                "• Conecta pruebas en el grafo hasta Tidewater Austral.\n• Indicadores OIT: 4+ Retención · 7+ Congelación · 11 Condena.\n• Usa el 15 % del embargo para repatriar a la tripulación.",
+                "- Conecta pruebas en el grafo hasta el beneficiario final.\n- Indicadores OIT: 4+ Retención · 7+ Congelación · 11 Condena.\n- Usa el 15 % del embargo para repatriar a la tripulación.",
                 Pal.DeckLight);
 
             var ctrl = Card(s, Pal.DeckLight, 16, 6);
             UI.Line(ctrl, "CONTROLES RÁPIDOS", 21, Pal.DeckLight, true);
             UI.Line(ctrl,
                 "<b>Fase 2 (Lancha):</b>  W/S avanzar  ·  A/D girar  ·  Espacio pulso sonar  ·  H hidrófono  ·  T dron  ·  Clic der. cámara\n" +
-                "<b>Fase 3 (A bordo):</b>  WASD mover  ·  Shift correr  ·  E usar/cortar/hablar  ·  F visor  ·  Q herramienta  ·  Tab maletín  ·  Esc pausa",
+                "<b>Fase 3 (A bordo):</b>  WASD mover  ·  C/Ctrl agacharse (sigilo)  ·  Shift correr  ·  E usar/cortar/hablar  ·  F visor  ·  Q herramienta  ·  Tab maletín  ·  Esc pausa",
                 18, Pal.Text);
         }
 
@@ -429,7 +434,7 @@ namespace Kairos
                 fuel.interactable = Game.S.budget >= 3000;
                 var part = UI.Btn(c, "Comprar repuesto de dron  —  8.000 ¢", () => { Game.AddBudget(-8000); Game.S.droneParts++; Game.Write(); RefreshResources(); TabUpgrades(4); }, Pal.Sonar, 20, 52);
                 part.interactable = Game.S.budget >= 8000;
-                UI.Line(c, "• Sin combustible te remolcan (-24 h y -10.000 ¢). Sin drones, la Fase 2 sigue con sonar e hidrófono.", 19, Pal.Dim);
+                UI.Line(c, "- Sin combustible te remolcan (-24 h y -10.000 ¢). Sin drones, la Fase 2 sigue con sonar e hidrófono.", 19, Pal.Dim);
                 return;
             }
 

@@ -14,20 +14,20 @@ namespace Kairos
             visorTint.raycastTarget = false;
             marksRoot = UI.Rect(canvas.transform, "Marcas", Vector2.zero, Vector2.one);
 
-            var tl = UI.Panel(canvas.transform, new Vector2(0, .85f), new Vector2(.34f, 1));
-            objectives = UI.Text(tl.transform, "", 21);
-            objectives.margin = new Vector4(14, 10, 14, 10);
+            var tl = UI.Panel(canvas.transform, new Vector2(.012f, .845f), new Vector2(.355f, .985f));
+            objectives = UI.Text(tl.transform, "", 20);
+            objectives.margin = new Vector4(16, 12, 16, 10);
 
-            var tr = UI.Panel(canvas.transform, new Vector2(.8f, .85f), new Vector2(1, 1));
+            var tr = UI.Panel(canvas.transform, new Vector2(.79f, .845f), new Vector2(.988f, .985f));
             var trs = UI.VStack(tr.transform, 12, 5);
-            stateText = UI.Line(trs, "", 22, Pal.Sonar, true);
+            stateText = UI.Line(trs, "", 21, Pal.Sonar, true);
             suspBar = UI.NewBar(trs, Pal.DeckLight, 12);
-            envText = UI.Line(trs, "", 17, Pal.Dim);
-            breathText = UI.Line(trs, "Aliento", 17, Pal.Dim);
+            envText = UI.Line(trs, "", 16, Pal.Dim);
+            breathText = UI.Line(trs, "Aliento", 16, Pal.Dim);
             staminaBar = UI.NewBar(trs, Pal.Sonar, 6);
 
-            var bl = UI.Panel(canvas.transform, new Vector2(0, 0), new Vector2(.5f, .06f));
-            tools = UI.Text(bl.transform, "", 18, Pal.Text, TextAlignmentOptions.MidlineLeft);
+            var bl = UI.Panel(canvas.transform, new Vector2(.012f, .015f), new Vector2(.64f, .072f));
+            tools = UI.Text(bl.transform, "", 17, Pal.Text, TextAlignmentOptions.MidlineLeft);
             tools.margin = new Vector4(14, 2, 14, 2);
 
             compass = UI.Text(UI.Rect(canvas.transform, "Brujula", new Vector2(.4f, .95f), new Vector2(.6f, 1)), "", 22, Pal.Sonar, TextAlignmentOptions.Center);
@@ -138,6 +138,7 @@ namespace Kairos
             foreach (var g in guards) nearestGuard = Mathf.Min(nearestGuard, Vector3.Distance(g.transform.position, player.transform.position));
 
             if (player.Moved) MarkHint("move");
+            if (player.Crouching) MarkHint("crouch");
             if (player.Running) MarkHint("run");
             Offer("move", "Muévete con WASD y mira con el ratón. Sigue la línea del suelo.");
             Offer("photo", "Mantén pulsado E sin moverte para fotografiar la prueba. Queda sellada en tu maletín.", near is EvidenceProp);
@@ -145,6 +146,7 @@ namespace Kairos
             Offer("talk", "Pulsa E para hablar. Cada persona decide por sí misma.", near is PersonNpc);
             Offer("tool", "Guardia al alcance: pulsa Q para aturdirlo. Solo una vez, y sin heridas.", nearestGuard < 3f && !C.stunUsed);
             Offer("cone", "Las zonas de color son lo que ve cada guardia. Evítalas: si no te ven, no pasa nada.", nearestGuard < 14f);
+            Offer("crouch", "Pulsa C o Ctrl para agacharte: reduces tu ruido y visibilidad ante los guardias.", nearestGuard < 16f);
             Offer("visor", "Pulsa F: el visor muestra guardias, personas y pruebas a través de las paredes.");
             Offer("run", "Mantén Shift para correr. Es más rápido, pero hace ruido.");
 
@@ -182,7 +184,8 @@ namespace Kairos
             string tool = !C.stunUsed && GuardInReach() != null ? "<color=#3FE0D0>[Q] Aturdir</color>"
                 : JamActive ? $"<color=#3FE0D0>Bloqueador {jamT:0} s</color>" : $"[Q] Bloqueador ({C.jammerCharges})";
             string visorLabel = visorT > 0 ? $"<color=#6CFF8A>Visor {visorT:0} s</color>" : visorCd > 0 ? $"<color=#7F9098>Visor {visorCd:0} s</color>" : "[F] Visor";
-            tools.text = $"[E] Usar    {visorLabel}    {tool}    [Tab] Maletín {C.evidence.Count}/{CaseData.MaxEvidence}";
+            string crouchLabel = player.Crouching ? "<color=#6CFF8A>[C] Agachado</color>" : "[C] Sigilo";
+            tools.text = $"[E] Usar   {crouchLabel}   {visorLabel}   {tool}   [Tab] Maletín {C.evidence.Count}/{CaseData.MaxEvidence}";
 
             compass.text = Where(player.transform.position);
 

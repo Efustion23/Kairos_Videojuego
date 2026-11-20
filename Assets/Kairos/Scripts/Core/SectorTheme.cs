@@ -9,7 +9,11 @@ namespace Kairos
     {
         public static void Apply(int sector, Transform shipRoot = null, Light[] deckLights = null)
         {
-            if (sector <= 0) return;
+            if (sector <= 0)
+            {
+                SpawnSouthAtlanticSquidFleet();
+                return;
+            }
 
             var root = shipRoot != null ? shipRoot : GameObject.Find("HaiFeng77")?.transform;
             var targetName = CaseData.TargetFor(sector).name.ToUpperInvariant();
@@ -145,6 +149,44 @@ namespace Kairos
             Part("PuenteLuz", new Vector3(0, 15.5f, -15f), new Vector3(11f, 1.4f, .5f), lightCol, true);
             for (float z = -10f; z <= 32f; z += 14f)
                 Part("FocoCarga", new Vector3(0, 10.5f, z), new Vector3(12f, .8f, .8f), lightCol, true);
+        }
+
+        /// En Sector 1 (Atlántico Sur — Milla 201) refuerza el horizonte con una flota masiva de poteros iluminados ("ciudad flotante de luces").
+        static void SpawnSouthAtlanticSquidFleet()
+        {
+            if (GameObject.Find("FlotaPoterosMilla201") != null) return;
+            var root = new GameObject("FlotaPoterosMilla201");
+            var hullMat = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(.06f, .08f, .10f) };
+            var glowMat = Mats.Glow(new Color(1f, .76f, .36f), true, true);
+            var rnd = new System.Random(201);
+
+            for (int i = 0; i < 14; i++)
+            {
+                float angle = (i / 14f) * Mathf.PI * 2f + (float)rnd.NextDouble() * .25f;
+                float dist = 300f + (float)rnd.NextDouble() * 340f;
+                var vessel = new GameObject($"PoteroHorizonte_{i + 1:00}");
+                vessel.transform.SetParent(root.transform, false);
+                vessel.transform.position = new Vector3(Mathf.Cos(angle) * dist, 0f, Mathf.Sin(angle) * dist);
+                vessel.transform.rotation = Quaternion.Euler(0f, (float)rnd.NextDouble() * 360f, 0f);
+
+                var hull = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                Object.Destroy(hull.GetComponent<Collider>());
+                hull.transform.SetParent(vessel.transform, false);
+                hull.transform.localPosition = new Vector3(0f, 3.2f, 0f);
+                hull.transform.localScale = new Vector3(11f, 6.5f, 54f);
+                var hmr = hull.GetComponent<MeshRenderer>();
+                hmr.sharedMaterial = hullMat;
+                hmr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+                var lights = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                Object.Destroy(lights.GetComponent<Collider>());
+                lights.transform.SetParent(vessel.transform, false);
+                lights.transform.localPosition = new Vector3(0f, 8.6f, 4f);
+                lights.transform.localScale = new Vector3(12f, 1.1f, 34f);
+                var lmr = lights.GetComponent<MeshRenderer>();
+                lmr.sharedMaterial = glowMat;
+                lmr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
         }
     }
 }

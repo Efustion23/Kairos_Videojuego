@@ -26,7 +26,7 @@ namespace Kairos
 
             // Módulo 03: Indicador de Traductor Neuronal (Alexander - S13-1)
             if (Game.Has(2, 4))
-                UI.Line(s, "🌐 <color=#3FE0D0>TRADUCTOR NEURONAL EN CASCO: ACTIVO</color>", 16, Pal.Sonar, true);
+                UI.Line(s, "<color=#3FE0D0>[TRADUCTOR NEURONAL EN CASCO: ACTIVO]</color>", 16, Pal.Sonar, true);
 
             // Medidor interactivo de confianza y empatía (Alexander - S13-1)
             var trustColor = st.trust >= 60 ? Pal.Sealed : st.trust >= 40 ? Pal.ThermHot : Pal.Danger;
@@ -42,7 +42,7 @@ namespace Kairos
                     ? "Consentimiento: <b>DECLINADO</b> · Decisión del testigo respetada"
                     : st.trust >= 60
                         ? "Consentimiento: <b>LISTO PARA CONSULTAR</b> (opcional, sin presión)"
-                        : $"Consentimiento: Pendiente (requiere confianza ≥ 60%, falta {Mathf.Max(0, 60 - st.trust)}%)";
+                        : $"Consentimiento: Pendiente (requiere confianza >= 60%, falta {Mathf.Max(0, 60 - st.trust)}%)";
             Color consentCol = st.testimony == 1 ? Pal.Sealed : st.testimony == 2 ? Pal.Dim : st.trust >= 60 ? Pal.Sonar : Pal.ThermHot;
             UI.Line(s, consentText, 16, consentCol);
 

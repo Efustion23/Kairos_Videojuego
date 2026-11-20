@@ -89,12 +89,12 @@ namespace Kairos
                     var d = CaseData.Evidence(ev.id);
                     string catTag = d.cat == 'A' ? "CLAVE" : d.cat == 'B' ? "CORROBORACIÓN" : "TESTIMONIO";
                     string shaDisplay = string.IsNullOrEmpty(ev.sha) ? "N/A" : ev.sha.Substring(0, Mathf.Min(20, ev.sha.Length));
-                    UI.Line(s, $"<color=#3FE0D0>◄ {catTag} ►</color> <b>{d.title}</b> — {(Game.S.omitSensitive ? d.descSafe : d.desc)}\n<size=14><color=#6CFF8A>✔ SELLO SHA-256: {shaDisplay}…</color>  ·  <color=#8DA2AB>{ev.stamp}</color></size>", 17);
+                    UI.Line(s, $"<color=#3FE0D0>[{catTag}]</color> <b>{d.title}</b> — {(Game.S.omitSensitive ? d.descSafe : d.desc)}\n<size=14><color=#6CFF8A>[OK] SELLO SHA-256: {shaDisplay}…</color>  ·  <color=#8DA2AB>{ev.stamp}</color></size>", 17);
                 }
             }
 
             UI.Line(s, "\nOpciones de Extracción y Salida", 22, Pal.DeckLight, true);
-            UI.Line(s, "• Vía Popa: Regresar a la lancha semirrígida (sigilo total y cero sospecha).\n• Vía Puente: Neutralizar al capitán y tomar la consola de navegación para incautación completa.\n• Vía Patrullera: Extracción de emergencia en 60 s (alerta al buque).", 17, Pal.Dim);
+            UI.Line(s, "- Vía Popa: Regresar a la lancha semirrígida (sigilo total y cero sospecha).\n- Vía Puente: Neutralizar al capitán y tomar la consola de navegación para incautación completa.\n- Vía Patrullera: Extracción de emergencia en 60 s (alerta al buque).", 17, Pal.Dim);
             if (patrolT < 0)
                 UI.Btn(s, "Llamar a la patrullera aliada de apoyo", () => { CloseOverlay(); CallPatrol(); }, Pal.DeckLight, 20, 44);
             UI.Btn(s, "Cerrar Maletín (Tab o Esc)", CloseOverlay, Pal.Dim, 18, 40);
@@ -115,7 +115,7 @@ namespace Kairos
 
             // Guía de Controles y Usabilidad
             UI.Line(s, "\n<b>Controles de Operación:</b>", 19, Pal.DeckLight);
-            UI.Line(s, "• <color=#3FE0D0>WASD</color>: Desplazamiento táctico  |  <color=#3FE0D0>Shift</color>: Correr (alerta acústica)\n• <color=#3FE0D0>[E]</color>: Interactuar / Fotografiar prueba  |  <color=#3FE0D0>[F]</color>: Visor térmico-acústico\n• <color=#3FE0D0>[Q]</color>: Dispositivo táctico (Aturdir/Bloqueador)  |  <color=#3FE0D0>[Tab]</color>: Maletín forense\n• <color=#3FE0D0>Clic Derecho</color>: Teleobjetivo de cámara forense", 17, Pal.Dim);
+            UI.Line(s, "- <color=#3FE0D0>WASD</color>: Desplazamiento  |  <color=#3FE0D0>[C / Ctrl]</color>: Agacharse (sigilo)  |  <color=#3FE0D0>Shift</color>: Correr\n- <color=#3FE0D0>[E]</color>: Usar / Cortar / Fotografiar  |  <color=#3FE0D0>[F]</color>: Visor térmico-acústico\n- <color=#3FE0D0>[Q]</color>: Dispositivo táctico (Aturdir/Bloqueador)  |  <color=#3FE0D0>[Tab]</color>: Maletín forense\n- <color=#3FE0D0>Clic Derecho</color>: Teleobjetivo de cámara forense", 17, Pal.Dim);
 
             UI.Line(s, " ", 8);
             UI.Btn(s, "Reanudar Misión", CloseOverlay, Pal.Sealed, 22, 48);

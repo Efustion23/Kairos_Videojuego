@@ -104,7 +104,16 @@ namespace Kairos
             }
             agent.isStopped = false;
             if (walker != null) walker.crouched = false;
+            if (fan != null) fan.range = EffectiveRange;
             Footsteps();
+
+            // Reacción visible ante escora fuerte del buque (>15°): se sujetan y pierden foco unos segundos
+            if (I.HeelAngle > 15f && state != GuardState.Alerta)
+            {
+                agent.isStopped = true;
+                if (fan != null) fan.SetColor(new Color(.35f, .55f, .65f));
+                return;
+            }
 
             var p = I.player;
             bool seen = false; float dist = 99f;

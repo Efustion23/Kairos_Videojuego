@@ -172,7 +172,7 @@ namespace Kairos
             foreach (var e in C.evidence)
             {
                 var d = CaseData.Evidence(e.id);
-                string mark = selected == e.id ? "► " : "  ";
+                string mark = selected == e.id ? "> " : "  ";
                 string pres = NoActionsLeft(e.id) ? " <color=#7F9098>[USADA]</color>" : " <color=#3FE0D0>[ACTIVA]</color>";
                 var col = NoActionsLeft(e.id) ? Pal.Dim : d.cat == 'A' ? Pal.Sealed : Pal.Sonar;
                 UI.Btn(cards, $"{mark}[{d.cat}] {d.title}{pres}", () => { selected = e.id; Refresh(); }, col, 16, 42);
@@ -187,7 +187,7 @@ namespace Kairos
                 oitBar.img.color = inds >= 7 ? Pal.Sealed : inds >= 4 ? Pal.DeckLight : Pal.Sonar;
             }
             if (boardLegend != null)
-                boardLegend.text = $"PIZARRA DE CONEXIÓN  ·  Enlaces probados: <b>{C.links.Count}</b>  ·  Cadena: {(chain ? "<color=#6CFF8A>COMPLETA</color>" : "<color=#F2A73B>EN CONSTRUCCIÓN</color>")}  ·  <color=#6CFF8A>■ Probado</color>  <color=#F2A73B>■ Disponible</color>";
+                boardLegend.text = $"PIZARRA DE CONEXIÓN  ·  Enlaces probados: <b>{C.links.Count}</b>  ·  Cadena: {(chain ? "<color=#6CFF8A>COMPLETA</color>" : "<color=#F2A73B>EN CONSTRUCCIÓN</color>")}  ·  <color=#6CFF8A>[X] Probado</color>  <color=#F2A73B>[+] Disponible</color>";
             clock.text = $"<b>FASE 4 · JUICIO FINANCIERO</b>     Antes de que cambie de nombre y bandera: <color={(C.trialDays <= 3 ? "#FF5940" : "#F2A73B")}>{C.trialDays:0.#} días</color>     Salida: {CaseData.ExitNames[C.exitUsed]}";
 
             UI.Clear(actions);
@@ -198,7 +198,7 @@ namespace Kairos
                 var indNames = new List<string>();
                 foreach (var i in d.indicators) indNames.Add(CaseData.Indicators[i]);
                 string shaDisplay = (seal != null && seal.sha.Length >= 24) ? seal.sha.Substring(0, 24) : (seal?.sha ?? "N/A");
-                detail.text = $"<b>{d.title}</b>  <color=#3FE0D0>[Categoría {d.cat}]</color>\n{(Game.S.omitSensitive ? d.descSafe : d.desc)}\n<b>Indicadores OIT:</b> {(indNames.Count > 0 ? string.Join(", ", indNames) : "<color=#8DA2AB>Sin indicadores directos (vínculo societario estratégico)</color>")}\n<size=15><color=#6CFF8A>✔ Sello Forense:</color> SHA-256 <color=#3FE0D0>{shaDisplay}…</color>  |  Fecha: <color=#8DA2AB>{seal?.stamp}</color></size>";
+                detail.text = $"<b>{d.title}</b>  <color=#3FE0D0>[Categoría {d.cat}]</color>\n{(Game.S.omitSensitive ? d.descSafe : d.desc)}\n<b>Indicadores OIT:</b> {(indNames.Count > 0 ? string.Join(", ", indNames) : "<color=#8DA2AB>Sin indicadores directos (vínculo societario estratégico)</color>")}\n<size=15><color=#6CFF8A>[OK] Sello Forense:</color> SHA-256 <color=#3FE0D0>{shaDisplay}…</color>  |  Fecha: <color=#8DA2AB>{seal?.stamp}</color></size>";
                 bool any = false;
                 foreach (var key in d.edges)
                 {
@@ -228,7 +228,7 @@ namespace Kairos
             foreach (var id in C.presented) foreach (var i in CaseData.Evidence(id).indicators) proved.Add(i);
             var sb = new System.Text.StringBuilder();
             for (int i = 0; i < CaseData.Indicators.Length; i++)
-                sb.AppendLine((proved.Contains(i) ? "<color=#6CFF8A>■ " : "<color=#7F9098>□ ") + CaseData.Indicators[i] + "</color>");
+                sb.AppendLine((proved.Contains(i) ? "<color=#6CFF8A>[X] " : "<color=#7F9098>[ ] ") + CaseData.Indicators[i] + "</color>");
             indicatorText.text = sb.ToString();
 
             int verdict = CaseData.VerdictFor(inds);
@@ -263,9 +263,9 @@ namespace Kairos
                 $"<b>Veredicto del Tribunal: {CaseData.VerdictNames[C.verdict]}</b>",
                 $"Expediente Fiscal Oficial: <b>KAIROS-JUD-2026</b>  |  Investigador: {Game.Inspector}",
                 $"Carga probatoria: <b>{inds} de 11 indicadores de la OIT</b> debidamente acreditados con cadena de custodia.",
-                "<color=#3FE0D0>⚖ Medidas Internacionales:</color> Orden de Retención (WRO) ante aduanas y cierre de puertos bajo Acuerdo PSMA (FAO).",
-                $"<color=#6CFF8A>✔ Embargo Económico Decretado:</color> <b>{C.embargo:N0} ¢</b>.",
-                $"<color=#FFD27A>★ Fondo de Decomiso Legal (15%):</color> <b>+{fund15:N0} ¢</b> transferidos para rescate y repatriación digna.",
+                "<color=#3FE0D0>[PSMA/WRO] Medidas Internacionales:</color> Orden de Retención (WRO) ante aduanas y cierre de puertos bajo Acuerdo PSMA (FAO).",
+                $"<color=#6CFF8A>[OK] Embargo Económico Decretado:</color> <b>{C.embargo:N0} ¢</b>.",
+                $"<color=#FFD27A>[FONDO 15%] Decomiso Legal:</color> <b>+{fund15:N0} ¢</b> transferidos para rescate y repatriación digna.",
                 C.verdict == 3
                     ? $"<b>Condena Histórica:</b> El beneficiario final de {CaseData.NodesFor(C.sector)[5].name} ha sido sentenciado y sus activos marítimos confiscados."
                     : $"<b>Retención Preventiva:</b> La red pierde el buque {CaseData.NodesFor(C.sector)[0].name} y su cargamento. {CaseData.NodesFor(C.sector)[5].name} evade cargos mayores por falta de pruebas vinculantes.",
