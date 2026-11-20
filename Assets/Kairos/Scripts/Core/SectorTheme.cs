@@ -33,7 +33,7 @@ namespace Kairos
                 TintShipPalette(root, new Color(.78f, .86f, .72f));
 
                 // En Fase 2 (Sonar), sustituir visualmente el casco por el arrastrero 3D real KestrelExplorer_3D
-                if (shipRoot != null) SwapSonarShipVisual(shipRoot, "Ships/KestrelExplorer_3D");
+                if (shipRoot != null) SwapSonarShipVisual(shipRoot, "Ships/KestrelExplorer_3D", 18.4f / 14f); // manga real del arrastrero
                 SpawnHorizonReefer("Atlantic Reef", "Ships/ReeferShip_3D", new Vector3(125f, 0f, 30f), -22f, new Color(1f, .65f, .25f));
             }
             else if (sector == 2)
@@ -49,8 +49,7 @@ namespace Kairos
                 TintShipPalette(root, new Color(.72f, .84f, 1.0f));
                 AddRedSecurityBeacons(root);
 
-                // En Fase 2 (Sonar), sustituir visualmente el casco por el barco 3D real OceanicCrown9_3D
-                if (shipRoot != null) SwapSonarShipVisual(shipRoot, "Ships/OceanicCrown9_3D");
+                // En Fase 2 (Sonar) se mantiene el casco del Hai Feng: falta un modelo de palangrero con proporciones reales
                 SpawnHorizonReefer("Mombasa Reefer", "Ships/ReeferShip_3D", new Vector3(-135f, 0f, 45f), 28f, new Color(.65f, .90f, 1f));
             }
 
@@ -65,10 +64,16 @@ namespace Kairos
         }
 
         /// En 02_Sonar reemplaza la malla visual de HaiFeng77 por el barco 3D real del sector, conservando el HullShell para el sonar.
-        static void SwapSonarShipVisual(Transform shipRoot, string resourcePath)
+        static void SwapSonarShipVisual(Transform shipRoot, string resourcePath, float beamScale = 1f)
         {
             var prefab = Resources.Load<GameObject>(resourcePath);
             if (prefab == null) return;
+
+            // El sonar dibuja el casco con impactos sobre «Hull» y la lancha choca con su manga: ambos siguen al barco nuevo.
+            var hull = shipRoot.Find("Hull");
+            if (hull != null) hull.localScale = Vector3.Scale(hull.localScale, new Vector3(beamScale, 1f, 1f));
+            var sonar = Object.FindFirstObjectByType<SonarController>();
+            if (sonar != null) sonar.beamScale = beamScale;
 
             foreach (var r in shipRoot.GetComponentsInChildren<Renderer>(true))
                 r.enabled = false;
@@ -109,14 +114,15 @@ namespace Kairos
             if (trawler == null && reefer == null) return;
 
             var root = new GameObject("FlotaRealMilla201");
+            // A 400-500 m del objetivo: se leen como flota en el horizonte y ninguno se cruza con la lancha.
             var placements = new (Vector3 pos, float yaw, bool useReefer)[]
             {
-                (new Vector3(175f, 0f, 95f), -35f, false),
-                (new Vector3(-190f, 0f, 120f), 42f, false),
-                (new Vector3(210f, 0f, -110f), -125f, true),
-                (new Vector3(-165f, 0f, -145f), 115f, false),
-                (new Vector3(40f, 0f, 235f), 85f, true),
-                (new Vector3(-55f, 0f, -225f), -70f, false),
+                (new Vector3(385f, 0f, 209f), -35f, false),
+                (new Vector3(-418f, 0f, 264f), 42f, false),
+                (new Vector3(462f, 0f, -242f), -125f, true),
+                (new Vector3(-363f, 0f, -319f), 115f, false),
+                (new Vector3(88f, 0f, 517f), 85f, true),
+                (new Vector3(-121f, 0f, -495f), -70f, false),
             };
 
             for (int i = 0; i < placements.Length; i++)

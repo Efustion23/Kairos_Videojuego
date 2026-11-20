@@ -605,6 +605,22 @@ namespace Kairos.EditorTools
         static GameObject BoatPrefab()
         {
             if (boatPrefab != null) return boatPrefab;
+
+            // Lancha con modelo real (motorboat.glb, CC-BY, Remi Remix): enderezada y escalada a la eslora de la semirrígida.
+            var motorboat = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/Models/Vehicles/motorboat.glb");
+            if (motorboat != null)
+            {
+                var root = new GameObject("Lancha");
+                var model = (GameObject)PrefabUtility.InstantiatePrefab(motorboat, root.transform);
+                model.name = "Motorboat_3D";
+                model.transform.localPosition = new Vector3(0, -.028f, -1.444f);
+                model.transform.localRotation = new Quaternion(-.5f, .5f, .5f, .5f);
+                model.transform.localScale = Vector3.one * .01232f;
+                boatPrefab = PrefabUtility.SaveAsPrefabAsset(root, $"{Root}/Prefabs/Lancha.prefab");
+                UnityEngine.Object.DestroyImmediate(root);
+                return boatPrefab;
+            }
+
             var b = new ShipBuild { root = new GameObject("Lancha") };
             b.colliders = new GameObject("c").transform;
             b.colliders.SetParent(b.root.transform, false);
