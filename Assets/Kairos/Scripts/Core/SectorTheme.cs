@@ -142,7 +142,7 @@ namespace Kairos
             if (fleet != null) fleet.SetActive(false);
         }
 
-        static void SpawnVessel(Transform parent, string name, string resourcePath, Vector3 pos, float yaw, Color lightColor, float lightIntensity = 55f, float lightHeight = 16f)
+        static void SpawnVessel(Transform parent, string name, string resourcePath, Vector3 pos, float yaw, Color lightColor, float lightIntensity = 55f, float lightHeight = 16f, float scale = 1f, Color? hullTint = null)
         {
             var prefab = Resources.Load<GameObject>(resourcePath);
             if (prefab == null) return;
@@ -150,6 +150,9 @@ namespace Kairos
             var v = Object.Instantiate(prefab, pos, Quaternion.Euler(0f, yaw, 0f), parent);
             v.name = name;
             foreach (var c in v.GetComponentsInChildren<Collider>(true)) Object.Destroy(c);
+            // Cada copia con su tamaño y su pintura: la flota no se ve clonada.
+            v.transform.localScale *= scale;
+            if (hullTint.HasValue) TintVessel(v, hullTint.Value);
 
             var lamp = new GameObject("FocoBuque");
             lamp.transform.SetParent(v.transform, false);
@@ -162,18 +165,22 @@ namespace Kairos
             l.shadows = LightShadows.None;
         }
 
-        // Flotas solo con los modelos livianos (Kestrel, carguero, frigorífico): Rita y el carguero pesquero pasan del millón de triángulos.
+        // Flotas: cada sector con barcos de su pesquería y ninguno repite el modelo del objetivo.
+        // Los poteros salen del Hai Feng del generador; el carguero queda solo como objetivo del Sector 3.
+        const string Potero = "Ships/PoteroFlota_3D", Kestrel = "Ships/KestrelExplorer_3D", Reefer = "Ships/ReeferShip_3D";
+
         static void SpawnSector1Fleet()
         {
             if (GameObject.Find("FlotaSector") != null) return;
             HideLegacyFleet();
             var root = new GameObject("FlotaSector").transform;
             var gold = new Color(1f, .78f, .32f);
-            SpawnVessel(root, "PoteroMilla201_01", "Ships/KestrelExplorer_3D", new Vector3(95f, 0f, 55f), -35f, gold, 65f, 15f);
-            SpawnVessel(root, "PoteroMilla201_02", "Ships/KestrelExplorer_3D", new Vector3(-105f, 0f, 65f), 42f, gold, 55f, 12f);
-            SpawnVessel(root, "TransbordoMilla201_03", "Ships/CargoShip_3D", new Vector3(135f, 0f, -85f), -125f, gold, 65f, 14f);
-            SpawnVessel(root, "ReeferMilla201_04", "Ships/ReeferShip_3D", new Vector3(-125f, 0f, -105f), 110f, gold, 70f, 18f);
-            SpawnVessel(root, "PoteroMilla201_05", "Ships/KestrelExplorer_3D", new Vector3(30f, 0f, 145f), 82f, gold, 55f, 12f);
+            // Flota de poteros de la milla 201 y el frigorífico que les recoge la pesca.
+            SpawnVessel(root, "PoteroMilla201_01", Potero, new Vector3(95f, 0f, 55f), -35f, gold, 65f, 15f, 1.05f, new Color(.80f, .88f, 1f));
+            SpawnVessel(root, "PoteroMilla201_02", Potero, new Vector3(-105f, 0f, 65f), 42f, gold, 55f, 12f, .85f, new Color(1f, .82f, .72f));
+            SpawnVessel(root, "PoteroMilla201_03", Potero, new Vector3(135f, 0f, -85f), -125f, gold, 60f, 14f, .95f, new Color(.72f, .95f, .80f));
+            SpawnVessel(root, "ReeferMilla201_04", Reefer, new Vector3(-125f, 0f, -105f), 110f, gold, 70f, 18f);
+            SpawnVessel(root, "PoteroMilla201_05", Potero, new Vector3(30f, 0f, 145f), 82f, gold, 55f, 12f, .78f, new Color(.95f, .95f, .80f));
         }
 
         static void SpawnSector2Fleet()
@@ -182,10 +189,10 @@ namespace Kairos
             HideLegacyFleet();
             var root = new GameObject("FlotaSector").transform;
             var amber = new Color(1f, .58f, .20f);
-            // Nodriza Atlantic Reef muy visible haciendo transbordo cercano + pesqueros costeros
-            SpawnVessel(root, "BuqueHorizonte_AtlanticReef", "Ships/CargoShip_3D", new Vector3(88f, 0f, 22f), -18f, amber, 80f, 20f);
-            SpawnVessel(root, "PesqueroGuinea_Rita", "Ships/KestrelExplorer_3D", new Vector3(-82f, 0f, 48f), 32f, amber, 55f, 12f);
-            SpawnVessel(root, "TransbordoGuinea_02", "Ships/ReeferShip_3D", new Vector3(-115f, 0f, -72f), 125f, amber, 60f, 14f);
+            // El Atlantic Reef, que recibe los transbordos del Kestrel, y dos pesqueros costeros más pequeños.
+            SpawnVessel(root, "BuqueHorizonte_AtlanticReef", Reefer, new Vector3(88f, 0f, 22f), -18f, amber, 80f, 20f, 1f, new Color(1f, .86f, .70f));
+            SpawnVessel(root, "PesqueroGuinea_01", Potero, new Vector3(-82f, 0f, 48f), 32f, amber, 55f, 12f, .7f, new Color(1f, .70f, .55f));
+            SpawnVessel(root, "PesqueroGuinea_02", Potero, new Vector3(-115f, 0f, -72f), 125f, amber, 50f, 11f, .62f, new Color(.70f, .82f, .62f));
         }
 
         static void SpawnSector3Fleet()
@@ -194,9 +201,10 @@ namespace Kairos
             HideLegacyFleet();
             var root = new GameObject("FlotaSector").transform;
             var cyan = new Color(.55f, .90f, 1f);
-            // Nodriza Mombasa Reefer + escoltas en tormenta monzónica
-            SpawnVessel(root, "BuqueHorizonte_MombasaReefer", "Ships/ReeferShip_3D", new Vector3(-95f, 0f, 38f), 26f, cyan, 80f, 18f);
-            SpawnVessel(root, "EscoltaIndico_02", "Ships/KestrelExplorer_3D", new Vector3(55f, 0f, 125f), -65f, cyan, 65f, 15f);
+            // El Mombasa Reefer (nodriza), un arrastrero de la red de Tidewater y un palangrero.
+            SpawnVessel(root, "BuqueHorizonte_MombasaReefer", Reefer, new Vector3(-95f, 0f, 38f), 26f, cyan, 80f, 18f, 1.05f, new Color(.75f, .85f, 1f));
+            SpawnVessel(root, "EscoltaIndico_02", Kestrel, new Vector3(55f, 0f, 125f), -65f, cyan, 65f, 15f, .9f, new Color(.62f, .70f, .80f));
+            SpawnVessel(root, "PalangreroIndico_03", Potero, new Vector3(120f, 0f, -60f), -140f, cyan, 55f, 12f, .8f, new Color(.85f, .80f, .95f));
         }
 
         static void TintDeckLights(Light[] deckLights, Transform root, Color tint, float intensityMul)
@@ -226,6 +234,17 @@ namespace Kairos
         {
             var moon = GameObject.Find("Luna")?.GetComponent<Light>();
             if (moon != null) { moon.color = color; moon.intensity = intensity; }
+        }
+
+        /// Multiplica el color base de todo el barco (URP Lit usa _BaseColor; los .glb, baseColorFactor).
+        static void TintVessel(GameObject v, Color tint)
+        {
+            foreach (var r in v.GetComponentsInChildren<MeshRenderer>(true))
+                foreach (var m in r.materials)
+                {
+                    if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", m.GetColor("_BaseColor") * tint);
+                    if (m.HasProperty("baseColorFactor")) m.SetColor("baseColorFactor", m.GetColor("baseColorFactor") * tint);
+                }
         }
 
         static void TintShipPalette(Transform root, Color hullTint)

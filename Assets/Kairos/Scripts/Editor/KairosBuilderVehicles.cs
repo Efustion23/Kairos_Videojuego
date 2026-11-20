@@ -18,6 +18,25 @@ namespace Kairos.EditorTools
             foreach (var name in new[] { "KestrelExplorer_3D", "ReeferShip_3D", "CargoShip_3D" }) BakeShip(name);
         }
 
+        /// Potero de flota: el Hai Feng sin luces, colisiones, textos ni objetos sueltos. Solo su geometría unida
+        /// (Geo_*) y los conos de luz de los focos (Haz), que es lo que se distingue de un potero a 300 m.
+        static void BakePoteroFleetShip(GameObject shipPrefab)
+        {
+            var inst = (GameObject)PrefabUtility.InstantiatePrefab(shipPrefab);
+            PrefabUtility.UnpackPrefabInstance(inst, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            inst.name = "PoteroFlota_3D";
+            // Primero los scripts: Unity no quita un componente del que dependa otro.
+            foreach (var mb in inst.GetComponentsInChildren<MonoBehaviour>(true)) Object.DestroyImmediate(mb);
+            foreach (var c in inst.GetComponentsInChildren<Component>(true))
+            {
+                if (c == null || c is Transform || c is MeshFilter) continue;
+                bool keep = c is MeshRenderer && (c.name.StartsWith("Geo_") || c.name == "Haz");
+                if (!keep) Object.DestroyImmediate(c);
+            }
+            PrefabUtility.SaveAsPrefabAsset(inst, $"{ShipsOut}/PoteroFlota_3D.prefab");
+            Object.DestroyImmediate(inst);
+        }
+
         static void BakeShip(string name)
         {
             var src = AssetDatabase.LoadAssetAtPath<GameObject>($"{VehicleSrcDir}/{name}.prefab");
