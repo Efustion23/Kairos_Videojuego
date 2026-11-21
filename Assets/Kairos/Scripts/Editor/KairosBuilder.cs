@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 
 namespace Kairos.EditorTools
 {
-    /// Genera materiales, el buque Hai Feng 77 y las 5 escenas. Menú: Kairos > Generar juego.
+    /// Genera materiales, los buques y las 7 escenas (3 sectores jugables). Menú: Kairos > Generar juego.
     /// Coordenadas del buque: proa +Z, popa -Z, babor -X. Cubierta principal y=6, cubierta inferior y=3.
     public static partial class KairosBuilder
     {
@@ -185,17 +185,30 @@ namespace Kairos.EditorTools
             Debug.Log("KAIROS: juego generado (" + scenes.Count + " escenas).");
         }
 
+        /// Rutas ordenadas de las 7 escenas del juego (incluye los 3 sectores de infiltración).
+        public static string[] GetBuildScenePaths() => new[]
+        {
+            $"{ScenesDir}/00_Menu.unity",
+            $"{ScenesDir}/01_Rastreo.unity",
+            $"{ScenesDir}/02_Sonar.unity",
+            $"{ScenesDir}/03_Infiltracion.unity",
+            $"{ScenesDir}/03_Infiltracion_S2.unity",
+            $"{ScenesDir}/03_Infiltracion_S3.unity",
+            $"{ScenesDir}/04_Juicio.unity"
+        };
+
         [MenuItem("Kairos/Compilar ejecutable (.exe)")]
         public static void BuildWindowsExecutable()
         {
-            string[] scenePaths = new[]
+            string[] scenePaths = GetBuildScenePaths();
+            foreach (var path in scenePaths)
             {
-                $"{ScenesDir}/00_Menu.unity",
-                $"{ScenesDir}/01_Rastreo.unity",
-                $"{ScenesDir}/02_Sonar.unity",
-                $"{ScenesDir}/03_Infiltracion.unity",
-                $"{ScenesDir}/04_Juicio.unity"
-            };
+                if (!System.IO.File.Exists(path))
+                {
+                    Debug.LogError($"KAIROS Build cancelado: falta la escena '{path}'. Ejecuta primero 'Kairos > Generar juego'.");
+                    return;
+                }
+            }
             if (!System.IO.Directory.Exists("Builds")) System.IO.Directory.CreateDirectory("Builds");
             var opts = new BuildPlayerOptions
             {
@@ -205,7 +218,8 @@ namespace Kairos.EditorTools
                 options = BuildOptions.None
             };
             var report = BuildPipeline.BuildPlayer(opts);
-            Debug.Log("KAIROS Build: " + report.summary.result + " -> Builds/KAIROS_SombrasEnAltamar.exe");
+            float sizeMb = report.summary.totalSize / (1024f * 1024f);
+            Debug.Log($"KAIROS Build: {report.summary.result} ({scenePaths.Length} escenas, {sizeMb:0.0} MB, errores: {report.summary.totalErrors}) -> {opts.locationPathName}");
         }
 
         static void BuildMenuScene(GameObject ship, List<EditorBuildSettingsScene> list)
