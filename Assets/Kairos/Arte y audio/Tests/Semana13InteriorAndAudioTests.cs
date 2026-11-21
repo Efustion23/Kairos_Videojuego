@@ -70,5 +70,45 @@ namespace Kairos.Pruebas.Tests
 
             Object.DestroyImmediate(guardGo);
         }
+
+        [Test]
+        public void RigDeGuardiaOptimizaSombrasYRespondeAAturdimiento()
+        {
+            var guardGo = new GameObject("TestGuardStunRig");
+            var rig = guardGo.AddComponent<GuardLanternPatrolRig>();
+
+            Assert.AreEqual(LightShadows.None, rig.lanternLight.shadows, "Las linternas de patrulla no deben saturar el atlas de sombras URP.");
+
+            rig.SetStunned(true);
+            Assert.IsTrue(rig.isStunned);
+            Assert.IsFalse(rig.lanternLight.enabled);
+            Assert.AreEqual(0f, rig.lanternLight.intensity, 0.001f);
+
+            rig.SetStunned(false);
+            Assert.IsFalse(rig.isStunned);
+            Assert.IsTrue(rig.lanternLight.enabled);
+            Assert.Greater(rig.lanternLight.intensity, 2.0f);
+
+            Object.DestroyImmediate(guardGo);
+        }
+
+        [Test]
+        public void InteriorSpatialAudio_RestauraLoopCompresorSiClipEsNulo()
+        {
+            var host = new GameObject("Compresores_Test");
+            var sysGo = new GameObject("InteriorAudio_Test");
+            var spatial = sysGo.AddComponent<InteriorSpatialAudio>();
+
+            var src = InteriorSpatialAudio.CreateSpatialLoop(host, InteriorSpatialAudio.CompressorHumLoop, 0.4f, 20f);
+            Assert.IsNotNull(src);
+            src.clip = null;
+
+            int restored = spatial.EnsureRuntimeSpatialLoops(host);
+            Assert.AreEqual(1, restored);
+            Assert.AreEqual(InteriorSpatialAudio.CompressorHumLoop, src.clip);
+
+            Object.DestroyImmediate(host);
+            Object.DestroyImmediate(sysGo);
+        }
     }
 }

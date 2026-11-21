@@ -42,8 +42,9 @@ namespace Kairos.Pruebas.Tests
             Assert.IsNotNull(radio.voiceAudioSource, "El AudioSource de voz debe estar asignado.");
             Assert.IsNotNull(radio.fxAudioSource, "El AudioSource secundario de FX de squelch debe estar asignado.");
 
-            var highPass = go.GetComponent<AudioHighPassFilter>();
-            var lowPass = go.GetComponent<AudioLowPassFilter>();
+            // Los filtros viven junto a la fuente de voz (objeto hijo), así no tocan otros sonidos.
+            var highPass = radio.voiceAudioSource.GetComponent<AudioHighPassFilter>();
+            var lowPass = radio.voiceAudioSource.GetComponent<AudioLowPassFilter>();
             Assert.IsNotNull(highPass, "Debe crearse el filtro pasa-altos para cortar frecuencias graves.");
             Assert.IsNotNull(lowPass, "Debe crearse el filtro pasa-bajos para limitar el canal a frecuencias de voz.");
             Assert.AreEqual(350f, radio.highPassCutoff, 1.0f);
@@ -91,6 +92,19 @@ namespace Kairos.Pruebas.Tests
 
             Assert.Greater(startEnergy, endEnergy, "La ráfaga de squelch PTT debe decaer en energía.");
             UnityEngine.Object.DestroyImmediate(ptt);
+        }
+
+        [Test]
+        public void RadioComms_PlayTacticalCueInicializaSinErroresEnEditMode()
+        {
+            GameObject go = new GameObject("Test_RadioCue");
+            spawnedObjects.Add(go);
+
+            var radio = go.AddComponent<TacticalRadioCommsAudio>();
+            radio.PlayTacticalCue(true, 0.25f);
+
+            Assert.IsTrue(radio.IsInitialized);
+            Assert.IsNotNull(radio.fxAudioSource);
         }
     }
 }

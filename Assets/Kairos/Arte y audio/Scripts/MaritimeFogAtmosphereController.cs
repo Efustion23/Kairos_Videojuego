@@ -32,12 +32,32 @@ namespace Kairos.Pruebas
         [Header("Volumen de Post-Procesado")]
         public Volume postProcessVolume;
 
+        [Header("Integración por Sector")]
+        public bool preserveActiveSectorFog = true;
+
         private float[] baseLightIntensities;
 
         private void Start()
         {
-            ApplyAtmosphericSettings();
+            // En escenas con SectorTheme (Fase 2 / Fase 3), respetar la niebla configurada para el sector activo
+            if (preserveActiveSectorFog && RenderSettings.fog &&
+                (InfiltrationController.I != null || FindFirstObjectByType<SonarController>() != null))
+            {
+                SyncFromRenderSettings();
+            }
+            else
+            {
+                ApplyAtmosphericSettings();
+            }
             CacheLightIntensities();
+        }
+
+        public void SyncFromRenderSettings()
+        {
+            enableMarineFog = RenderSettings.fog;
+            marineFogColor = RenderSettings.fogColor;
+            fogDensity = RenderSettings.fogDensity;
+            fogMode = RenderSettings.fogMode;
         }
 
         private void Update()

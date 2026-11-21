@@ -38,10 +38,87 @@ namespace Kairos.Pruebas
 
         [Header("Estado Actual de Mezcla")]
         public AudioMixerSnapshotState currentState = AudioMixerSnapshotState.InfiltracionNormal;
+        public bool autoTrackGameplayState = true;
+
+        [SerializeField, HideInInspector] private System.Collections.Generic.List<string> exposedParamNames = new System.Collections.Generic.List<string>();
+        private float sonarSnapshotTimer;
+
+        private void OnValidate()
+        {
+            RefreshExposedParamsCache();
+        }
+
+        private void RefreshExposedParamsCache()
+        {
+#if UNITY_EDITOR
+            exposedParamNames.Clear();
+            if (targetMixer == null) return;
+            var so = new UnityEditor.SerializedObject(targetMixer);
+            var prop = so.FindProperty("m_ExposedParameters");
+            if (prop == null) return;
+            for (int i = 0; i < prop.arraySize; i++)
+            {
+                var nameProp = prop.GetArrayElementAtIndex(i).FindPropertyRelative("name");
+                if (nameProp != null && !string.IsNullOrEmpty(nameProp.stringValue))
+                    exposedParamNames.Add(nameProp.stringValue);
+            }
+#endif
+        }
 
         private void Start()
         {
+            if (targetMixer == null)
+                targetMixer = SubmarineAudioSuite.Mixer;
             ApplyNominalLevels();
+        }
+
+        private void Update()
+        {
+            if (!Application.isPlaying || !autoTrackGameplayState) return;
+
+            if (sonarSnapshotTimer > 0f)
+            {
+                sonarSnapshotTimer -= Time.unscaledDeltaTime;
+                if (sonarSnapshotTimer <= 0f && currentState == AudioMixerSnapshotState.SonarActivo)
+                    TransitionToState(AudioMixerSnapshotState.InfiltracionNormal, 0.5f);
+                return;
+            }
+
+            var inf = InfiltrationController.I;
+            if (inf == null) return;
+
+            var desired = AudioMixerSnapshotState.InfiltracionNormal;
+            if (inf.mode == InfiltrationController.Mode.Dialog)
+            {
+                desired = AudioMixerSnapshotState.DialogoTestigo;
+            }
+            else if (inf.Lockdown)
+            {
+                desired = AudioMixerSnapshotState.AlertaMaxima;
+            }
+            else if (inf.guards != null)
+            {
+                for (int i = 0; i < inf.guards.Length; i++)
+                {
+                    if (inf.guards[i] != null && !inf.guards[i].IsStunned && inf.guards[i].state == GuardState.Alerta)
+                    {
+                        desired = AudioMixerSnapshotState.AlertaMaxima;
+                        break;
+                    }
+                }
+            }
+
+            if (desired != currentState)
+                TransitionToState(desired, 0.45f);
+        }
+
+        /// <summary>
+        /// Activa temporalmente el perfil SonarActivo para atenuar la tormenta durante el eco del pulso.
+        /// </summary>
+        public void PulseSonarSnapshot(float holdSeconds = 1.8f)
+        {
+            sonarSnapshotTimer = Mathf.Max(sonarSnapshotTimer, Mathf.Max(0.1f, holdSeconds));
+            TransitionToState(AudioMixerSnapshotState.SonarActivo, 0.25f);
         }
 
         /// <summary>
@@ -87,7 +164,7 @@ namespace Kairos.Pruebas
 
         private void SetMixerParamSafe(string paramName, float valueDb)
         {
-            if (targetMixer != null)
+            if (targetMixer != null && exposedParamNames != null && exposedParamNames.Contains(paramName))
             {
                 targetMixer.SetFloat(paramName, valueDb);
             }
@@ -103,6 +180,7 @@ namespace Kairos.Pruebas
 
             var cal = go.AddComponent<MasterAudioMixerCalibration>();
             cal.targetMixer = mixer;
+            cal.RefreshExposedParamsCache();
             cal.ApplyNominalLevels();
 
             return go;

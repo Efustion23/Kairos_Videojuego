@@ -2,9 +2,9 @@
 <!-- Explica brevemente qué hace este Pull Request y qué módulo impacta (Fase 1, 2, 3, 4, Shaders, UI, etc.) -->
 
 ## 👤 Rol del Autor
-- [ ] Diego Tornero (Programación, mecánicas e IA)
-- [ ] Christopher Veliz (Arte 3D, iluminación y audio)
-- [ ] Alexander Benites (Diseño, UI/UX y narrativa)
+- [ ] Desarrollador 1 (Gameplay & Systems Programmer)
+- [ ] Desarrollador 2 (Technical Artist & Level Designer)
+- [ ] Desarrollador 3 (UI/UX, Audio, Narrative & QA)
 
 ## 🎯 Tipo de Cambio
 - [ ] `feat`: Nueva mecánica o funcionalidad jugable
@@ -24,6 +24,6 @@
 ## 📋 Checklist de Control de Calidad
 - [ ] El proyecto compila sin errores ni advertencias rojas en la consola de Unity.
 - [ ] Todos los archivos nuevos (`.cs`, `.png`, `.prefab`, `.fbx`, etc.) incluyen sus respectivos `.meta`.
-- [ ] Las escenas y prefabs generados solo cambiaron con `Kairos > Generar juego`, no a mano.
+- [ ] No se modificaron escenas compartidas directamente (se usaron Prefabs).
 - [ ] Los tests en `Assets/Kairos/Tests` siguen pasando exitosamente (si aplica).
 

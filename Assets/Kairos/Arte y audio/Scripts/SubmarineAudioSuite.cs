@@ -37,6 +37,7 @@ namespace Kairos.Pruebas
                 n -= crossfade;
             }
             var clip = AudioClip.Create(name, n, 1, SampleRate, false);
+            clip.hideFlags = HideFlags.DontSave; // procedural: ni se guarda en la escena ni la destruye el cambio de escena
             clip.SetData(samples, 0);
             return clip;
         }
@@ -125,17 +126,19 @@ namespace Kairos.Pruebas
 
         public static void LoadMixer()
         {
-            if (mixerLoaded) return;
-            mixerLoaded = true;
+            if (mixerLoaded && mixerAsset != null) return;
             try
             {
                 mixerAsset = Resources.Load<AudioMixer>("SonarAudioMixer");
 #if UNITY_EDITOR
                 if (mixerAsset == null)
-                    mixerAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioMixer>("Assets/Kairos/Arte y audio/Audio/SonarAudioMixer.mixer");
+                {
+                    mixerAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioMixer>("Assets/Kairos/Arte y audio/Audio/Resources/SonarAudioMixer.mixer");
+                }
 #endif
                 if (mixerAsset != null)
                 {
+                    mixerLoaded = true;
                     var mg = mixerAsset.FindMatchingGroups("Master");
                     if (mg != null && mg.Length > 0) masterGrp = mg[0];
 

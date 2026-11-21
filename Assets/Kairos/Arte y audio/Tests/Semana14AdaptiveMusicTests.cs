@@ -107,5 +107,26 @@ namespace Kairos.Pruebas.Tests
             Assert.AreEqual(44100, clip.frequency);
             Assert.Greater(clip.samples, 0);
         }
+
+        [Test]
+        public void EnsureStemsReady_RegeneraClipsNulosTrasGuardarEscena()
+        {
+            var musicSystemGo = AdaptiveTensionMusic.CreateAdaptiveMusicSystem(null);
+            spawnedObjects.Add(musicSystemGo);
+
+            var music = musicSystemGo.GetComponent<AdaptiveTensionMusic>();
+            music.calmSource.clip = null;
+            music.suspicionSource.clip = null;
+            music.alertSource.clip = null;
+
+            music.EnsureStemsReady();
+
+            Assert.IsNotNull(music.calmSource.clip, "El stem de calma debe regenerarse si es nulo.");
+            Assert.IsNotNull(music.suspicionSource.clip, "El stem de sospecha debe regenerarse si es nulo.");
+            Assert.IsNotNull(music.alertSource.clip, "El stem de alerta debe regenerarse si es nulo.");
+            Assert.IsTrue(music.calmSource.loop);
+            Assert.IsTrue(music.suspicionSource.loop);
+            Assert.IsTrue(music.alertSource.loop);
+        }
     }
 }

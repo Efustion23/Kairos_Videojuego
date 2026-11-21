@@ -36,9 +36,29 @@ namespace Kairos.Pruebas
 
         [Header("Secuencia de Tomas")]
         public List<CinematicShot> sequenceShots = new List<CinematicShot>();
+        public int activeSector = 0;
         public int currentShotIndex = 0;
         public bool isPlaying = false;
         public bool loopSequence = true;
+
+        public float TotalDuration
+        {
+            get
+            {
+                float sum = 0f;
+                if (sequenceShots != null)
+                {
+                    for (int i = 0; i < sequenceShots.Count; i++)
+                        sum += Mathf.Max(0f, sequenceShots[i].duration);
+                }
+                return sum;
+            }
+        }
+
+        public CinematicShot CurrentShot =>
+            sequenceShots != null && sequenceShots.Count > 0
+                ? sequenceShots[Mathf.Clamp(currentShotIndex, 0, sequenceShots.Count - 1)]
+                : default;
 
         [Header("Velocidad de Suavizado")]
         public float cameraMoveDamping = 2.5f;
@@ -161,6 +181,97 @@ namespace Kairos.Pruebas
                 4.5f,
                 "Inspección forense de evidencias OIT y rescate"
             ));
+        }
+
+        /// <summary>
+        /// Carga la secuencia cinematográfica adaptada al sector oceánico (0: Atlántico Sur, 1: Golfo de Guinea, 2: Océano Índico).
+        /// </summary>
+        public void LoadSectorShots(int sector)
+        {
+            activeSector = Mathf.Clamp(sector, 0, 2);
+            currentShotIndex = 0;
+            shotTimer = 0f;
+
+            if (activeSector == 0)
+            {
+                LoadDefaultTrailerShots();
+                return;
+            }
+
+            sequenceShots.Clear();
+
+            if (activeSector == 1)
+            {
+                // Sector 2: Golfo de Guinea — Arrastrero Kestrel Explorer y transbordo al Atlantic Reef
+                sequenceShots.Add(new CinematicShot(
+                    "S2_Toma1_GolfoGuineaCrepusculo",
+                    new Vector3(-48f, 16f, -36f),
+                    new Vector3(14f, 48f, 0f),
+                    62f,
+                    4.2f,
+                    "Sector 2: Golfo de Guinea — Apagón masivo de AIS"
+                ));
+                sequenceShots.Add(new CinematicShot(
+                    "S2_Toma2_TransbordoAtlanticReef",
+                    new Vector3(24f, 8f, -22f),
+                    new Vector3(8f, -40f, 0f),
+                    52f,
+                    4.0f,
+                    "Transbordo nocturno en zona vedada — Kestrel Explorer"
+                ));
+                sequenceShots.Add(new CinematicShot(
+                    "S2_Toma3_AbordajeArrastrero",
+                    new Vector3(4.2f, 4.5f, -16f),
+                    new Vector3(-20f, 175f, 0f),
+                    54f,
+                    3.8f,
+                    "Infiltración sin armas entre rondas invertidas"
+                ));
+                sequenceShots.Add(new CinematicShot(
+                    "S2_Toma4_LicenciasFalsasOIT",
+                    new Vector3(-2.1f, 7.6f, -15.5f),
+                    new Vector3(16f, 128f, 0f),
+                    46f,
+                    4.4f,
+                    "Licencias falsificadas y testimonios sellados con SHA-256"
+                ));
+            }
+            else
+            {
+                // Sector 3: Océano Índico Occidental — Palangrero Oceanic Crown 9 bajo tormenta monzónica
+                sequenceShots.Add(new CinematicShot(
+                    "S3_Toma1_TormentaMonzonicaIndico",
+                    new Vector3(-52f, 20f, -44f),
+                    new Vector3(16f, 46f, 0f),
+                    64f,
+                    4.5f,
+                    "Sector 3: Océano Índico — Oceanic Crown 9 (2 años sin puerto)"
+                ));
+                sequenceShots.Add(new CinematicShot(
+                    "S3_Toma2_BalizasNodrizaMombasa",
+                    new Vector3(-26f, 9f, 20f),
+                    new Vector3(10f, 130f, 0f),
+                    52f,
+                    4.0f,
+                    "Buque nodriza Mombasa Reefer — Red de Tidewater Holdings"
+                ));
+                sequenceShots.Add(new CinematicShot(
+                    "S3_Toma3_VigiaProaRelampagos",
+                    new Vector3(3.8f, 8.2f, 18f),
+                    new Vector3(12f, 195f, 0f),
+                    55f,
+                    3.8f,
+                    "Aislamiento extremo y vigilancia reforzada en proa"
+                ));
+                sequenceShots.Add(new CinematicShot(
+                    "S3_Toma4_JuicioTidewaterHoldings",
+                    new Vector3(-1.5f, 10.4f, -5.0f),
+                    new Vector3(20f, 145f, 0f),
+                    45f,
+                    4.5f,
+                    "Cadena de mando completa ante el tribunal marítimo"
+                ));
+            }
         }
 
         /// <summary>

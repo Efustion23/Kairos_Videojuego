@@ -315,11 +315,29 @@ namespace Kairos.EditorTools
 
         /// Pescador con su modelo de Models/<Nombre>/, animado con los clips del protagonista.
         /// Si la carpeta no tiene modelo, vuelve a la figura simple.
+        /// Modelo de reserva para la tripulación de los Sectores 2 y 3 mientras no tenga su propia carpeta en Models/:
+        /// el del Sector 1 que más se acerca a su origen. Con una carpeta Models/<Nombre>/ se usa la suya.
+        static readonly Dictionary<string, string>[] FallbackModel =
+        {
+            null,
+            new Dictionary<string, string> { { "rodel", "moussa" }, { "ari", "moussa" }, { "moussa", "moussa" }, { "thant", "moussa" } }, // Golfo de Guinea
+            new Dictionary<string, string> { { "rodel", "ari" }, { "ari", "thant" }, { "moussa", "rodel" }, { "thant", "moussa" } },      // Índico
+        };
+
+        static string[] Fbx(string dir) => AssetDatabase.IsValidFolder(dir) ? System.IO.Directory.GetFiles(dir, "*.fbx") : new string[0];
+
         static GameObject PersonFigure(string id, Material skinTone, out HumanoidMotion motion)
         {
             motion = null;
-            string name = "Persona " + id, dir = Root + "/Models/" + CaseData.PersonDefOf(id).name;
-            var files = AssetDatabase.IsValidFolder(dir) ? System.IO.Directory.GetFiles(dir, "*.fbx") : new string[0];
+            var def = System.Array.Find(CaseData.PeopleFor(buildSector), p => p.id == id);
+            string name = "Persona " + id, dir = Root + "/Models/" + def.name;
+            var files = Fbx(dir);
+            if (files.Length == 0 && buildSector > 0)
+            {
+                id = FallbackModel[buildSector][id];
+                dir = Root + "/Models/" + System.Array.Find(CaseData.People, p => p.id == id).name;
+                files = Fbx(dir);
+            }
             if (files.Length == 0) return Humanoid(name, worker, skinTone);
             string fbx = files[0].Replace('\\', '/');
             PrepareCharacter(fbx);

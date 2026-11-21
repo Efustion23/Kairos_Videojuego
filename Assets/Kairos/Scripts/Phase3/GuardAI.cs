@@ -7,6 +7,9 @@ namespace Kairos
     {
         public Transform[] route;
         public float viewRange = 11f, viewAngle = 100f;
+        [Header("Tiempos de parada en waypoints (s)")]
+        public float minWaitTime = 1.6f;
+        public float maxWaitTime = 3.2f;
         public string displayName = "Guardia";
         public GuardState state;
         public float suspicion;
@@ -16,7 +19,8 @@ namespace Kairos
         Walker walker;
         HumanoidMotion motion;
         float stepDistance;
-        int wp; float wait, stunned, radio, lostFor;
+        int wp; float wait, stunned, radio, lostFor, scanPhase;
+        bool waitingAtWp;
         Vector3 lastKnown;
         InfiltrationController I => InfiltrationController.I;
 
@@ -100,7 +104,16 @@ namespace Kairos
             }
             agent.isStopped = false;
             if (walker != null) walker.crouched = false;
+            if (fan != null) fan.range = EffectiveRange;
             Footsteps();
+
+            // Reacción visible ante escora fuerte del buque (>15°): se sujetan y pierden foco unos segundos
+            if (I.HeelAngle > 15f && state != GuardState.Alerta)
+            {
+                agent.isStopped = true;
+                if (fan != null) fan.SetColor(new Color(.35f, .55f, .65f));
+                return;
+            }
 
             var p = I.player;
             bool seen = false; float dist = 99f;
@@ -181,14 +194,30 @@ namespace Kairos
             if (agent.pathPending) return;
             if (!agent.hasPath || agent.remainingDistance < .6f)
             {
+                if (!waitingAtWp)
+                {
+                    waitingAtWp = true;
+                    wait = Random.Range(minWaitTime, Mathf.Max(minWaitTime, maxWaitTime));
+                    scanPhase = 0f;
+                }
                 wait -= Time.deltaTime;
-                if (wait > 0) return;
-                wait = Random.Range(.8f, 2.4f);
+                if (wait > 0f)
+                {
+                    // Ojeo suave con la linterna mientras hace pausa en el waypoint
+                    scanPhase += Time.deltaTime * 1.4f;
+                    transform.Rotate(0, Mathf.Sin(scanPhase) * 22f * Time.deltaTime, 0);
+                    return;
+                }
+                waitingAtWp = false;
                 wp = (wp + 1) % route.Length;
                 agent.SetDestination(route[wp].position);
                 // La radio delata un cambio de ronda: solo se oye de cerca y avisa al jugador.
                 if ((transform.position - I.player.transform.position).sqrMagnitude < 18f * 18f)
                     Sfx.PlayAt(Sfx.Radio, transform.position + Vector3.up * 1.4f, .5f, 20);
+            }
+            else
+            {
+                waitingAtWp = false;
             }
         }
 

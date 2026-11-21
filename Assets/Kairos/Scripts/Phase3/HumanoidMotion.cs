@@ -7,7 +7,7 @@ namespace Kairos
     public class HumanoidMotion : MonoBehaviour
     {
         public Animator animator;
-        [System.NonSerialized] public bool busy, aiming, typing, talking;
+        [System.NonSerialized] public bool busy, aiming, typing, talking, stealthCrouch;
         /// Cuenta las pisadas: PlayerAgent hace sonar y oír cada paso cuando el pie toca el suelo.
         public int Steps { get; private set; }
 
@@ -17,7 +17,7 @@ namespace Kairos
 
         Transform body, footL, footR;
         Vector3 last;
-        float lastYaw, speed, torsoWeight, aimWeight, stunT, kneelT, pelvis;
+        float lastYaw, speed, torsoWeight, aimWeight, stunT, kneelT, pelvis, crouchDrop;
         bool leftAhead, kneeling, crouched;
         string torsoState, turnState;
 
@@ -127,7 +127,8 @@ namespace Kairos
             // Los clips asumen suelo plano a la altura del personaje: se corrige en rampas y bordes.
             float dl = FootOffset(AvatarIKGoal.LeftFoot), dr = FootOffset(AvatarIKGoal.RightFoot);
             pelvis = Mathf.Lerp(pelvis, Mathf.Min(0, Mathf.Min(dl, dr)), .2f);
-            animator.bodyPosition += Vector3.up * pelvis;
+            crouchDrop = Mathf.Lerp(crouchDrop, (stealthCrouch && !kneeling) ? -.26f : 0f, .18f);
+            animator.bodyPosition += Vector3.up * (pelvis + crouchDrop);
             Plant(AvatarIKGoal.LeftFoot, dl);
             Plant(AvatarIKGoal.RightFoot, dr);
 

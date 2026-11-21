@@ -26,15 +26,86 @@ namespace Kairos.Pruebas
         public AudioSource voiceAudioSource;
         public AudioSource fxAudioSource;
 
+        [Header("Respuesta Automática a Eventos")]
+        public bool autoRespondToEvents = true;
+
         private AudioClip pttOpenClip;
         private AudioClip rogerBeepClip;
         private AudioClip staticHissClip;
+        private bool prevPlayMode, prevLockdown, prevResult, prevSonarReady;
+        private SonarController cachedSonar;
 
         public bool IsInitialized { get; private set; }
 
         private void Awake()
         {
             InitializeRadioComms();
+        }
+
+        private void Start()
+        {
+            if (!Application.isPlaying) return;
+            cachedSonar = FindFirstObjectByType<SonarController>();
+            var inf = InfiltrationController.I;
+            if (inf != null)
+            {
+                prevPlayMode = inf.mode == InfiltrationController.Mode.Play;
+                prevLockdown = inf.Lockdown;
+                prevResult = inf.mode == InfiltrationController.Mode.Result;
+            }
+            prevSonarReady = Game.S != null && Game.C != null && Game.C.confidence >= CaseData.ConfidenceToBoard;
+        }
+
+        private void Update()
+        {
+            if (!Application.isPlaying || !autoRespondToEvents) return;
+
+            var inf = InfiltrationController.I;
+            if (inf != null)
+            {
+                bool nowPlay = inf.mode == InfiltrationController.Mode.Play;
+                if (nowPlay && !prevPlayMode)
+                    PlayTacticalCue(true, 0.35f);
+                prevPlayMode = nowPlay;
+
+                bool nowLockdown = inf.Lockdown;
+                if (nowLockdown && !prevLockdown)
+                    PlayTacticalCue(true, 0.22f);
+                prevLockdown = nowLockdown;
+
+                bool nowResult = inf.mode == InfiltrationController.Mode.Result;
+                if (nowResult && !prevResult)
+                    PlayTacticalCue(true, 0.30f);
+                prevResult = nowResult;
+            }
+            else if (cachedSonar != null && Game.S != null && Game.C != null)
+            {
+                bool sonarReady = Game.C.confidence >= CaseData.ConfidenceToBoard;
+                if (sonarReady && !prevSonarReady)
+                    PlayTacticalCue(true, 0.30f);
+                prevSonarReady = sonarReady;
+            }
+        }
+
+        /// <summary>
+        /// Emite una señal táctica corta de radio VHF (apertura de squelch PTT y Roger Beep opcional)
+        /// en hitos clave de infiltración o sonar.
+        /// </summary>
+        public void PlayTacticalCue(bool includeRogerBeep = true, float rogerDelay = 0.28f)
+        {
+            InitializeRadioComms();
+
+            if (!Application.isPlaying) return;
+
+            if (fxAudioSource != null && enablePttBurst && pttOpenClip != null)
+            {
+                fxAudioSource.PlayOneShot(pttOpenClip, masterRadioVolume * 0.75f);
+            }
+
+            if (includeRogerBeep && enableRogerBeep && fxAudioSource != null && rogerBeepClip != null)
+            {
+                StartCoroutine(HandleTransmissionEnd(Mathf.Max(0.05f, rogerDelay)));
+            }
         }
 
         public void InitializeRadioComms()
@@ -51,27 +122,37 @@ namespace Kairos.Pruebas
         {
             if (voiceAudioSource == null)
             {
-                voiceAudioSource = gameObject.AddComponent<AudioSource>();
+                GameObject voiceChild = new GameObject("Radio_Voice_Audio");
+                voiceChild.SetActive(false);
+                voiceChild.transform.SetParent(transform, false);
+                voiceAudioSource = voiceChild.AddComponent<AudioSource>();
+                voiceAudioSource.playOnAwake = false;
+                voiceChild.SetActive(true);
             }
 
+            voiceAudioSource.playOnAwake = false;
             voiceAudioSource.spatialBlend = 0.0f; // Sonido 2D en cascos del operador
             voiceAudioSource.volume = masterRadioVolume;
 
-            // Filtro pasa-banda para efecto walkie-talkie
-            var highPass = gameObject.GetComponent<AudioHighPassFilter>();
-            if (highPass == null) highPass = gameObject.AddComponent<AudioHighPassFilter>();
+            // Filtro pasa-banda para efecto walkie-talkie en el mismo nodo que voiceAudioSource
+            GameObject filterHost = voiceAudioSource.gameObject;
+            var highPass = filterHost.GetComponent<AudioHighPassFilter>();
+            if (highPass == null) highPass = filterHost.AddComponent<AudioHighPassFilter>();
             if (highPass != null) highPass.cutoffFrequency = highPassCutoff;
 
-            var lowPass = gameObject.GetComponent<AudioLowPassFilter>();
-            if (lowPass == null) lowPass = gameObject.AddComponent<AudioLowPassFilter>();
+            var lowPass = filterHost.GetComponent<AudioLowPassFilter>();
+            if (lowPass == null) lowPass = filterHost.AddComponent<AudioLowPassFilter>();
             if (lowPass != null) lowPass.cutoffFrequency = lowPassCutoff;
 
             // AudioSource secundario para beeps y clics mecánicos del micro PTT
             GameObject fxChild = new GameObject("Radio_Squelch_FX");
+            fxChild.SetActive(false);
             fxChild.transform.SetParent(transform, false);
             fxAudioSource = fxChild.AddComponent<AudioSource>();
+            fxAudioSource.playOnAwake = false;
             fxAudioSource.spatialBlend = 0.0f;
             fxAudioSource.volume = masterRadioVolume * 0.9f;
+            fxChild.SetActive(true);
         }
 
         private void GenerateRadioSfxClips()
