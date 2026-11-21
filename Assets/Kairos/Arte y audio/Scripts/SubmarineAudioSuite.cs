@@ -126,13 +126,19 @@ namespace Kairos.Pruebas
 
         public static void LoadMixer()
         {
-            if (mixerLoaded) return;
-            mixerLoaded = true;
+            if (mixerLoaded && mixerAsset != null) return;
             try
             {
                 mixerAsset = Resources.Load<AudioMixer>("SonarAudioMixer");
+#if UNITY_EDITOR
+                if (mixerAsset == null)
+                {
+                    mixerAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioMixer>("Assets/Kairos/Arte y audio/Audio/Resources/SonarAudioMixer.mixer");
+                }
+#endif
                 if (mixerAsset != null)
                 {
+                    mixerLoaded = true;
                     var mg = mixerAsset.FindMatchingGroups("Master");
                     if (mg != null && mg.Length > 0) masterGrp = mg[0];
 

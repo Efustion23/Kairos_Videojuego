@@ -82,6 +82,53 @@ namespace Kairos.Pruebas
             return (whistle + windNoise) * gust * 0.75f;
         }, true);
 
+        private void Start()
+        {
+            EnsureRuntimeSpatialLoops();
+        }
+
+        /// <summary>
+        /// Restaura en tiempo de ejecución los clips procedurales de bucles 3D (DontSave al guardar escena)
+        /// en la sala de compresores y asegura su enrutamiento al AudioMixer.
+        /// </summary>
+        public int EnsureRuntimeSpatialLoops(GameObject compressorHost = null)
+        {
+            int restored = 0;
+            GameObject target = compressorHost;
+            if (target == null && InfiltrationController.I != null && InfiltrationController.I.compressorRoom != null)
+                target = InfiltrationController.I.compressorRoom.gameObject;
+            if (target == null)
+                target = GameObject.Find("Compresores");
+
+            if (target != null)
+            {
+                var sources = target.GetComponents<AudioSource>();
+                for (int i = 0; i < sources.Length; i++)
+                {
+                    var src = sources[i];
+                    if (src == null || !src.loop || src.spatialBlend < 0.9f) continue;
+                    if (src.clip == null)
+                    {
+                        src.clip = CompressorHumLoop;
+                        restored++;
+                    }
+                    if (src.outputAudioMixerGroup == null)
+                        src.outputAudioMixerGroup = SubmarineAudioSuite.AmbienceGroup ?? SubmarineAudioSuite.MasterGroup;
+                    if (Application.isPlaying && !src.isPlaying && src.clip != null)
+                        src.Play();
+                }
+            }
+            return restored;
+        }
+
+        /// <summary>
+        /// Emite un paso metálico espacial 3D sobre chapa naval húmeda.
+        /// </summary>
+        public static void PlayMetallicFootstep(Vector3 position, float volume = 0.45f, float maxDistance = 16f)
+        {
+            PlaySpatialAt(StepMetalWet, position, volume, maxDistance);
+        }
+
         /// <summary>
         /// Emite un sonido espacial 3D en la posición indicada con atenuación y enrutamiento a AudioMixer.
         /// </summary>
@@ -94,14 +141,19 @@ namespace Kairos.Pruebas
             var a = go.AddComponent<AudioSource>();
             a.clip = clip;
             a.volume = volume;
+            a.playOnAwake = false;
             a.spatialBlend = 1.0f; // 100% 3D
             a.minDistance = 1.5f;
             a.maxDistance = maxDistance;
             a.rolloffMode = AudioRolloffMode.Logarithmic;
             a.outputAudioMixerGroup = group ?? SubmarineAudioSuite.SubmarineGroup ?? SubmarineAudioSuite.AmbienceGroup;
-            a.Play();
+            if (Application.isPlaying)
+                a.Play();
 
-            UnityEngine.Object.Destroy(go, clip.length + 0.1f);
+            if (Application.isPlaying)
+                UnityEngine.Object.Destroy(go, clip.length + 0.1f);
+            else
+                UnityEngine.Object.DestroyImmediate(go);
         }
 
         /// <summary>
@@ -113,13 +165,15 @@ namespace Kairos.Pruebas
             var a = host.AddComponent<AudioSource>();
             a.clip = clip;
             a.loop = true;
+            a.playOnAwake = false;
             a.volume = volume;
             a.spatialBlend = 1.0f; // 100% 3D
             a.minDistance = 2.0f;
             a.maxDistance = maxDistance;
             a.rolloffMode = AudioRolloffMode.Linear;
             a.outputAudioMixerGroup = SubmarineAudioSuite.AmbienceGroup;
-            a.Play();
+            if (Application.isPlaying)
+                a.Play();
             return a;
         }
     }
