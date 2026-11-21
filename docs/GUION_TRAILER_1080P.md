@@ -17,8 +17,18 @@
 
 ---
 
-## 2. Procedimiento de Grabación a 1080p
+## 2. Variantes Cinemáticas por Sector (`LoadSectorShots`)
 
-1. Abrir la escena `00_Menu` o `03_Infiltracion` en Unity 6 (`6000.3.24f1`) con resolución del Game View fijada en **Full HD (`1920 × 1080`)**.
-2. El componente `TrailerCinematicSequencer` ya se encuentra integrado en la escena principal y configurado con las 4 tomas suaves interpoladas (`Vector3.Lerp` / `Quaternion.Slerp`).
-3. Grabar en modo Maximized (sin bordes del editor) a 60 FPS estables verificados con el monitor `F3`.
+El componente `TrailerCinematicSequencer` incluye presets dedicados para los **3 sectores oceánicos jugables** (`LoadSectorShots(int sector)`):
+
+- **Sector 1 (`0` — Atlántico Sur):** *Hai Feng 77* en noche polar azul, lancha RHIB, escala de popa y puente de mando (`03_Infiltracion`).
+- **Sector 2 (`1` — Golfo de Guinea):** Arrastrero *Kestrel Explorer* al crepúsculo tropical, transbordo con *Atlantic Reef*, rondas invertidas y documentación de licencias falsas (`03_Infiltracion_S2`).
+- **Sector 3 (`2` — Océano Índico Occidental):** Palangrero *Oceanic Crown 9* bajo tormenta monzónica eléctrica con relámpagos, buque nodriza *Mombasa Reefer*, vigía de proa y cierre judicial contra *Tidewater Holdings* (`03_Infiltracion_S3`).
+
+---
+
+## 3. Procedimiento de Grabación a 1080p
+
+1. Abrir cualquiera de las 7 escenas (`00_Menu`, `02_Sonar`, `03_Infiltracion`, `03_Infiltracion_S2`, `03_Infiltracion_S3`) en Unity 6 (`6000.3.24f1`) con el Game View fijado en **Full HD (`1920 × 1080`)**.
+2. Invocar `LoadSectorShots(0 | 1 | 2)` y `PlaySequence()` en `TrailerCinematicSequencer` para recorrer las 4 tomas suaves interpoladas (`Vector3.Lerp` / `Quaternion.Slerp`) de cada océano.
+3. Grabar en modo Maximized (sin bordes del editor) a 60 FPS estables verificados con el monitor `F3` (`PerfMonitor.cs`) y mezcla de audio calibrada mediante `MasterAudioMixerCalibration`.

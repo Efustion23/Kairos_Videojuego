@@ -88,15 +88,17 @@ flowchart LR
 
 ---
 
-## 4. Estructura de Sectores Oceánicos
+## 4. Estructura de Sectores Oceánicos (7 Escenas · 3 Sectores Jugables)
 
-1. **Sector 1 — Atlántico Sur (Milla 201, Argentina) [Jugable en v1.0]:**
-   * *Caso Principal:* Potero *Hai Feng 77* (con bucle completo de 4 fases, repatriación digna y epílogo personalizado para los 4 pescadores).
-   * *Enfoque:* Pesca de calamar con focos poteros, incursiones al límite de la ZEE y transbordos opacos hacia el frigorífico *Polar Meridian*.
-2. **Sector 2 — Golfo de Guinea (África Occidental) [Próximamente]:**
-   * *Enfoque:* Arrastreros industriales (*Kestrel Explorer*), falsificación de licencias locales y apagones masivos de AIS. Mostrado como *Próximamente* en el mapa orbital v1.0 manteniendo los datos de flota y nodos listos para expansión.
-3. **Sector 3 — Océano Índico Occidental [Próximamente]:**
-   * *Enfoque:* Palangreros de atún de larga distancia (*Oceanic Crown 9*), tripulaciones retenidas por más de 2 años sin tocar puerto y desenlace contra *Tidewater Holdings*. Mostrado como *Próximamente* en el mapa orbital v1.0.
+1. **Sector 1 — Atlántico Sur (Milla 201, Argentina) [`03_Infiltracion.unity`]:**
+   * *Caso Principal:* Potero *Hai Feng 77* (`45°24'S 59°12'O`), bucle completo de 4 fases, repatriación digna y epílogo personalizado para los 4 pescadores (Rodel Santos, Ari Wibowo, Moussa Diallo y Thant Zin).
+   * *Atmósfera y Flota:* Noche polar azul, flota de poteros con focos dorados y transbordos opacos hacia el frigorífico *Polar Meridian*.
+2. **Sector 2 — Golfo de Guinea (África Occidental) [`03_Infiltracion_S2.unity`]:**
+   * *Caso Principal:* Arrastrero industrial *Kestrel Explorer* (`2°18'N 2°24'E`), licencias locales falsificadas y apagones masivos de AIS.
+   * *Atmósfera, Flota y Tripulación:* Crepúsculo cálido tropical, mar verde-petróleo, buque *Kestrel Explorer 3D* con transbordos al *Atlantic Reef*, rondas invertidas de guardias y tripulación propia (Kwame Mensah, Ibrahim Diop, Samuel Osei y Jean-Luc Koffi).
+3. **Sector 3 — Océano Índico Occidental [`03_Infiltracion_S3.unity`]:**
+   * *Caso Principal:* Palangrero de atún de larga distancia *Oceanic Crown 9* (`10°12'S 58°18'E`), tripulación retenida por más de 2 años sin tocar puerto y desenlace final contra *Tidewater Holdings*.
+   * *Atmósfera, Flota y Tripulación:* Tormenta monzónica eléctrica con relámpagos, balizas rojas de seguridad, buque nodriza *Mombasa Reefer*, vigía adicional en proa y tripulación propia (Budi Santoso, Aung Kyaw, Mateo Cruz y Hassan Juma).
 
 ---
 
