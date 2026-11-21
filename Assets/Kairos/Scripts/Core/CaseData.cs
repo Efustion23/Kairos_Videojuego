@@ -138,6 +138,21 @@ namespace Kairos
             : "Potero industrial de 90 m con señal AIS apagada fuera de la zona económica exclusiva.";
         public static int DouglasFor(int sector, float hours) => Mathf.Min(9, DouglasAt(hours) + (sector == 1 ? 1 : sector == 2 ? 2 : 0));
 
+        /// Formatea en grados y minutos (DMS) las coordenadas reales del buque objetivo de cada sector.
+        public static string FormatGps(int sector)
+        {
+            var target = TargetFor(sector);
+            static string Dms(float v, char pos, char neg)
+            {
+                float abs = Mathf.Abs(v);
+                int deg = Mathf.FloorToInt(abs);
+                int min = Mathf.RoundToInt((abs - deg) * 60f);
+                if (min >= 60) { deg++; min -= 60; }
+                return $"{deg}°{min:00}'{(v >= 0f ? pos : neg)}";
+            }
+            return $"{Dms(target.lat, 'N', 'S')} {Dms(target.lon, 'E', 'O')}";
+        }
+
         public static bool LayerVisible(ShipDef ship, Anomaly a, int mask, float hours)
         {
             if (a.layer < 0) return hours >= a.minHours;

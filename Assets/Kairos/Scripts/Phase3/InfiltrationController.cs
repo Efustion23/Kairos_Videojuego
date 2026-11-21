@@ -111,6 +111,8 @@ namespace Kairos
             {
                 bool dumped = C.dumped && System.Array.IndexOf(CaseData.DumpedWhenDetected, e.evidenceId) >= 0;
                 if (dumped && !C.burned.Contains(e.evidenceId)) C.burned.Add(e.evidenceId);
+                if (Game.HasEvidence(e.evidenceId))
+                    e.SendMessage("CollectEvidence", SendMessageOptions.DontRequireReceiver);
                 if (C.burned.Contains(e.evidenceId) || Game.HasEvidence(e.evidenceId)) e.gameObject.SetActive(false);
             }
             foreach (var p in people)
@@ -124,7 +126,7 @@ namespace Kairos
 
         public void RebuildNav() => surface.UpdateNavMesh(surface.navMeshData);
         public void Toast(string msg, Color? c = null, float seconds = 3.5f) => toast.Show(msg, c, seconds);
-        public string Gps() => "45°24'S 59°12'O";
+        public string Gps() => CaseData.FormatGps(C.sector);
         public bool CaptainAwake() => captain != null && !captain.IsStunned;
         public bool OnWetDeck(Vector3 p) => p.y > 5.5f && (p.y > 8.5f || Mathf.Abs(p.x) > 5.2f || p.z < -20.2f || p.z > 2.2f);
 
@@ -390,6 +392,7 @@ namespace Kairos
             if (fade != null) fade.color = new Color(.78f, .96f, 1f, .42f);
             var seal = C.evidence.Find(x => x.id == e.evidenceId);
             Toast($"<color=#6CFF8A>PRUEBA SELLADA ({e.Def.cat})</color>  {e.Def.title}\nSHA-256 {seal.sha.Substring(0, 16)}…", Pal.Text, 4.5f);
+            e.SendMessage("CollectEvidence", SendMessageOptions.DontRequireReceiver);
             e.gameObject.SetActive(false);
             Progressed();
         }
