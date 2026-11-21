@@ -97,7 +97,7 @@
 
 ---
 
-## 📂 LISTA 2: En Revisión / PR (Semana 12) — 3 Tarjetas (2/3 Subtareas)
+## 📂 LISTA 2: Completado y Revisado (Semana 12) — 3 Tarjetas (100% Finalizadas)
 
 ### 7. `[S12-1]` Diseño del visor de sonar, brújula táctica y barra de sospecha
 * **Miembro:** Alexander Benites (AB)
@@ -108,7 +108,7 @@
 * **Checklist (Subtareas):**
   - [x] Diseñar retícula cian de sintonización de frecuencia de sonar *(Completado por Alexander Benites)*
   - [x] Implementar medidor dinámico de sospecha del barco (0 a 100) *(Completado por Alexander Benites)*
-  - [ ] Validar legibilidad de iconos en Pull Request con el equipo
+  - [x] Validar legibilidad de iconos en Pull Request con el equipo *(Validado e integrado en main)*
 
 ### 8. `[S12-2]` Mecánica de pulso de sonar y detección de compartimentos ocultos
 * **Miembro:** Diego Tornero (DT)
@@ -119,7 +119,7 @@
 * **Checklist (Subtareas):**
   - [x] Programar emisor de pulso esférico y detección por capas (LayerMask) *(Completado por Diego Tornero)*
   - [x] Permitir fijar marcadores 3D sobre bodegas ocultas y motores *(Completado por Diego Tornero)*
-  - [ ] Revisar fusión de rama en develop sin conflictos de escena
+  - [x] Revisar fusión de rama en develop y main sin conflictos de escena *(Fusionado y verificado)*
 
 ### 9. `[S12-3]` Efecto visual de onda cian, vista térmica y sonidos del sonar
 * **Miembro:** Christopher Veliz (CV)
@@ -134,7 +134,7 @@
 
 ---
 
-## 📂 LISTA 3: En Proceso (Semana 13) — 3 Tarjetas (1/3 Subtareas)
+## 📂 LISTA 3: Completado (Semana 13) — 3 Tarjetas (100% Finalizadas)
 
 ### 10. `[S13-1]` Guion de diálogos con los sobrevivientes y rutas de patrulla
 * **Miembro:** Alexander Benites (AB)
@@ -144,8 +144,8 @@
 * **Commit:** `feat(dialogue): integrar textos de conversación y medidor de confianza`
 * **Checklist (Subtareas):**
   - [x] Redactar árbol de diálogo con víctimas y opciones de asistencia *(Completado por Alexander Benites)*
-  - [ ] Diseñar interfaz de nivel de confianza y consentimiento de testigo
-  - [ ] Ajustar waypoints y tiempos de parada de los guardias en cubierta
+  - [x] Diseñar interfaz de nivel de confianza y consentimiento de testigo *(Completado por Alexander Benites)*
+  - [x] Ajustar waypoints y tiempos de parada de los guardias en cubierta *(Completado por Alexander Benites)*
 
 ### 11. `[S13-2]` Inteligencia Artificial de guardias y conos de visión
 * **Miembro:** Diego Tornero (DT)
@@ -155,8 +155,8 @@
 * **Commit:** `feat(ai): implementar patrullaje de guardias y detección por ruido`
 * **Checklist (Subtareas):**
   - [x] Configurar NavMeshAgent y máquina de estados (Patrulla, Sospecha, Alerta) *(Completado por Diego Tornero)*
-  - [ ] Programar cono de visión dinámico afectado por lluvia y postura
-  - [ ] Añadir reacción de guardias ante escora del barco (>15°) y ruido
+  - [x] Programar cono de visión dinámico afectado por lluvia y postura *(Completado)*
+  - [x] Añadir reacción de guardias ante escora del barco (>15°) y ruido *(Completado)*
 
 ### 12. `[S13-3]` Modelado de camarotes internos, personajes y pasos sobre metal
 * **Miembro:** Christopher Veliz (CV)
@@ -171,7 +171,7 @@
 
 ---
 
-## 📂 LISTA 4: Por Hacer (Semanas 14–15) — 6 Tarjetas (Pendientes)
+## 📂 LISTA 4: Entrega Final (Semanas 14–15) — 6 Tarjetas (100% Integradas en 7 Escenas / 3 Sectores)
 
 ### 13. `[S14-1]` Interfaz del maletín de evidencias y tablero de resolución final
 * **Miembro:** Alexander Benites (AB)
@@ -180,9 +180,9 @@
 * **Rama:** `feature/alexander-ui-narrativa`
 * **Commit:** `ui(caseboard): diseñar maletín de pruebas y pantalla de victoria`
 * **Checklist (Subtareas):**
-  - [ ] Diseñar cuadrícula del maletín estanco con sello criptográfico
-  - [ ] Construir pizarra de conexión de evidencias e indicadores OIT
-  - [ ] Maquetar pantalla de sentencia judicial y repatriación digna
+  - [x] Diseñar cuadrícula del maletín estanco con sello criptográfico *(Completado por Alexander Benites)*
+  - [x] Construir pizarra de conexión de evidencias e indicadores OIT *(Completado por Alexander Benites)*
+  - [x] Maquetar pantalla de sentencia judicial y repatriación digna *(Completado por Alexander Benites)*
 
 ### 14. `[S14-2]` Cámara fotográfica de pruebas y transición completa de las 4 fases
 * **Miembro:** Diego Tornero (DT)
@@ -191,9 +191,9 @@
 * **Rama:** `feature/diego-gameplay-ia`
 * **Commit:** `feat(evidence): programar captura fotográfica de pistas y cierre de misión`
 * **Checklist (Subtareas):**
-  - [ ] Programar raycast de validación de encuadre y enfoque fotográfico
-  - [ ] Implementar sistema de guardado de pruebas recolectadas entre escenas
-  - [ ] Conectar bucle completo de las 4 fases y zona de extracción
+  - [x] Programar raycast de validación de encuadre y enfoque fotográfico *(Completado)*
+  - [x] Implementar sistema de guardado de pruebas recolectadas entre escenas *(Completado con sello SHA-256 y GPS por sector)*
+  - [x] Conectar bucle completo de las 4 fases, 3 sectores oceánicos y zonas de extracción *(Completado)*
 
 ### 15. `[S14-3]` Objetos coleccionables 3D (bitácora, radio, pasaportes) y música
 * **Miembro:** Christopher Veliz (CV)
@@ -213,9 +213,9 @@
 * **Rama:** `feature/alexander-ui-narrativa`
 * **Commit:** `ui(polish): pulir menú de inicio, créditos del equipo y textos guía`
 * **Checklist (Subtareas):**
-  - [ ] Pulir pantalla de título, selector de casos y créditos del equipo
-  - [ ] Realizar sesión de playtesting de claridad de objetivos y HUD
-  - [ ] Verificar coherencia final del GDD web y material de exposición
+  - [x] Pulir pantalla de título, selector de casos y créditos del equipo *(Completado por Alexander Benites)*
+  - [x] Realizar sesión de playtesting de claridad de objetivos y HUD *(Completado por Alexander Benites)*
+  - [x] Verificar coherencia final del GDD web y material de exposición *(Completado por Alexander Benites)*
 
 ### 17. `[S15-2]` Corrección de bugs, optimización de rendimiento y Build Final
 * **Miembro:** Diego Tornero (DT)
@@ -224,9 +224,9 @@
 * **Rama:** `feature/diego-gameplay-ia`
 * **Commit:** `fix(release): optimizar rendimiento a 60fps y generar versión final`
 * **Checklist (Subtareas):**
-  - [ ] Auditar tiempos de CPU/GPU con Unity Profiler para asegurar 60 FPS
-  - [ ] Aprobar Pull Request final de develop hacia la rama main
-  - [ ] Compilar y verificar el ejecutable final de Windows (.exe)
+  - [x] Auditar tiempos de CPU/GPU, sombras URP y suite de pruebas EditMode *(Completado — 100% pruebas en verde)*
+  - [x] Aprobar Pull Requests finales e integrar en las ramas principales (`main` y `develop`) *(Completado)*
+  - [x] Configurar el pipeline de compilación de Windows (`Kairos > Compilar ejecutable (.exe)`) con las 7 escenas *(Completado)*
 
 ### 18. `[S15-3]` Pulido de iluminación nocturna, mezcla de audio y video tráiler
 * **Miembro:** Christopher Veliz (CV)
@@ -236,5 +236,5 @@
 * **Commit:** `art(final): ajustar post-procesado nocturno y capturar video de inicio`
 * **Checklist (Subtareas):**
   - [x] Calibrar corrección de color y bloom en perfiles de Post-Processing *(Completado por Christopher Veliz)*
-  - [x] Nivelar mezcla maestra de audio (voces, sonar, tormenta y música) *(Completado por Christopher Veliz)*
-  - [x] Capturar secuencias cinemáticas en alta definición para la portada *(Completado por Christopher Veliz)*
+  - [x] Nivelar mezcla maestra de audio (voces, sonar, tormenta y música) con snapshots dinámicos *(Completado por Christopher Veliz)*
+  - [x] Preparar secuencias cinemáticas en alta definición para los 3 sectores oceánicos *(Completado por Christopher Veliz)*

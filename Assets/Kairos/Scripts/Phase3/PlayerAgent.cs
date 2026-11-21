@@ -9,16 +9,18 @@ namespace Kairos
     {
         public Camera cam;
         public HumanoidMotion motion;
-        public float walkSpeed = 2f, runSpeed = 5.2f;
+        public float walkSpeed = 2f, crouchSpeed = 1.25f, runSpeed = 5.2f;
         public float acceleration = 11f, braking = 15f, turnSharpness = 11f;
 
         CharacterController cc;
         float yaw, pitch = 8f, velY, slipT, stumble, breathT, focus, roll, camVelY;
         int lastStep;
         Vector3 moveVel, camAnchor, camVelXZ;
-        bool camReady;
+        bool camReady, bodyHidden;
+        Renderer[] bodyRenderers;
         public bool Aiming { get; private set; }
         public bool Running { get; private set; }
+        public bool Crouching { get; private set; }
         public bool Moved { get; private set; }
         public bool IsMoving => moveVel.sqrMagnitude > .04f;
         public float Stamina { get; private set; } = 1f;
@@ -29,7 +31,7 @@ namespace Kairos
         public string FrameBlock { get; private set; }
 
         InfiltrationController I => InfiltrationController.I;
-        public Vector3 ChestPos => transform.position + Vector3.up * 1.25f;
+        public Vector3 ChestPos => transform.position + Vector3.up * (Crouching ? .78f : 1.25f);
         readonly Collider[] overlap = new Collider[16];
 
         void Awake()
@@ -49,12 +51,13 @@ namespace Kairos
         }
 
         /// Mira a un punto, con la cámara detrás: en una conversación se ve a las dos personas.
-        public void FaceTo(Vector3 point)
+        /// camYaw gira solo la cámara: en un diálogo deja a la persona en la mitad libre de la pantalla.
+        public void FaceTo(Vector3 point, float camYaw = 0)
         {
             var dir = point - transform.position; dir.y = 0;
             if (dir.sqrMagnitude < .01f) return;
             transform.rotation = Quaternion.LookRotation(dir);
-            yaw = transform.eulerAngles.y;
+            yaw = transform.eulerAngles.y + camYaw;
             pitch = 8f;
             moveVel = Vector3.zero;
         }
@@ -65,6 +68,7 @@ namespace Kairos
             get
             {
                 float v = I.InDangerLight(transform.position) ? 1.3f : .75f;
+                if (Crouching) v *= .55f;
                 if (Game.Has(2, 2)) v *= .8f;
                 return v;
             }
@@ -83,6 +87,7 @@ namespace Kairos
             pitch = Mathf.Clamp(pitch - md.y * sens, -40, 60);
 
             Aiming = mouse.rightButton.isPressed;
+            if (kb.cKey.wasPressedThisFrame || kb.leftCtrlKey.wasPressedThisFrame) Crouching = !Crouching;
 
             Vector3 input = Vector3.zero;
             if (kb.wKey.isPressed) input.z += 1;
@@ -93,9 +98,13 @@ namespace Kairos
             if (moving) Moved = true;
 
             Running = kb.leftShiftKey.isPressed && moving && !Aiming && Stamina > .02f;
+            if (Running) Crouching = false;
             Stamina = Mathf.Clamp01(Stamina + (Running ? -Time.deltaTime / 9f : Time.deltaTime / 7f));
-            float speed = Aiming ? 1.1f : Running ? runSpeed : walkSpeed;
+            float speed = Aiming ? 1.1f : Running ? runSpeed : Crouching ? crouchSpeed : walkSpeed;
             if (stumble > 0) { stumble -= Time.deltaTime; speed = .3f; }
+
+            cc.height = Mathf.MoveTowards(cc.height, Crouching ? 1.25f : 1.8f, Time.deltaTime * 4f);
+            cc.center = new Vector3(0, cc.height * .52f, 0);
 
             // Arranca, frena y cambia de dirección con inercia: el cuerpo tiene peso.
             var dir = Quaternion.Euler(0, yaw, 0) * input.normalized;
@@ -116,6 +125,7 @@ namespace Kairos
             motion.busy = HoldingTarget != null;
             motion.typing = HoldingTarget is BridgeConsole;
             motion.aiming = Aiming;
+            motion.stealthCrouch = Crouching;
 
             if (kb.qKey.wasPressedThisFrame) I.UseTool();
             if (kb.fKey.wasPressedThisFrame) I.UseVisor();
@@ -126,10 +136,10 @@ namespace Kairos
         {
             if (motion.Steps == lastStep) return;
             lastStep = motion.Steps;
-            float radius = Running ? 8f : 2.5f; // caminar es sigiloso; correr, no
+            float radius = Running ? 8f : Crouching ? .9f : 2.5f; // caminar es sigiloso; agachado casi inaudible; correr, no
             if (Game.Has(2, 1)) radius *= .7f;
             // Metal seco o cubierta mojada, y ningún paso suena igual al anterior.
-            Sfx.PlayAt(I.OnWetDeck(transform.position) ? Sfx.StepWet : Sfx.Step, transform.position, Running ? .6f : .25f, 12, Random.Range(.88f, 1.12f));
+            Sfx.PlayAt(I.OnWetDeck(transform.position) ? Sfx.StepWet : Sfx.Step, transform.position, Running ? .6f : Crouching ? .12f : .25f, 12, Random.Range(.88f, 1.12f));
             if (!I.StepsMasked) I.EmitNoise(transform.position, radius);
         }
 
@@ -252,7 +262,7 @@ namespace Kairos
             var rot = Quaternion.Euler(pitch, yaw, roll);
 
             // La cámara sigue con un ligero retardo, más lento en altura: rampas y escalones no la sacuden.
-            var target = transform.position + Vector3.up * 1.55f;
+            var target = transform.position + Vector3.up * (Crouching ? 1.12f : 1.55f);
             if (!camReady) { camAnchor = target; camVelXZ = Vector3.zero; camVelY = 0; camReady = true; }
             var flatAnchor = new Vector3(camAnchor.x, 0, camAnchor.z);
             flatAnchor = Vector3.SmoothDamp(flatAnchor, new Vector3(target.x, 0, target.z), ref camVelXZ, Aiming ? .02f : .05f);
@@ -264,6 +274,15 @@ namespace Kairos
             if (Physics.SphereCast(head, .18f, to.normalized, out var hit, to.magnitude, Layers.SolidMask))
                 desired = head + to.normalized * Mathf.Max(hit.distance - .05f, .25f);
             cam.transform.SetPositionAndRotation(desired, rot);
+
+            // En pasillos estrechos la cámara queda pegada a la cabeza: se oculta el cuerpo para ver lo que hay delante.
+            bool hide = !Aiming && (desired - head).sqrMagnitude < 1f;
+            if (hide != bodyHidden)
+            {
+                bodyHidden = hide;
+                bodyRenderers ??= GetComponentsInChildren<Renderer>();
+                foreach (var r in bodyRenderers) r.forceRenderingOff = hide;
+            }
         }
     }
 }

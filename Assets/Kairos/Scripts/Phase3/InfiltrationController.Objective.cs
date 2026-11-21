@@ -28,7 +28,7 @@ namespace Kairos
                 objective = "Fotografía el manifiesto en el camarote del oficial"; objTarget = Prop("e_manifiesto").transform; return;
             }
             var rodel = System.Array.Find(people, n => n.personId == "rodel");
-            if (rodel != null && !rodel.State.rescued && !rodel.State.following) { objective = "Habla con Rodel Santos, en el comedor"; objTarget = rodel.transform; }
+            if (rodel != null && !rodel.State.rescued && !rodel.State.following) { objective = $"Habla con {rodel.Def.name}, en el comedor"; objTarget = rodel.transform; }
         }
 
         /// Lo que hay tras una puerta cerrada no tiene ruta: primero, la puerta.

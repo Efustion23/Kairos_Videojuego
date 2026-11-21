@@ -30,20 +30,37 @@ namespace Kairos
                 c.a = k.kind == 1 ? .28f : .42f;
                 b.GetComponent<MeshRenderer>().material = Mats.Glow(c);
             }
-            // Focos de 36-37 °C dentro del compartimento con personas: nunca un contador, solo huella térmica.
+            // Siluetas humanas térmicas (36-37 °C) sentadas/confinadas en K4 (3 sobrevivientes; el cuarto trabaja fuera)
             var k4 = CaseData.Compartments[3];
             var rnd = new System.Random(4);
-            for (int i = 0; i < 3; i++) // Ari, Moussa y Thant; Rodel trabaja fuera de K4
+            var hotMat = Mats.Glow(Pal.ThermHot, true, true);
+            for (int i = 0; i < 3; i++)
             {
-                var f = k4.center + new Vector3(((float)rnd.NextDouble() - .5f) * 3.5f, 1.8f, ((float)rnd.NextDouble() - .5f) * 12f);
+                var f = k4.center + new Vector3(((float)rnd.NextDouble() - .5f) * 3.5f, 1.5f, ((float)rnd.NextDouble() - .5f) * 12f);
                 personFoci.Add(f);
-                var s = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                Destroy(s.GetComponent<Collider>());
-                s.layer = ThermalLayer;
-                s.transform.SetParent(thermalRoot.transform, false);
-                s.transform.position = ship.TransformPoint(f);
-                s.transform.localScale = new Vector3(.9f, 1.7f, .9f);
-                s.GetComponent<MeshRenderer>().material = Mats.Glow(Pal.ThermHot, true, true);
+                var personGo = new GameObject($"SiluetaTermica_{i + 1}");
+                personGo.transform.SetParent(thermalRoot.transform, false);
+                personGo.transform.position = ship.TransformPoint(f);
+                personGo.transform.rotation = Quaternion.Euler(0f, i * 110f + 25f, 0f);
+
+                void BodyPart(PrimitiveType pt, Vector3 lp, Vector3 sc, Vector3 rot)
+                {
+                    var part = GameObject.CreatePrimitive(pt);
+                    Destroy(part.GetComponent<Collider>());
+                    part.layer = ThermalLayer;
+                    part.transform.SetParent(personGo.transform, false);
+                    part.transform.localPosition = lp;
+                    part.transform.localRotation = Quaternion.Euler(rot);
+                    part.transform.localScale = sc;
+                    part.GetComponent<MeshRenderer>().sharedMaterial = hotMat;
+                }
+
+                BodyPart(PrimitiveType.Sphere, new Vector3(0f, .62f, .02f), new Vector3(.28f, .30f, .28f), Vector3.zero);         // cabeza
+                BodyPart(PrimitiveType.Capsule, new Vector3(0f, .18f, 0f), new Vector3(.42f, .36f, .26f), new Vector3(8f, 0, 0));   // torso
+                BodyPart(PrimitiveType.Capsule, new Vector3(-.22f, .14f, .12f), new Vector3(.13f, .24f, .13f), new Vector3(52f, 0, 14f)); // brazo izq recogido
+                BodyPart(PrimitiveType.Capsule, new Vector3(.22f, .14f, .12f), new Vector3(.13f, .24f, .13f), new Vector3(52f, 0, -14f)); // brazo der recogido
+                BodyPart(PrimitiveType.Capsule, new Vector3(-.13f, -.26f, .24f), new Vector3(.16f, .30f, .16f), new Vector3(68f, 0, 0));  // pierna izq sentada
+                BodyPart(PrimitiveType.Capsule, new Vector3(.13f, -.26f, .24f), new Vector3(.16f, .30f, .16f), new Vector3(68f, 0, 0));   // pierna der sentada
             }
             // Tubería de agua dulce hasta K4, solo visible en térmica.
             var pipe = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -99,11 +116,11 @@ namespace Kairos
             thermalVisorOverlay.transform.SetParent(canvasRoot, false);
 
             var topPanel = UI.Panel(thermalVisorOverlay.transform, new Vector2(.25f, .93f), new Vector2(.75f, .985f), default, default, new Color(.01f, .03f, .08f, .85f));
-            var topText = UI.Text(topPanel.transform, "● ÓPTICA TÉRMICA FLIR DRON · CONTRASTE TÉRMICO AZUL/ÁMBAR", 15, Pal.ThermHot, TMPro.TextAlignmentOptions.Center);
+            var topText = UI.Text(topPanel.transform, "OPTICA TERMICA FLIR DRON  ·  CONTRASTE AZUL (-18°C) / AMBAR (37°C)", 15, Pal.ThermHot, TMPro.TextAlignmentOptions.Center, true);
             topText.margin = new Vector4(6, 2, 6, 2);
 
             var scalePanel = UI.Panel(thermalVisorOverlay.transform, new Vector2(.02f, .02f), new Vector2(.28f, .10f), default, default, new Color(.01f, .04f, .09f, .88f));
-            var scaleText = UI.Text(scalePanel.transform, "<color=#2050FF>■ Frío (-18°C)</color>  |  <color=#FFD27A>■ Vital (37°C)</color>\nBodegas refrigeradas vs. Presencia humana", 13, Pal.Text, TMPro.TextAlignmentOptions.Center);
+            var scaleText = UI.Text(scalePanel.transform, "<color=#2050FF>[FRIO -18°C]</color>  |  <color=#FFD27A>[VITAL 37°C · 3 firmas]</color>\nBodegas refrigeradas vs. Presencia humana real", 13, Pal.Text, TMPro.TextAlignmentOptions.Center);
             scaleText.margin = new Vector4(4, 2, 4, 2);
         }
 

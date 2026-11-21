@@ -55,6 +55,7 @@ namespace Kairos
         void Start()
         {
             SyncSea();
+            SectorTheme.Apply(C.sector, ship);
             buoy = boat.gameObject.AddComponent<Buoy>();
             buoy.draft = .1f; buoy.tilt = Game.Has(1, 3) ? .35f : .8f;
             ResetBoat();
@@ -107,38 +108,58 @@ namespace Kairos
             cloud.Play();
         }
 
+        static Texture2D CreateSoftFoamTex()
+        {
+            const int s = 64;
+            var t = new Texture2D(s, s, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+            for (int y = 0; y < s; y++)
+                for (int x = 0; x < s; x++)
+                {
+                    float u = (x / (float)(s - 1)) * 2f - 1f;
+                    float v = (y / (float)(s - 1)) * 2f - 1f;
+                    float r = Mathf.Sqrt(u * u + v * v);
+                    float soft = Mathf.Clamp01(1f - r);
+                    soft = soft * soft * (3f - 2f * soft);
+                    float froth = .75f + .25f * Mathf.PerlinNoise(x * .22f, y * .22f);
+                    t.SetPixel(x, y, new Color(1f, 1f, 1f, soft * froth));
+                }
+            t.Apply();
+            return t;
+        }
+
         void BuildWake()
         {
+            var foamTex = CreateSoftFoamTex();
+            var foamMat = Mats.Glow(new Color(.82f, .94f, 1f, .52f), false, false, false, foamTex);
+
+            // Espuma y bruma suave detrás de la popa (textura difuminada, sin triángulos ni cintas)
             var go = new GameObject("EstelaLancha");
             go.transform.SetParent(boat, false);
-            go.transform.localPosition = new Vector3(0, .15f, -3.4f);
+            go.transform.localPosition = new Vector3(0, .12f, -3.2f);
             wakeFx = go.AddComponent<ParticleSystem>();
             var main = wakeFx.main;
-            main.loop = true; main.startLifetime = 1.6f; main.startSpeed = 1.4f;
-            main.startSize = new ParticleSystem.MinMaxCurve(.4f, 1.1f);
-            main.startColor = new Color(.72f, .92f, 1f, .45f);
+            main.loop = true; main.startLifetime = new ParticleSystem.MinMaxCurve(1.4f, 2.4f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(.6f, 1.8f);
+            main.startSize = new ParticleSystem.MinMaxCurve(.55f, 1.35f);
+            main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+            main.startColor = new Color(.84f, .95f, 1f, .42f);
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             var em = wakeFx.emission; em.rateOverTime = 0;
-            var sh = wakeFx.shape; sh.shapeType = ParticleSystemShapeType.Cone; sh.angle = 22f; sh.radius = .45f;
-            var size = wakeFx.sizeOverLifetime; size.enabled = true; size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0, .6f, 1, 2.4f));
+            var sh = wakeFx.shape; sh.shapeType = ParticleSystemShapeType.Box; sh.scale = new Vector3(1.4f, .1f, .3f);
+            var size = wakeFx.sizeOverLifetime; size.enabled = true; size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0, .5f, 1, 2.6f));
+            var col = wakeFx.colorOverLifetime; col.enabled = true;
+            var grad = new Gradient();
+            grad.SetKeys(
+                new[] { new GradientColorKey(new Color(.9f, .97f, 1f), 0f), new GradientColorKey(new Color(.62f, .82f, .92f), 1f) },
+                new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(.55f, .15f), new GradientAlphaKey(0f, 1f) });
+            col.color = grad;
             var r = go.GetComponent<ParticleSystemRenderer>();
-            var wakeTemplate = Resources.Load<Material>("KBoatWakeFoam");
-            var wakeShader = wakeTemplate != null ? wakeTemplate.shader : Shader.Find("Kairos/Pruebas/BoatWakeFoam");
-            if (wakeTemplate != null || wakeShader != null)
-            {
-                var wakeMat = wakeTemplate != null ? new Material(wakeTemplate) : new Material(wakeShader);
-                wakeMat.SetColor("_FoamColor", new Color(0.85f, 0.95f, 1.0f, 0.8f));
-                wakeMat.SetColor("_DeepColor", new Color(0.05f, 0.15f, 0.25f, 0.3f));
-                r.sharedMaterial = wakeMat;
-            }
-            else
-            {
-                r.sharedMaterial = Mats.Glow(Color.white, true, true, true);
-            }
+            r.renderMode = ParticleSystemRenderMode.Billboard;
+            r.sharedMaterial = foamMat;
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
-        void EmitPoint(Vector3 p, Color c, float size = .22f, float life = 90f)
+        void EmitPoint(Vector3 p, Color c, float size = .15f, float life = 26f)
         {
             var e = new ParticleSystem.EmitParams { position = p, startColor = c, startSize = size, startLifetime = life, velocity = Vector3.zero, applyShapeToPosition = false };
             cloud.Emit(e, 1);
@@ -296,6 +317,9 @@ namespace Kairos
             cam.transform.SetPositionAndRotation(targetPos, rot);
         }
 
+        /// Manga del barco del sector respecto a los 14 m del Hai Feng: la fija SectorTheme al cambiar el modelo.
+        [HideInInspector] public float beamScale = 1f;
+
         /// Evita que la lancha atraviese el casco del Hai Feng 77 (90 m de eslora, 14 m de manga).
         void KeepBoatOutsideShipHull()
         {
@@ -304,7 +328,7 @@ namespace Kairos
             const float halfLen = 47.5f;
             if (Mathf.Abs(local.z) >= halfLen) return;
             float zClamped = Mathf.Clamp(local.z, -45f, 45f);
-            float beam = zClamped < 15f ? 7f : 7f * Mathf.Sqrt(Mathf.Max(0f, 1f - Mathf.Pow((zClamped - 15f) / 30f, 2f)));
+            float beam = (zClamped < 15f ? 7f : 7f * Mathf.Sqrt(Mathf.Max(0f, 1f - Mathf.Pow((zClamped - 15f) / 30f, 2f)))) * beamScale;
             float halfW = beam + 2.5f;
             if (Mathf.Abs(local.x) >= halfW) return;
 
@@ -378,11 +402,12 @@ namespace Kairos
 
             // El casco se reconstruye con impactos reales; las bodegas, según el lado desde el que disparas.
             var from = boat.position + Vector3.up * 1.5f;
-            for (int i = 0; i < (crest ? 260 : 90); i++)
+            var hullCol = new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, .55f);
+            for (int i = 0; i < (crest ? 140 : 55); i++)
             {
                 var target = ship.TransformPoint(new Vector3(Random.Range(-7f, 7f), Random.Range(-4f, 11f), Random.Range(-46f, 46f)));
                 if (Physics.Raycast(from, (target - from).normalized, out var hit, PulseRange + 80f, 1 << Layers.HullShell))
-                    EmitPoint(hit.point, Pal.Sonar, .24f);
+                    EmitPoint(hit.point, hullCol, .16f, 24f);
             }
 
             var side = Mathf.Sign(ship.InverseTransformPoint(boat.position).x);
@@ -395,9 +420,53 @@ namespace Kairos
                 float sideF = Mathf.Sign(k.center.x) == side ? 1f : .6f;
                 scan[i] = Mathf.Min(1, scan[i] + q * rangeFactor * sideF);
                 if (scan[i] >= 1) C.scanSignals[i] |= Bit_Density;
-                int points = (int)(320 * q * sideF);
-                Color col = k.kind == 0 ? new Color(.25f, .62f, .78f) : k.kind == 1 ? Pal.Sonar : new Color(.3f, .7f, .65f);
-                for (int n = 0; n < points; n++) EmitPoint(SamplePoint(k, rnd), col, .18f);
+
+                // Estructura tenue del compartimento (bodega fría azul, maquinaria verde-azulado, habitable cian suave)
+                int structPoints = (int)(75 * q * sideF);
+                Color col = k.kind == 0 ? new Color(.18f, .44f, .78f, .38f)
+                    : k.kind == 1 ? new Color(.22f, .78f, .74f, .34f)
+                    : new Color(.25f, .60f, .58f, .38f);
+                for (int n = 0; n < structPoints; n++)
+                {
+                    if (k.kind == 1)
+                    {
+                        // Solo contorno de paredes de K4 para no confundir estructura con personas
+                        var half = k.size;
+                        var v = new Vector3(((float)rnd.NextDouble() - .5f) * half.x, ((float)rnd.NextDouble() - .5f) * half.y, ((float)rnd.NextDouble() - .5f) * half.z);
+                        switch (rnd.Next(3))
+                        {
+                            case 0: v.x = Mathf.Sign(v.x) * half.x * .5f; break;
+                            case 1: v.z = Mathf.Sign(v.z) * half.z * .5f; break;
+                            default: v.y = Mathf.Sign(v.y) * half.y * .5f; break;
+                        }
+                        EmitPoint(ship.TransformPoint(k.center + v), col, .12f, 24f);
+                    }
+                    else
+                    {
+                        EmitPoint(SamplePoint(k, rnd), col, .12f, 24f);
+                    }
+                }
+
+                // Exactamente 3 siluetas humanas reconocibles en K4 (cabeza + torso + hombros + piernas sentadas)
+                if (k.kind == 1)
+                {
+                    var bioCol = new Color(Pal.ThermHot.r, Pal.ThermHot.g, Pal.ThermHot.b, .92f);
+                    var silhouette = new[]
+                    {
+                        new Vector3(0f, .62f, 0f),      // cabeza
+                        new Vector3(-.18f, .34f, 0f),   // hombro izq
+                        new Vector3(.18f, .34f, 0f),    // hombro der
+                        new Vector3(0f, .24f, 0f),      // pecho
+                        new Vector3(0f, .02f, .04f),    // abdomen
+                        new Vector3(-.14f, -.22f, .18f),// rodilla izq
+                        new Vector3(.14f, -.22f, .18f), // rodilla der
+                        new Vector3(-.12f, -.48f, .28f),// pie izq
+                        new Vector3(.12f, -.48f, .28f), // pie der
+                    };
+                    foreach (var focus in personFoci)
+                        foreach (var off in silhouette)
+                            EmitPoint(ship.TransformPoint(focus + off), bioCol, .20f, 18f);
+                }
                 dense += k.densityValue * sideF; total += sideF;
             }
             Sfx.Play(dense / total > .62f ? Sfx.PingDense : Sfx.PingHollow, crest ? .9f : .5f);
@@ -434,6 +503,8 @@ namespace Kairos
             }
             var lr1 = MakeRing(1.2f);
             var lr2 = MakeRing(.6f);
+            var m1 = lr1.sharedMaterial;
+            var m2 = lr2.sharedMaterial;
             var c = boat.position;
             for (float t = 0; t < 1.6f; t += Time.deltaTime)
             {
@@ -448,12 +519,14 @@ namespace Kairos
                     lr2.SetPosition(i, new Vector3(x2, Ocean.Height(x2, z2) + .45f, z2));
                 }
                 float alpha = 1f - t / 1.6f;
-                lr1.material.SetColor("_Color", new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, alpha));
-                lr2.material.SetColor("_Color", new Color(Pal.Sealed.r, Pal.Sealed.g, Pal.Sealed.b, alpha * .65f));
+                if (m1 != null) m1.SetColor("_Color", new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, alpha));
+                if (m2 != null) m2.SetColor("_Color", new Color(Pal.Sealed.r, Pal.Sealed.g, Pal.Sealed.b, alpha * .65f));
                 yield return null;
             }
             Destroy(lr1.gameObject);
             Destroy(lr2.gameObject);
+            if (m1 != null) Destroy(m1);
+            if (m2 != null) Destroy(m2);
         }
 
         void Detected()

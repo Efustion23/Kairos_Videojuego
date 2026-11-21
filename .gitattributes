@@ -82,3 +82,6 @@
 *.mask merge=unityyamlmerge eol=lf
 *.playable merge=unityyamlmerge eol=lf
 
+
+# Mallas de barcos unidas por el generador (pesan decenas de MB en texto)
+Assets/Kairos/Generated/Ships/*.asset filter=lfs diff=lfs merge=lfs -text
