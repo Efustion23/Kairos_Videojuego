@@ -29,15 +29,21 @@ namespace Kairos.Pruebas
 
         [Header("Balanceo de Patrulla")]
         public bool isPatrolling = true;
+        public bool isStunned = false;
         public float walkSpeed = 1.6f;
         public float swingAmplitude = 4.5f;
 
         float swingTime;
         Quaternion baseLocalRot;
+        GuardAI guardAI;
 
         public void EnsureLantern()
         {
-            if (_lanternLight != null) return;
+            if (_lanternLight != null)
+            {
+                _lanternLight.shadows = LightShadows.None;
+                return;
+            }
 
             var child = transform.Find("LinternaHalogena");
             GameObject lGo = child != null ? child.gameObject : null;
@@ -57,17 +63,22 @@ namespace Kairos.Pruebas
             _lanternLight.intensity = patrolIntensity;
             _lanternLight.range = beamRange;
             _lanternLight.spotAngle = spotAngle;
-            _lanternLight.shadows = LightShadows.Soft;
+            // Sin sombras dinámicas en linternas de patrulla para evitar saturar el atlas de sombras URP 2048x2048
+            _lanternLight.shadows = LightShadows.None;
         }
 
         void Awake()
         {
+            guardAI = GetComponent<GuardAI>();
             EnsureLantern();
         }
 
         void Update()
         {
-            if (!isPatrolling || lanternLight == null) return;
+            if (guardAI != null && guardAI.IsStunned != isStunned)
+                SetStunned(guardAI.IsStunned);
+
+            if (isStunned || !isPatrolling || lanternLight == null) return;
 
             swingTime += Time.deltaTime * walkSpeed * Mathf.PI;
             float yawSwing = Mathf.Sin(swingTime) * swingAmplitude;
@@ -76,10 +87,20 @@ namespace Kairos.Pruebas
             lanternLight.transform.localRotation = baseLocalRot * Quaternion.Euler(pitchSwing, yawSwing, 0f);
         }
 
+        public void SetStunned(bool stunned)
+        {
+            isStunned = stunned;
+            EnsureLantern();
+            if (lanternLight == null) return;
+            lanternLight.enabled = !stunned;
+            lanternLight.intensity = stunned ? 0f : patrolIntensity;
+            if (!stunned) lanternLight.color = halogenColor;
+        }
+
         public void SetAlert(bool alert)
         {
             EnsureLantern();
-            if (lanternLight == null) return;
+            if (lanternLight == null || isStunned) return;
             lanternLight.intensity = alert ? alertIntensity : patrolIntensity;
             lanternLight.color = alert ? new Color(1.0f, 0.45f, 0.25f) : halogenColor;
         }
