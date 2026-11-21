@@ -97,5 +97,43 @@ namespace Kairos.Pruebas.Tests
                 Object.DestroyImmediate(mat);
             }
         }
+
+        [Test]
+        public void RainController_AsignaMaterialUrpSinSombrasEnRenderers()
+        {
+            GameObject go = new GameObject("Test_RainMaterials");
+            spawnedObjects.Add(go);
+
+            var rain = go.AddComponent<MaritimeRainParticlesController>();
+            rain.InitializeRainVfx();
+
+            Assert.IsNotNull(rain.RainEmitter);
+            var rainRenderer = rain.RainEmitter.GetComponent<ParticleSystemRenderer>();
+            Assert.IsNotNull(rainRenderer.sharedMaterial, "El emisor de lluvia debe tener un material URP asignado.");
+            Assert.AreEqual(UnityEngine.Rendering.ShadowCastingMode.Off, rainRenderer.shadowCastingMode);
+
+            Assert.IsNotNull(rain.SplashEmitter);
+            var splashRenderer = rain.SplashEmitter.GetComponent<ParticleSystemRenderer>();
+            Assert.IsNotNull(splashRenderer.sharedMaterial, "El emisor de salpicaduras debe tener un material URP asignado.");
+            Assert.AreEqual(UnityEngine.Rendering.ShadowCastingMode.Off, splashRenderer.shadowCastingMode);
+        }
+
+        [Test]
+        public void RainController_AdaptaIntensidadYVientoPorSector()
+        {
+            GameObject go = new GameObject("Test_RainSectors");
+            spawnedObjects.Add(go);
+
+            var rain = go.AddComponent<MaritimeRainParticlesController>();
+            rain.InitializeRainVfx();
+
+            rain.ApplySectorWeather(1, 4f);
+            float guineaIntensity = rain.rainIntensity;
+            float guineaWind = rain.windAngleDegrees;
+
+            rain.ApplySectorWeather(2, 6f);
+            Assert.Greater(rain.rainIntensity, guineaIntensity, "La tormenta monzónica del Sector 3 debe tener mayor intensidad.");
+            Assert.Greater(rain.windAngleDegrees, guineaWind, "La tormenta del Sector 3 debe inclinar más el viento.");
+        }
     }
 }

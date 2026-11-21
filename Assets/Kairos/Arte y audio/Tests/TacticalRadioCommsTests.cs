@@ -93,5 +93,18 @@ namespace Kairos.Pruebas.Tests
             Assert.Greater(startEnergy, endEnergy, "La ráfaga de squelch PTT debe decaer en energía.");
             UnityEngine.Object.DestroyImmediate(ptt);
         }
+
+        [Test]
+        public void RadioComms_PlayTacticalCueInicializaSinErroresEnEditMode()
+        {
+            GameObject go = new GameObject("Test_RadioCue");
+            spawnedObjects.Add(go);
+
+            var radio = go.AddComponent<TacticalRadioCommsAudio>();
+            radio.PlayTacticalCue(true, 0.25f);
+
+            Assert.IsTrue(radio.IsInitialized);
+            Assert.IsNotNull(radio.fxAudioSource);
+        }
     }
 }

@@ -103,5 +103,41 @@ namespace Kairos.Pruebas.Tests
                 Assert.IsNotNull(comp, $"No se pudo agregar el componente {christopherTypes[i].Name}.");
             }
         }
+
+        [Test]
+        public void SecuenciadorCinematico_CargaTomasParaLosTresSectores()
+        {
+            var go = TrailerCinematicSequencer.CreateCinematicSequencer(null, null);
+            spawnedObjects.Add(go);
+            var seq = go.GetComponent<TrailerCinematicSequencer>();
+
+            seq.LoadSectorShots(0);
+            Assert.AreEqual(4, seq.sequenceShots.Count);
+            Assert.AreEqual("Toma1_BuqueEntreNiebla", seq.CurrentShot.shotName);
+
+            seq.LoadSectorShots(1);
+            Assert.AreEqual(4, seq.sequenceShots.Count);
+            StringAssert.StartsWith("S2_", seq.CurrentShot.shotName);
+            Assert.Greater(seq.TotalDuration, 10f);
+
+            seq.LoadSectorShots(2);
+            Assert.AreEqual(4, seq.sequenceShots.Count);
+            StringAssert.StartsWith("S3_", seq.CurrentShot.shotName);
+            Assert.Greater(seq.TotalDuration, 10f);
+        }
+
+        [Test]
+        public void MasterAudioCalibration_SoportaPulsoSonarYEstados()
+        {
+            var go = MasterAudioMixerCalibration.CreateMasterAudioCalibration(null, null);
+            spawnedObjects.Add(go);
+            var cal = go.GetComponent<MasterAudioMixerCalibration>();
+
+            cal.PulseSonarSnapshot(1.5f);
+            Assert.AreEqual(AudioMixerSnapshotState.SonarActivo, cal.currentState);
+
+            cal.TransitionToState(AudioMixerSnapshotState.AlertaMaxima);
+            Assert.AreEqual(AudioMixerSnapshotState.AlertaMaxima, cal.currentState);
+        }
     }
 }
