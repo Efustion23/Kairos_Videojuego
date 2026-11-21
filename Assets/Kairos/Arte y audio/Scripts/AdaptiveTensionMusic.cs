@@ -27,6 +27,46 @@ namespace Kairos.Pruebas
 
         [Header("Velocidad de Transición")]
         public float crossfadeSpeed = 3.5f;
+        [Range(0f, 1f)] public float masterStemScale = 0.45f;
+
+        private void Start()
+        {
+            EnsureStemsReady();
+        }
+
+        /// <summary>
+        /// Regenera en tiempo de ejecución los stems procedurales (marcados como DontSave al guardar escena),
+        /// los enruta al AudioMixer y sincroniza el inicio de reproducción en Play Mode.
+        /// </summary>
+        public void EnsureStemsReady()
+        {
+            var mixerGroup = SubmarineAudioSuite.AmbienceGroup ?? SubmarineAudioSuite.MasterGroup;
+            PrepareStem(calmSource, "CalmStealthStem", 55f, 45f, mixerGroup);
+            PrepareStem(suspicionSource, "SuspicionTensionStem", 110f, 80f, mixerGroup);
+            PrepareStem(alertSource, "AlertChaseStem", 220f, 130f, mixerGroup);
+
+            SetSuspicionInstant(suspicionLevel);
+
+            if (Application.isPlaying)
+            {
+                if (calmSource != null && calmSource.clip != null && !calmSource.isPlaying) calmSource.Play();
+                if (suspicionSource != null && suspicionSource.clip != null && !suspicionSource.isPlaying) suspicionSource.Play();
+                if (alertSource != null && alertSource.clip != null && !alertSource.isPlaying) alertSource.Play();
+            }
+        }
+
+        private static void PrepareStem(AudioSource src, string clipName, float freq, float bpm, AudioMixerGroup group)
+        {
+            if (src == null) return;
+            src.loop = true;
+            src.playOnAwake = false;
+            if (src.clip == null)
+                src.clip = GenerateStemClip(clipName, freq, bpm);
+            if (src.outputAudioMixerGroup == null && group != null)
+                src.outputAudioMixerGroup = group;
+        }
+
+        private float VolumeScale => Application.isPlaying ? Mathf.Clamp01(Game.S.musicVolume) * masterStemScale : 1f;
 
         private void Update()
         {
@@ -85,30 +125,32 @@ namespace Kairos.Pruebas
         }
 
         /// <summary>
-        /// Aplica suavemente los volúmenes a las fuentes de audio.
+        /// Aplica suavemente los volúmenes a las fuentes de audio respetando el volumen de música.
         /// </summary>
         public void ApplyVolumes(float lerpFactor)
         {
+            float scale = VolumeScale;
             if (calmSource != null)
             {
-                calmSource.volume = Mathf.Lerp(calmSource.volume, calmWeight, lerpFactor);
+                calmSource.volume = Mathf.Lerp(calmSource.volume, calmWeight * scale, lerpFactor);
             }
             if (suspicionSource != null)
             {
-                suspicionSource.volume = Mathf.Lerp(suspicionSource.volume, suspicionWeight, lerpFactor);
+                suspicionSource.volume = Mathf.Lerp(suspicionSource.volume, suspicionWeight * scale, lerpFactor);
             }
             if (alertSource != null)
             {
-                alertSource.volume = Mathf.Lerp(alertSource.volume, alertWeight, lerpFactor);
+                alertSource.volume = Mathf.Lerp(alertSource.volume, alertWeight * scale, lerpFactor);
             }
         }
 
         public void SetSuspicionInstant(float suspicion)
         {
             UpdateWeights(suspicion);
-            if (calmSource != null) calmSource.volume = calmWeight;
-            if (suspicionSource != null) suspicionSource.volume = suspicionWeight;
-            if (alertSource != null) alertSource.volume = alertWeight;
+            float scale = VolumeScale;
+            if (calmSource != null) calmSource.volume = calmWeight * scale;
+            if (suspicionSource != null) suspicionSource.volume = suspicionWeight * scale;
+            if (alertSource != null) alertSource.volume = alertWeight * scale;
         }
 
         /// <summary>
