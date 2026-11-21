@@ -116,5 +116,55 @@ namespace Kairos.Tests
             StringAssert.Contains("Eligió", Epilogue(Person("thant", 2), 1));
             StringAssert.DoesNotContain("reclamando", Epilogue(Person("rodel", 0, 3), 1));
         }
+
+        [Test]
+        public void SectoresDosYTresTienenFlotaTripulacionYNodosPropios()
+        {
+            for (int sector = 1; sector <= 2; sector++)
+            {
+                var ships = CaseData.ShipsFor(sector);
+                var target = CaseData.TargetFor(sector);
+                Assert.GreaterOrEqual(ships.Length, 3, $"Sector {sector + 1} debe tener flota completa.");
+                Assert.IsTrue(target.target);
+                Assert.GreaterOrEqual(CaseData.ComputeIR(target, AllLayers, 0), CaseData.IrToScan, target.name);
+
+                foreach (var ship in ships)
+                    if (!ship.target) Assert.Less(CaseData.ComputeIR(ship, AllLayers, 0), CaseData.IrToScan, ship.name);
+
+                Assert.AreEqual(4, CaseData.PeopleFor(sector).Length, $"Sector {sector + 1} debe tener 4 tripulantes.");
+                var nodes = CaseData.NodesFor(sector);
+                Assert.AreEqual(6, nodes.Length, $"Sector {sector + 1} debe tener 6 nodos judiciales.");
+                Assert.AreEqual(target.name, nodes[0].name);
+                StringAssert.Contains(target.name, CaseData.CaseTitleFor(sector));
+                Assert.IsNotEmpty(CaseData.CaseSummaryFor(sector));
+            }
+        }
+
+        [Test]
+        public void EscenasDeInfiltracionCorrespondenACadaSector()
+        {
+            Assert.AreEqual("03_Infiltracion", Game.InfiltrationScene(0));
+            Assert.AreEqual("03_Infiltracion_S2", Game.InfiltrationScene(1));
+            Assert.AreEqual("03_Infiltracion_S3", Game.InfiltrationScene(2));
+        }
+
+        [Test]
+        public void DouglasEscalaConElSectorSinSuperarNueve()
+        {
+            int d0 = CaseData.DouglasFor(0, 0f);
+            int d1 = CaseData.DouglasFor(1, 0f);
+            int d2 = CaseData.DouglasFor(2, 0f);
+            Assert.Less(d0, d1);
+            Assert.Less(d1, d2);
+            Assert.LessOrEqual(CaseData.DouglasFor(2, 48f), 9);
+        }
+
+        [Test]
+        public void FormatoGpsReflejaCoordenadasDeCadaSector()
+        {
+            Assert.AreEqual("45°24'S 59°12'O", CaseData.FormatGps(0));
+            Assert.AreEqual("2°18'N 2°24'E", CaseData.FormatGps(1));
+            Assert.AreEqual("10°12'S 58°18'E", CaseData.FormatGps(2));
+        }
     }
 }
