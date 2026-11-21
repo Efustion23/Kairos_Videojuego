@@ -16,10 +16,26 @@ namespace Kairos.Pruebas
 
         public void FireSonarPulse(Vector3 originWorld)
         {
-            FireSonarPulse(originWorld, true, 180f);
+            var sonar = GetComponent<SonarController>();
+            float targetDist = 180f;
+            bool isCrest = true;
+            if (sonar != null && sonar.ship != null)
+            {
+                targetDist = Vector3.Distance(
+                    new Vector3(originWorld.x, 0f, originWorld.z),
+                    new Vector3(sonar.ship.position.x, 0f, sonar.ship.position.z));
+                isCrest = Ocean.SecondsFromCrest(originWorld.x, originWorld.z) <= (Game.Has(0, 1) ? 0.7f : 0.5f);
+            }
+            // SonarController ya dispara PingAcoustic y EcoMetallic; evitar doble disparo de audio
+            FireSonarPulseInternal(originWorld, isCrest, targetDist, sonar == null);
         }
 
         public void FireSonarPulse(Vector3 originWorld, bool isCrest = true, float targetDistance = 180f)
+        {
+            FireSonarPulseInternal(originWorld, isCrest, targetDistance, true);
+        }
+
+        private void FireSonarPulseInternal(Vector3 originWorld, bool isCrest, float targetDistance, bool playPrimaryPingAndEco)
         {
             if (mainCamera == null) mainCamera = Camera.main;
 
@@ -30,11 +46,13 @@ namespace Kairos.Pruebas
             StartCoroutine(WorldSweepRoutine(originWorld, isCrest));
 
             // 3. Audio diegético sincronizado con la onda
-            SubmarineAudioSuite.Play(SubmarineAudioSuite.PingAcoustic, isCrest ? 0.95f : 0.65f);
+            if (playPrimaryPingAndEco)
+            {
+                SubmarineAudioSuite.Play(SubmarineAudioSuite.PingAcoustic, isCrest ? 0.95f : 0.65f);
+                float echoDelay = Mathf.Clamp(targetDistance / 450f, 0.15f, 1.25f);
+                StartCoroutine(DelayedEcho(echoDelay, isCrest));
+            }
             SubmarineAudioSuite.Play(SubmarineAudioSuite.SonarReverb, isCrest ? 0.75f : 0.45f);
-
-            float echoDelay = Mathf.Clamp(targetDistance / 450f, 0.15f, 1.25f);
-            StartCoroutine(DelayedEcho(echoDelay, isCrest));
 
             if (targetDistance < 220f)
                 SubmarineAudioSuite.Play(SubmarineAudioSuite.UnderwaterCreak, isCrest ? 0.7f : 0.45f);
@@ -49,13 +67,14 @@ namespace Kairos.Pruebas
         IEnumerator ScreenSweepRoutine(Vector3 worldOrigin, bool isCrest)
         {
             var sweepGo = new GameObject("Prueba_ScreenSweepWave");
+            GameObject tempCanvasGo = null;
             Canvas canvas = targetCanvas != null ? targetCanvas : FindAnyObjectByType<Canvas>();
             if (canvas == null)
             {
-                var cGo = new GameObject("TempSonarCanvas");
-                canvas = cGo.AddComponent<Canvas>();
+                tempCanvasGo = new GameObject("TempSonarCanvas");
+                canvas = tempCanvasGo.AddComponent<Canvas>();
                 canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                cGo.AddComponent<CanvasScaler>();
+                tempCanvasGo.AddComponent<CanvasScaler>();
             }
             sweepGo.transform.SetParent(canvas.transform, false);
 
@@ -85,6 +104,7 @@ namespace Kairos.Pruebas
             }
 
             Destroy(sweepGo);
+            if (tempCanvasGo != null) Destroy(tempCanvasGo);
             if (mat != null) Destroy(mat);
         }
 
@@ -93,7 +113,8 @@ namespace Kairos.Pruebas
             var ringGo = new GameObject("Prueba_PulsoRing3D");
             ringGo.transform.position = center;
             var lr = ringGo.AddComponent<LineRenderer>();
-            lr.material = MatsSonarPrueba.CreateRadialSweep(cyanColor, 0f, 16f);
+            Material ringMat = MatsSonarPrueba.CreateRadialSweep(cyanColor, 0f, 16f);
+            lr.sharedMaterial = ringMat;
             lr.loop = true;
             lr.positionCount = 80;
             lr.widthMultiplier = isCrest ? 2.5f : 1.6f;
@@ -113,16 +134,17 @@ namespace Kairos.Pruebas
                 }
 
                 float alpha = 1f - (t / duration);
-                if (lr.material != null)
+                if (ringMat != null)
                 {
-                    lr.material.SetColor("_SweepColor", new Color(cyanColor.r, cyanColor.g, cyanColor.b, alpha));
-                    lr.material.SetVector("_Center", new Vector4(center.x, center.y, center.z, 0));
-                    lr.material.SetFloat("_Radius", r);
+                    ringMat.SetColor("_SweepColor", new Color(cyanColor.r, cyanColor.g, cyanColor.b, alpha));
+                    ringMat.SetVector("_Center", new Vector4(center.x, center.y, center.z, 0));
+                    ringMat.SetFloat("_Radius", r);
                 }
                 yield return null;
             }
 
             Destroy(ringGo);
+            if (ringMat != null) Destroy(ringMat);
         }
     }
 }

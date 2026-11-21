@@ -503,6 +503,8 @@ namespace Kairos
             }
             var lr1 = MakeRing(1.2f);
             var lr2 = MakeRing(.6f);
+            var m1 = lr1.sharedMaterial;
+            var m2 = lr2.sharedMaterial;
             var c = boat.position;
             for (float t = 0; t < 1.6f; t += Time.deltaTime)
             {
@@ -517,12 +519,14 @@ namespace Kairos
                     lr2.SetPosition(i, new Vector3(x2, Ocean.Height(x2, z2) + .45f, z2));
                 }
                 float alpha = 1f - t / 1.6f;
-                lr1.material.SetColor("_Color", new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, alpha));
-                lr2.material.SetColor("_Color", new Color(Pal.Sealed.r, Pal.Sealed.g, Pal.Sealed.b, alpha * .65f));
+                if (m1 != null) m1.SetColor("_Color", new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, alpha));
+                if (m2 != null) m2.SetColor("_Color", new Color(Pal.Sealed.r, Pal.Sealed.g, Pal.Sealed.b, alpha * .65f));
                 yield return null;
             }
             Destroy(lr1.gameObject);
             Destroy(lr2.gameObject);
+            if (m1 != null) Destroy(m1);
+            if (m2 != null) Destroy(m2);
         }
 
         void Detected()
