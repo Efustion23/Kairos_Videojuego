@@ -45,7 +45,10 @@ namespace Kairos.Pruebas
             // 2. Efecto en espacio 3D (Onda en la superficie marina)
             StartCoroutine(WorldSweepRoutine(originWorld, isCrest));
 
-            // 3. Audio diegético sincronizado con la onda
+            // 3. Audio diegético sincronizado con la onda y ducking temporal en el mixer
+            var cal = FindFirstObjectByType<MasterAudioMixerCalibration>();
+            if (cal != null) cal.PulseSonarSnapshot(1.8f);
+
             if (playPrimaryPingAndEco)
             {
                 SubmarineAudioSuite.Play(SubmarineAudioSuite.PingAcoustic, isCrest ? 0.95f : 0.65f);
