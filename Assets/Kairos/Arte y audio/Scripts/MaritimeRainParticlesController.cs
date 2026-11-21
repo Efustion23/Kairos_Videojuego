@@ -28,12 +28,98 @@ namespace Kairos.Pruebas
         private ParticleSystem rainParticleSystem;
         private ParticleSystem splashParticleSystem;
         private AudioClip generatedRainClip;
+        private Material rainMat;
+        private Material splashMat;
+        private bool isUnderCover;
 
         public bool IsInitialized { get; private set; }
+        public ParticleSystem RainEmitter => rainParticleSystem;
+        public ParticleSystem SplashEmitter => splashParticleSystem;
 
         private void Awake()
         {
             InitializeRainVfx();
+        }
+
+        private void Start()
+        {
+            if (!Application.isPlaying) return;
+            if (rainAudioSource != null && rainAudioSource.outputAudioMixerGroup == null)
+                rainAudioSource.outputAudioMixerGroup = SubmarineAudioSuite.AmbienceGroup ?? SubmarineAudioSuite.MasterGroup;
+            if (Game.S != null && Game.C != null)
+                ApplySectorWeather(Game.C.sector, Ocean.Douglas);
+        }
+
+        private void Update()
+        {
+            if (!Application.isPlaying || !IsInitialized) return;
+
+            var cam = Camera.main;
+            if (cam != null && rainParticleSystem != null)
+            {
+                var cp = cam.transform.position;
+                rainParticleSystem.transform.position = new Vector3(cp.x, cp.y + 12f, cp.z);
+                if (splashParticleSystem != null)
+                    splashParticleSystem.transform.position = new Vector3(cp.x, cp.y - 1.2f, cp.z);
+            }
+
+            bool underCover = false;
+            if (InfiltrationController.I != null && InfiltrationController.I.player != null)
+            {
+                underCover = !InfiltrationController.I.OnWetDeck(InfiltrationController.I.player.transform.position);
+            }
+
+            if (underCover != isUnderCover)
+            {
+                isUnderCover = underCover;
+                if (rainParticleSystem != null)
+                {
+                    var em = rainParticleSystem.emission;
+                    em.enabled = !isUnderCover;
+                }
+                if (splashParticleSystem != null)
+                {
+                    var sEm = splashParticleSystem.emission;
+                    sEm.enabled = !isUnderCover;
+                }
+            }
+
+            if (rainAudioSource != null)
+            {
+                float targetVol = (isUnderCover ? 0.08f : 1f) * rainAudioVolume * rainIntensity;
+                rainAudioSource.volume = Mathf.MoveTowards(rainAudioSource.volume, targetVol, Time.deltaTime * 1.8f);
+            }
+        }
+
+        /// <summary>
+        /// Adapta densidad de lluvia y ángulo de ráfaga al sector oceánico activo y la escala Douglas.
+        /// </summary>
+        public void ApplySectorWeather(int sector, float douglas)
+        {
+            float d = Mathf.Clamp(douglas, 0f, 9f);
+            float intensity;
+            float wind;
+            if (sector == 1)
+            {
+                // Golfo de Guinea: chubasco tropical cálido moderado
+                intensity = Mathf.Clamp01(0.45f + (d - 3f) * 0.07f);
+                wind = Mathf.Clamp(14f + d * 2.0f, 6f, 40f);
+            }
+            else if (sector >= 2)
+            {
+                // Océano Índico: tormenta monzónica intensa
+                intensity = Mathf.Clamp01(0.82f + (d - 3f) * 0.06f);
+                wind = Mathf.Clamp(28f + d * 3.0f, 15f, 55f);
+            }
+            else
+            {
+                // Atlántico Sur (Milla 201): llovizna austral y viento constante
+                intensity = Mathf.Clamp01(0.60f + (d - 3f) * 0.08f);
+                wind = Mathf.Clamp(18f + d * 2.4f, 8f, 46f);
+            }
+
+            SetRainIntensity(intensity);
+            SetWindAngle(wind);
         }
 
         public void InitializeRainVfx()
@@ -44,6 +130,33 @@ namespace Kairos.Pruebas
             SetupAudioLoop();
 
             IsInitialized = true;
+        }
+
+        private static Material CreateUrpRainMaterial(Color tint, bool roundSplash)
+        {
+            var glowTemplate = Resources.Load<Material>("KGlow");
+            if (glowTemplate != null)
+            {
+                var mat = new Material(glowTemplate) { hideFlags = HideFlags.DontSave };
+                mat.SetColor("_Color", tint);
+                mat.SetFloat("_Src", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                mat.SetFloat("_Dst", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                mat.SetFloat("_ZT", (float)UnityEngine.Rendering.CompareFunction.LessEqual);
+                mat.SetFloat("_ZW", 0f);
+                mat.SetFloat("_Round", roundSplash ? 1f : 0f);
+                mat.renderQueue = 3000;
+                return mat;
+            }
+
+            Shader sh = Shader.Find("Universal Render Pipeline/Particles/Unlit")
+                ?? Shader.Find("Universal Render Pipeline/Unlit")
+                ?? Shader.Find("Sprites/Default");
+            if (sh == null) return null;
+
+            var fallback = new Material(sh) { hideFlags = HideFlags.DontSave };
+            if (fallback.HasProperty("_BaseColor")) fallback.SetColor("_BaseColor", tint);
+            if (fallback.HasProperty("_Color")) fallback.SetColor("_Color", tint);
+            return fallback;
         }
 
         private void SetupRainEmitters()
@@ -69,6 +182,18 @@ namespace Kairos.Pruebas
             shape.shapeType = ParticleSystemShapeType.Box;
             shape.scale = new Vector3(30f, 0.5f, 30f);
 
+            var rainRenderer = rainObj.GetComponent<ParticleSystemRenderer>();
+            if (rainRenderer != null)
+            {
+                rainMat = CreateUrpRainMaterial(rainColor, false);
+                if (rainMat != null) rainRenderer.sharedMaterial = rainMat;
+                rainRenderer.renderMode = ParticleSystemRenderMode.Stretch;
+                rainRenderer.velocityScale = 0.03f;
+                rainRenderer.lengthScale = 1.6f;
+                rainRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                rainRenderer.receiveShadows = false;
+            }
+
             // Inclinación por ráfagas de viento oceánico
             rainObj.transform.localRotation = Quaternion.Euler(windAngleDegrees, 0, 0);
 
@@ -85,10 +210,20 @@ namespace Kairos.Pruebas
                 sMain.startLifetime = splashLifetime;
                 sMain.startSpeed = 1.8f;
                 sMain.startSize = 0.08f;
-                sMain.startColor = new Color(0.85f, 0.95f, 1f, 0.45f);
+                Color splashCol = new Color(0.85f, 0.95f, 1f, 0.45f);
+                sMain.startColor = splashCol;
 
                 var sEmission = splashParticleSystem.emission;
                 sEmission.rateOverTime = 80f * rainIntensity;
+
+                var splashRenderer = splashObj.GetComponent<ParticleSystemRenderer>();
+                if (splashRenderer != null)
+                {
+                    splashMat = CreateUrpRainMaterial(splashCol, true);
+                    if (splashMat != null) splashRenderer.sharedMaterial = splashMat;
+                    splashRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    splashRenderer.receiveShadows = false;
+                }
             }
         }
 
@@ -185,9 +320,17 @@ namespace Kairos.Pruebas
 
         private void OnDestroy()
         {
-            if (Application.isPlaying && generatedRainClip != null)
+            if (Application.isPlaying)
             {
-                Destroy(generatedRainClip);
+                if (generatedRainClip != null) Destroy(generatedRainClip);
+                if (rainMat != null) Destroy(rainMat);
+                if (splashMat != null) Destroy(splashMat);
+            }
+            else
+            {
+                if (generatedRainClip != null) DestroyImmediate(generatedRainClip);
+                if (rainMat != null) DestroyImmediate(rainMat);
+                if (splashMat != null) DestroyImmediate(splashMat);
             }
         }
     }
