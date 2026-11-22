@@ -20,7 +20,7 @@ namespace Kairos
             compassText.enableAutoSizing = true; compassText.fontSizeMin = 12; compassText.fontSizeMax = 18;
 
             // --- Panel izquierdo (Estado de la lancha) con botón de minimizar ---
-            var left = UI.Panel(canvas.transform, new Vector2(.008f, .625f), new Vector2(.268f, .988f));
+            var left = UI.Panel(canvas.transform, new Vector2(.008f, .665f), new Vector2(.268f, .988f)); // a la altura de su contenido (incluida la línea de estado del dron)
             leftPanelObj = left.gameObject;
             var ls = UI.VStack(left.transform, 12, 5);
             var leftHead = UI.HStack(ls, 30, 6);

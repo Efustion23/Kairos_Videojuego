@@ -294,9 +294,8 @@ namespace Kairos
             bool pause = pausePanel == null;
             Time.timeScale = pause ? 0 : 1;
             if (!pause) { Destroy(pausePanel); return; }
-            var panel = UI.Panel(canvasRoot, new Vector2(.34f, .3f), new Vector2(.66f, .7f));
-            pausePanel = panel.gameObject;
-            var s = UI.VStack(panel.transform, 26, 10);
+            var s = UI.FitPanel(canvasRoot, new Vector2(.5f, .5f), new Vector2(.5f, .5f), 700, 28, 12);
+            pausePanel = s.gameObject;
             UI.Line(s, "Pausa", 34, Pal.Sonar, true);
             UI.Line(s, "W/S marcha · A/D timón · Espacio pulso · Tab panel casco · H hidrófono · T dron · V térmica · Clic derecho: cámara", 19, Pal.Dim);
             UI.Btn(s, "Continuar", TogglePause, Pal.Sealed);

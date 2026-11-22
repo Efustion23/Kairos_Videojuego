@@ -157,6 +157,26 @@ namespace Kairos.EditorTools
             return (c, rib * .35f + (fine - .5f) * rust * .2f, Mathf.Lerp(.42f, .12f, rust));
         }
 
+        /// Carga congelada de las bodegas: cajas de cartón apiladas (6x6 por cada 3 m), con cinta, etiqueta y escarcha.
+        static (Color, float, float) FrozenCartons(float u, float v)
+        {
+            const int N = 6;
+            float cu = u * N, cv = v * N;
+            int iu = Mathf.FloorToInt(cu), iv = Mathf.FloorToInt(cv);
+            float fu = cu - iu, fv = cv - iv;
+            float seam = Mathf.Min(Mathf.Min(fu, 1 - fu), Mathf.Min(fv, 1 - fv));
+            float edge = Smooth(.0f, .04f, seam);
+            float shade = .82f + Hash(iu, iv, 900) * .3f;
+            var carton = new Color(.62f, .5f, .36f) * shade;
+            bool tape = Mathf.Abs(fu - .5f) < .06f;
+            bool label = fu > .14f && fu < .4f && fv > .2f && fv < .42f && Hash(iu, iv, 950) > .35f;
+            var c = tape ? new Color(.7f, .62f, .46f) * shade : carton;
+            if (label) c = (fv * 30 % 1f) < .3f ? new Color(.2f, .2f, .22f) : new Color(.86f, .86f, .82f);
+            float frost = Smooth(.45f, .8f, Fbm(u, v, 24, 24, 970, 4) * .7f + fv * .35f);
+            c = Color.Lerp(c, new Color(.86f, .93f, 1f), frost * .65f) * Mathf.Lerp(.35f, 1f, edge);
+            return (c, edge * .5f + frost * .08f, Mathf.Lerp(.15f, .55f, frost));
+        }
+
         static Material super, orange, redPaint, rope, mattress, yellow, pipeBlue, pipeGreen, rubber, navRed, navGreen, navWhite, screenMat, netMat, jacket, vest;
         static Texture2D waterNormal;
 
@@ -178,7 +198,8 @@ namespace Kairos.EditorTools
             paint = Lit("M_HullPaint", Color.white, 1f, .1f, hullC, null, hullN);
             floor = Lit("M_Floor", Color.white, 1f, .1f, floorC, null, floorN);
             crate = Lit("M_Crate", new Color(.36f, .5f, .6f), 1f, .2f, crateC, null, crateN);
-            frozen = Lit("M_Frozen", new Color(.72f, .85f, .98f), 1f, .1f, crateC, null, crateN);
+            Surface("FrozenCartons", 512, 22, FrozenCartons, out var frozenC, out var frozenN);
+            frozen = Lit("M_Frozen", Color.white, 1f, 0f, frozenC, null, frozenN); // antes: chapa corrugada azul a rayas
             darkMetal = Lit("M_DarkMetal", new Color(.17f, .18f, .19f), .45f, .3f);
             skinA = Lit("M_SkinA", new Color(.55f, .38f, .26f), .3f, 0);
             skinB = Lit("M_SkinB", new Color(.33f, .22f, .15f), .3f, 0);
@@ -256,15 +277,16 @@ namespace Kairos.EditorTools
         }
 
         // ---------- Detalles del buque: casi todos sin colisión, para no cambiar las rutas ----------
-        static void ShipDetails(ShipBuild b)
+        static void ShipDetails(ShipBuild b, Material funnelBand)
         {
             Exterior(b);
             Interior(b);
             LightCones(b);
-            Funnel(b);
+            Funnel(b, funnelBand);
             ShipName(b, "HAI FENG 77", new Vector3(0, 4.7f, -45.1f), Quaternion.identity, 1.5f);
-            ShipName(b, "HAI FENG 77", new Vector3(6.55f, 4.9f, 27), Quaternion.Euler(0, -92, 0), 1.2f);
-            ShipName(b, "HAI FENG 77", new Vector3(-6.55f, 4.9f, 27), Quaternion.Euler(0, 92, 0), 1.2f);
+            // En el tramo recto del casco (z < 15) y bajo los ojos de buey: en la curva de proa el texto quedaba en el aire y se cortaba.
+            ShipName(b, "HAI FENG 77", new Vector3(7.06f, 4.05f, 4), Quaternion.Euler(0, -90, 0), 1.2f);
+            ShipName(b, "HAI FENG 77", new Vector3(-7.06f, 4.05f, 4), Quaternion.Euler(0, 90, 0), 1.2f);
         }
 
         static void Exterior(ShipBuild b)
@@ -312,12 +334,15 @@ namespace Kairos.EditorTools
             b.Solid(new Vector3(3.6f, 6.12f, -41.4f), new Vector3(1.05f, .24f, 1.05f));
             b.Pipe(rope, new Vector3(-3.7f, 6.03f, -21.6f), new Vector3(-3.7f, 6.18f, -21.6f), .5f, 14);
             b.Solid(new Vector3(-3.7f, 6.12f, -21.6f), new Vector3(.95f, .24f, .95f));
+            // Proa (estribor): cajas de pescado vacías apiladas y una bolsa de basura (antes, boyas de navegación
+            // tumbadas, que no pintan nada en un pesquero).
             foreach (var (x, z, yaw) in new[] { (4.4f, 11.2f, 35f), (4.1f, 9.6f, 145f) })
             {
-                var buoy = b.Prop("ocean_buoy", new Vector3(x, 6.20f, z), yaw, .75f); // boyas PBR reales tumbadas en cubierta de proa (estribor)
-                buoy.localRotation = Quaternion.Euler(84f, yaw, 0f);
+                b.Prop("plastic_crate_01", new Vector3(x, 6, z), yaw, .55f);
+                b.Prop("plastic_crate_01", new Vector3(x, 6.29f, z), yaw + 8, .55f);
                 b.Solid(new Vector3(x, 6.25f, z), new Vector3(.65f, .5f, .65f));
             }
+            b.Prop("trashbag", new Vector3(4.9f, 6, 12.6f), 40, .55f);
 
             // Bidones.
             foreach (var (x, z, yaw) in new[] { (5.6f, -38.6f, 20f), (5.6f, -39.4f, 140f), (4.9f, -39f, 250f), (-5.7f, 19.2f, 70f), (5.3f, 22.5f, 310f) })
@@ -344,14 +369,30 @@ namespace Kairos.EditorTools
             b.Solid(new Vector3(5.4f, 6.45f, -24.2f), new Vector3(.45f, .9f, .45f));
             b.Prop("metal_toolbox", new Vector3(3.4f, 6, -39.1f), -35f, .55f);
             b.Solid(new Vector3(3.4f, 6.2f, -39.1f), new Vector3(.5f, .4f, .35f));
-            b.Prop("old_military_crate", new Vector3(4.8f, 6, -31.5f), 12f, 1.05f);
-            b.Solid(new Vector3(4.8f, 6.35f, -31.5f), new Vector3(1.0f, .7f, .7f));
-            b.Prop("old_military_crate", new Vector3(-4.9f, 6, -36.2f), 85f, 1.05f);
-            b.Solid(new Vector3(-4.9f, 6.35f, -36.2f), new Vector3(.7f, .7f, 1.0f));
+            // Antes había dos cajas militares: en un pesquero sobran. Arcón de herramientas y aceite para el chigre,
+            // y basura y cajas de pescado al otro lado.
+            b.Prop("metal_tool_chest", new Vector3(4.8f, 6, -31.5f), 102f, .95f);
+            b.Prop("oil_tin", new Vector3(4.75f, 6.89f, -31.4f), 30f, .21f);
+            b.Solid(new Vector3(4.8f, 6.45f, -31.5f), new Vector3(.65f, .9f, 1.0f));
+            b.Prop("trashbag", new Vector3(-4.9f, 6, -36.6f), 85f, .55f);
+            b.Prop("trashbag", new Vector3(-5.3f, 6, -35.9f), 200f, .5f);
+            b.Prop("plastic_crate_03", new Vector3(-4.6f, 6, -35.7f), 15f, .5f);
+            b.Solid(new Vector3(-4.9f, 6.3f, -36.2f), new Vector3(.9f, .6f, 1.1f));
 
-            // Salvavidas y apliques en el mamparo de popa de la habilitación.
+            // Salvavidas, chalecos (pocos para tanta tripulación) y apliques en el mamparo de popa de la habilitación.
             b.Prop("lifebuoy", new Vector3(3.4f, 7.1f, -20.34f), 0, .8f);
+            foreach (var x in new[] { -3.3f, -2.7f })
+                b.Prop("life_jacket", new Vector3(x, 7.0f, -20.2f), 180, .8f).localRotation = Quaternion.Euler(-6, 180, 0);
             foreach (var x in new[] { -1.3f, 1.3f }) b.Prop("industrial_wall_lamp", new Vector3(x, 8.15f, -20.18f), 180, .4f);
+
+            // Defensas de neumático colgadas por fuera del casco, como en cualquier pesquero que abarloa.
+            foreach (var z in new[] { -30f, -16f, 18f }) // lejos del nombre del costado (z -4..12)
+                foreach (var side in new[] { -1f, 1f })
+                {
+                    float x = side * (Beam(z) + .14f);
+                    b.Prop("old_tyre", new Vector3(x, 4.3f, z), 90, .85f);
+                    b.Pipe(rope, new Vector3(x, 5.1f, z), new Vector3(side * (Beam(z) - .05f), 6.65f, z), .02f, 4);
+                }
 
             // Ventanas y marcos de la habilitación.
             foreach (var z in new[] { -17f, -12.5f, -8f, -3.5f, .5f })
@@ -488,6 +529,22 @@ namespace Kairos.EditorTools
                 b.Pipe(darkMetal, new Vector3(-5.15f, 3, z - 1.05f), new Vector3(-5.15f, 5.3f, z - 1.05f), .035f, 6);
             }
             b.Prop("plastic_jerrycan", new Vector3(-2.2f, 3.6f, 8.5f), 25, .45f);
+            // Lo poco que tienen: garrafas de agua, latas de conserva y una bolsa con su ropa junto a las literas.
+            foreach (var (x, z, yaw) in new[] { (-2.0f, -3.4f, 10f), (-1.75f, -3.1f, 60f), (-2.0f, 6.7f, 140f) })
+                b.Prop("plastic_bottle_gallon", new Vector3(x, 3, z), yaw, .3f);
+            b.Prop("long_life_food", new Vector3(-5.5f, 3.76f, -1f), 90, .45f); // sobre el colchón de la litera
+            b.Prop("long_life_food", new Vector3(-5.5f, 3.76f, 5f), 80, .45f);
+            b.Prop("trashbag", new Vector3(-1.9f, 3, 4.4f), 120, .5f); // fuera del paso de la escotilla
+
+            // Pañol: cajas de cartón sobre los palés.
+            foreach (var (x, z, lvl) in new[] { (-5.8f, -11.8f, 0), (-5.0f, -10.4f, 0), (-5.6f, -11.2f, 1) })
+                b.Prop("cardboard_box_01", new Vector3(x, 4f + lvl * .36f, z), lvl * 25f, .55f);
+
+            // Máquinas: arcón de herramientas y latas de aceite junto a los compresores.
+            b.Prop("metal_tool_chest", new Vector3(2.15f, 3, -27.2f), 90, .8f);
+            b.Solid(new Vector3(2.15f, 3.35f, -27.2f), new Vector3(.45f, .7f, .8f));
+            b.Prop("oil_tin", new Vector3(2.1f, 3.75f, -27.0f), 15, .21f);
+            b.Prop("oil_tin", new Vector3(5.9f, 3, -21.6f), 70, .21f);
 
             // Habilitación: literas con colchón, banquetas, carteles y lámparas.
             foreach (var z in new[] { -10f, -6.5f, -3f, .5f }) b.Box(mattress, new Vector3(4.2f, 7.84f, z), new Vector3(1.2f, .08f, 2f), null, false);
@@ -510,6 +567,7 @@ namespace Kairos.EditorTools
             b.Box(rubber, new Vector3(0, 10, -6.72f), new Vector3(.5f, .55f, .07f), null, false);
             b.Solid(new Vector3(0, 9.7f, -6.55f), new Vector3(.65f, 1.3f, .75f));
             b.Box(super, new Vector3(-2.6f, 10.01f, -11.8f), new Vector3(1.4f, .01f, 1f), null, false);
+            b.Prop("binoculars", new Vector3(-2.3f, 10.02f, -11.6f), 35, .3f); // sobre la mesa de cartas
         }
 
         static void LightCones(ShipBuild b)
@@ -555,10 +613,11 @@ namespace Kairos.EditorTools
             Cone(new Vector3(0, 12.5f, -2.5f), 8f, 5.6f, new Vector3(-18, 0, 0)); // el foco del mástil apunta 72° hacia proa
         }
 
-        static void Funnel(ShipBuild b)
+        /// Chimenea con la franja de la naviera de cada barco.
+        static void Funnel(ShipBuild b, Material band)
         {
             b.Pipe(super, new Vector3(0, 9.1f, -17), new Vector3(0, 11.8f, -17), .68f, 16);
-            b.Pipe(redPaint, new Vector3(0, 11.2f, -17), new Vector3(0, 11.65f, -17), .695f, 16);
+            b.Pipe(band, new Vector3(0, 11.2f, -17), new Vector3(0, 11.65f, -17), .695f, 16);
             b.Pipe(darkMetal, new Vector3(0, 11.65f, -17), new Vector3(0, 12.3f, -17), .7f, 16);
             b.Solid(new Vector3(0, 10.7f, -17f), new Vector3(1.38f, 3.2f, 1.38f));
 
