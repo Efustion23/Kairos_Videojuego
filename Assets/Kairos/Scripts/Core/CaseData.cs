@@ -136,6 +136,21 @@ namespace Kairos
             : sector == 2
             ? "Palangrero de atún de 95 m que lleva 2 años sin tocar puerto bajo la red de Tidewater Holdings."
             : "Potero industrial de 90 m con señal AIS apagada fuera de la zona económica exclusiva.";
+        public static string CaseFileCodeFor(int sector) => $"KAIROS-JUD-2026-S{Mathf.Clamp(sector, 0, Sectors.Length - 1) + 1}";
+
+        public static string EpilogueFooterFor(int sector, int verdict, bool allSectorsDone)
+        {
+            if (allSectorsDone && verdict > 0)
+                return "Campaña completada: los tres sectores oceánicos han sido documentados y la red de Tidewater Holdings quedó expuesta ante la justicia.";
+            if (sector == 2 && verdict == 3)
+                return "Cierre de red: Tidewater Holdings ha recibido condena penal en el Océano Índico.";
+            if (sector == 2 && verdict > 0)
+                return "Tidewater Holdings pierde el Oceanic Crown 9, aunque su estructura central aún requiere seguimiento.";
+            if (sector == 1 && verdict > 0)
+                return "Golfo de Guinea documentado. La pista financiera apunta ahora hacia el Océano Índico y Tidewater Holdings.";
+            return "Tidewater Holdings sigue ahí fuera.";
+        }
+
         public static int DouglasFor(int sector, float hours) => Mathf.Min(9, DouglasAt(hours) + (sector == 1 ? 1 : sector == 2 ? 2 : 0));
 
         /// Formatea en grados y minutos (DMS) las coordenadas reales del buque objetivo de cada sector.
@@ -365,16 +380,45 @@ namespace Kairos
             E("t_ari", "Testimonio de Ari Wibowo", 'A', "Testimonio con consentimiento y lector biométrico.", new[] { 4, 5 }, NoEdge, "Testimonio con consentimiento. Descripción omitida por tus ajustes."),
             E("t_moussa", "Testimonio de Moussa Diallo", 'A', "Testimonio con consentimiento y lector biométrico.", new[] { 0, 8 }, new[] { "0-2" }),
         };
-        public static EvidenceDef Evidence(string id)
+        public static EvidenceDef Evidence(string id) => Evidence(id, Game.S?.c?.sector ?? 0);
+
+        public static EvidenceDef Evidence(string id, int sector)
         {
             var e = System.Array.Find(EvidenceDefs, x => x.id == id);
-            if (e != null && (id == "t_rodel" || id == "t_ari" || id == "t_moussa"))
+            if (e == null) return null;
+
+            if (id == "t_rodel" || id == "t_ari" || id == "t_moussa")
             {
-                var p = PersonDefOf(id.Substring(2));
+                var p = System.Array.Find(PeopleFor(sector), x => x.id == id.Substring(2));
                 if (p != null)
                     return new EvidenceDef { id = e.id, title = $"Testimonio de {p.name}", cat = e.cat, desc = e.desc, descSafe = e.descSafe, indicators = e.indicators, edges = e.edges };
+                return e;
             }
-            return e;
+
+            var n = NodesFor(sector);
+            string sectorDesc = id switch
+            {
+                "e_comms" => $"Órdenes por radio de {n[4].name} a un enlace de {n[5].name}.",
+                "e_deudas" => $"Cuentas por persona, con cargos por comida y equipo pagados a {n[4].name}.",
+                "e_contratos" => $"Contratos de seis meses de {n[2].name}, con cláusulas en un idioma que no leían.",
+                "e_manifiesto" => $"Carga traspasada a {n[1].name} en altamar.",
+                "e_registro" => $"{n[3].name} figura como armador; su único socio es {n[4].name}.",
+                "e_facturas" => $"Ventas de {n[1].name} a una filial de {n[5].name}.",
+                "e_radio" => $"Emisora de banda oculta sintonizada con {n[4].name} sin acceso para la tripulación.",
+                _ => null
+            };
+            if (sectorDesc == null) return e;
+
+            return new EvidenceDef
+            {
+                id = e.id,
+                title = e.title,
+                cat = e.cat,
+                desc = sectorDesc,
+                descSafe = e.descSafe == e.desc ? sectorDesc : e.descSafe,
+                indicators = e.indicators,
+                edges = e.edges
+            };
         }
         // Lo que se puede perder nunca incluye lo necesario para llegar al beneficiario final.
         public static readonly string[] DumpedWhenDetected = { "e_turnos", "e_candados" };

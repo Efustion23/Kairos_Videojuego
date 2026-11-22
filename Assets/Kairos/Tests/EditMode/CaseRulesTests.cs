@@ -166,5 +166,54 @@ namespace Kairos.Tests
             Assert.AreEqual("2°18'N 2°24'E", CaseData.FormatGps(1));
             Assert.AreEqual("10°12'S 58°18'E", CaseData.FormatGps(2));
         }
+
+        [Test]
+        public void EvidenciasFisicasYTestimoniosSeAdaptanACadaSector()
+        {
+            string[] ids = { "e_comms", "e_deudas", "e_contratos", "e_manifiesto", "e_registro", "e_facturas", "e_radio" };
+            for (int sector = 0; sector <= 2; sector++)
+            {
+                var n = CaseData.NodesFor(sector);
+                var tRodel = CaseData.Evidence("t_rodel", sector);
+                StringAssert.Contains(CaseData.PeopleFor(sector)[0].name, tRodel.title);
+
+                StringAssert.Contains(n[4].name, CaseData.Evidence("e_comms", sector).desc);
+                StringAssert.Contains(n[5].name, CaseData.Evidence("e_comms", sector).desc);
+                StringAssert.Contains(n[4].name, CaseData.Evidence("e_deudas", sector).desc);
+                StringAssert.Contains(n[2].name, CaseData.Evidence("e_contratos", sector).desc);
+                StringAssert.Contains(n[1].name, CaseData.Evidence("e_manifiesto", sector).desc);
+                StringAssert.Contains(n[3].name, CaseData.Evidence("e_registro", sector).desc);
+                StringAssert.Contains(n[4].name, CaseData.Evidence("e_registro", sector).desc);
+                StringAssert.Contains(n[1].name, CaseData.Evidence("e_facturas", sector).desc);
+                StringAssert.Contains(n[5].name, CaseData.Evidence("e_facturas", sector).desc);
+                StringAssert.Contains(n[4].name, CaseData.Evidence("e_radio", sector).desc);
+
+                if (sector > 0)
+                {
+                    foreach (var id in ids)
+                    {
+                        var ev = CaseData.Evidence(id, sector);
+                        StringAssert.DoesNotContain("Polar Meridian", ev.desc);
+                        StringAssert.DoesNotContain("Cormorán Trade", ev.desc);
+                        StringAssert.DoesNotContain("Tidewater Austral", ev.desc);
+                        Assert.AreEqual(ev.desc, ev.descSafe);
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void ExpedienteYEpilogoReflejanElSectorYVeredicto()
+        {
+            Assert.AreEqual("KAIROS-JUD-2026-S1", CaseData.CaseFileCodeFor(0));
+            Assert.AreEqual("KAIROS-JUD-2026-S2", CaseData.CaseFileCodeFor(1));
+            Assert.AreEqual("KAIROS-JUD-2026-S3", CaseData.CaseFileCodeFor(2));
+
+            StringAssert.Contains("sigue ahí fuera", CaseData.EpilogueFooterFor(0, 1, false));
+            StringAssert.Contains("Golfo de Guinea", CaseData.EpilogueFooterFor(1, 2, false));
+            StringAssert.Contains("condena penal", CaseData.EpilogueFooterFor(2, 3, false));
+            StringAssert.Contains("Oceanic Crown 9", CaseData.EpilogueFooterFor(2, 1, false));
+            StringAssert.Contains("Campaña completada", CaseData.EpilogueFooterFor(2, 2, true));
+        }
     }
 }

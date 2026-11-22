@@ -215,6 +215,10 @@ namespace Kairos
             "Caso cerrado. Puedes repetirlo conservando tus mejoras y recursos."
         };
 
+        static string PhaseTipFor(int phase, int sector) => phase == 4
+            ? $"Objetivo ahora: conecta las pruebas en el grafo hasta {CaseData.NodesFor(sector)[5].name} y ejecuta la sentencia."
+            : PhaseTips[Mathf.Clamp(phase, 1, 6)];
+
         static readonly string[] SectorArtKeys = { "UI/sector_atlantico", "UI/sector_guinea", "UI/sector_indico" };
 
         // ---------- 1. MISIÓN ACTUAL (Layout táctico 2 zonas: alineado al 100%, cero huecos, cero glifos rotos) ----------
@@ -258,7 +262,7 @@ namespace Kairos
             objLe.minHeight = 52; objLe.preferredHeight = 52;
             var objBorder = objBox.transform.Find("FrameBorder")?.GetComponent<Image>(); if (objBorder != null) objBorder.color = new Color(Pal.DeckLight.r, Pal.DeckLight.g, Pal.DeckLight.b, .78f);
             var objFilo = objBox.transform.Find("Filo")?.GetComponent<Image>(); if (objFilo != null) objFilo.color = Pal.DeckLight;
-            var objTxt = UI.Text(objBox.transform, ">  " + PhaseTips[Mathf.Clamp(c.phase, 1, 6)], 18, Pal.DeckLight, TextAlignmentOptions.MidlineLeft, true);
+            var objTxt = UI.Text(objBox.transform, ">  " + PhaseTipFor(c.phase, c.sector), 18, Pal.DeckLight, TextAlignmentOptions.MidlineLeft, true);
             objTxt.margin = new Vector4(16, 4, 16, 4);
 
             if (c.phase >= 6)

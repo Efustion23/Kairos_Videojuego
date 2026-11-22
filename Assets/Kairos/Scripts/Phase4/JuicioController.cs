@@ -261,7 +261,7 @@ namespace Kairos
             UI.Summary(root, "SENTENCIA JUDICIAL EJECUTADA", Pal.Sealed, new[]
             {
                 $"<b>Veredicto del Tribunal: {CaseData.VerdictNames[C.verdict]}</b>",
-                $"Expediente Fiscal Oficial: <b>KAIROS-JUD-2026</b>  |  Investigador: {Game.Inspector}",
+                $"Expediente Fiscal Oficial: <b>{CaseData.CaseFileCodeFor(C.sector)}</b>  |  Investigador: {Game.Inspector}",
                 $"Carga probatoria: <b>{inds} de 11 indicadores de la OIT</b> debidamente acreditados con cadena de custodia.",
                 "<color=#3FE0D0>[PSMA/WRO] Medidas Internacionales:</color> Orden de Retención (WRO) ante aduanas y cierre de puertos bajo Acuerdo PSMA (FAO).",
                 $"<color=#6CFF8A>[OK] Embargo Económico Decretado:</color> <b>{C.embargo:N0} ¢</b>.",
@@ -384,7 +384,11 @@ namespace Kairos
             }
             UI.Line(s, " ", 10);
             UI.Line(s, success ? $"Caso cerrado: +50.000 ¢. Reputación {Game.S.reputation}/100. Sentencias: {Game.S.sentences}." : "Caso sin sentencia. Puedes repetirlo desde la base.", 22, Pal.Sealed);
-            UI.Line(s, "Expediente de " + Game.Inspector + ". Tidewater Holdings sigue ahí fuera.", 20, Pal.Dim);
+            bool allDone = Game.S.completedSectors != null && Game.S.completedSectors.Length >= CaseData.Sectors.Length;
+            if (allDone)
+                for (int i = 0; i < CaseData.Sectors.Length; i++)
+                    if (!Game.S.completedSectors[i]) { allDone = false; break; }
+            UI.Line(s, $"Expediente de {Game.Inspector}. {CaseData.EpilogueFooterFor(C.sector, C.verdict, allDone)}", 20, Pal.Dim);
             UI.Line(s, "Ningún océano es tan vasto ni ninguna noche tan oscura como para ocultar la dignidad humana.", 26, Pal.Sonar, false, TextAlignmentOptions.Center);
             UI.Btn(s, "Volver a la base", Game.GoToMenu, Pal.Sealed, 24, 56);
         }
