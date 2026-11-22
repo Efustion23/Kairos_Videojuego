@@ -118,17 +118,20 @@ namespace Kairos
         {
             if (thermalVisorOverlay != null) Destroy(thermalVisorOverlay);
             if (canvasRoot == null) return;
+            if (compassPanelObj != null) compassPanelObj.SetActive(false);
 
             thermalVisorOverlay = new GameObject("ThermalVisorOverlay");
             thermalVisorOverlay.transform.SetParent(canvasRoot, false);
 
-            var topPanel = UI.Panel(thermalVisorOverlay.transform, new Vector2(.25f, .93f), new Vector2(.75f, .985f), default, default, new Color(.01f, .03f, .08f, .85f));
-            var topText = UI.Text(topPanel.transform, "OPTICA TERMICA FLIR DRON  ·  CONTRASTE AZUL (-18°C) / AMBAR (37°C)", 15, Pal.ThermHot, TMPro.TextAlignmentOptions.Center, true);
-            topText.margin = new Vector4(6, 2, 6, 2);
+            var topPanel = UI.Panel(thermalVisorOverlay.transform, new Vector2(.278f, .928f), new Vector2(rightCollapsed ? .715f : .645f, .988f), default, default, new Color(.01f, .03f, .08f, .90f));
+            var topText = UI.Text(topPanel.transform, "ÓPTICA TÉRMICA FLIR DRON  ·  AZUL (-18°C) / ÁMBAR (37°C)", 15, Pal.ThermHot, TMPro.TextAlignmentOptions.Center, true);
+            topText.margin = new Vector4(8, 2, 8, 2);
+            topText.enableAutoSizing = true; topText.fontSizeMin = 11; topText.fontSizeMax = 15;
 
-            var scalePanel = UI.Panel(thermalVisorOverlay.transform, new Vector2(.02f, .02f), new Vector2(.28f, .10f), default, default, new Color(.01f, .04f, .09f, .88f));
-            var scaleText = UI.Text(scalePanel.transform, "<color=#2050FF>[FRIO -18°C]</color>  |  <color=#FFD27A>[VITAL 37°C · 3 firmas]</color>\nBodegas refrigeradas vs. Presencia humana real", 13, Pal.Text, TMPro.TextAlignmentOptions.Center);
-            scaleText.margin = new Vector4(4, 2, 4, 2);
+            var scalePanel = UI.Panel(thermalVisorOverlay.transform, new Vector2(.008f, .535f), new Vector2(.268f, .616f), default, default, new Color(.01f, .04f, .09f, .90f));
+            var scaleText = UI.Text(scalePanel.transform, "<color=#2050FF>[FRÍO -18°C]</color>  |  <color=#FFD27A>[VITAL 37°C · 3 firmas]</color>\nBodegas refrigeradas vs. Presencia humana real", 13.5f, Pal.Text, TMPro.TextAlignmentOptions.Center);
+            scaleText.margin = new Vector4(6, 2, 6, 2);
+            scaleText.enableAutoSizing = true; scaleText.fontSizeMin = 11; scaleText.fontSizeMax = 14;
         }
 
         void EndDrone(bool lost)
@@ -136,6 +139,7 @@ namespace Kairos
             droneActive = false;
             thermalRoot.SetActive(false);
             if (thermalVisorOverlay != null) Destroy(thermalVisorOverlay);
+            if (compassPanelObj != null) compassPanelObj.SetActive(true);
             cam.clearFlags = savedClear; cam.backgroundColor = savedBg; cam.cullingMask = savedMask;
             float away = Vector3.Distance(drone.position, boat.position);
             if (lost || away > 220f)
