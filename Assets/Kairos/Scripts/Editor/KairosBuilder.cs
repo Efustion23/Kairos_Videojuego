@@ -494,10 +494,11 @@ namespace Kairos.EditorTools
             var ev = new List<EvidenceProp>
             {
                 Evidence(gameplay, "e_celda", new Vector3(-6.3f, 4.2f, 3.5f), new Vector3(.08f, .8f, 1.2f), rust),
-                Evidence(gameplay, "e_pasaportes", new Vector3(-3.95f, 7.35f, -14f), new Vector3(.3f, .25f, .5f), paper),
+                Evidence(gameplay, "e_pasaportes", new Vector3(-4.4f, 7.73f, -14f) /* encima de la caja fuerte (tapa a y 7.6) */, new Vector3(.3f, .25f, .5f), paper),
                 Evidence(gameplay, "e_candados", new Vector3(-1.05f, 4.3f, 1.05f), new Vector3(.15f, .35f, .3f), darkMetal),
-                Evidence(gameplay, "e_radio", new Vector3(-1.9f, 9.95f, -5.8f), new Vector3(.32f, .28f, .26f), darkMetal),
-                Evidence(gameplay, "e_plotter", new Vector3(1.9f, 9.95f, -5.8f), new Vector3(.36f, .28f, .22f), darkMetal),
+                // Radio y plotter apoyados en el tablero de la consola del puente (tapa a y 10.1, z -5.45..-4.55).
+                Evidence(gameplay, "e_radio", new Vector3(-1.9f, 10.28f, -5.15f), new Vector3(.32f, .28f, .26f), darkMetal),
+                Evidence(gameplay, "e_plotter", new Vector3(1.9f, 10.28f, -5.15f), new Vector3(.36f, .28f, .22f), darkMetal),
             };
             // El manifiesto queda siempre en el camarote del oficial y las facturas en la sala de máquinas:
             // los objetivos guiados de la Fase 3 llevan ahí.

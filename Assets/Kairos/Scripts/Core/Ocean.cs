@@ -97,6 +97,15 @@ namespace Kairos
             Push();
         }
 
+        void OnDisable()
+        {
+            if (mesh != null)
+            {
+                if (Application.isPlaying) Destroy(mesh); else DestroyImmediate(mesh);
+                mesh = null;
+            }
+        }
+
         void Update()
         {
             Push();
