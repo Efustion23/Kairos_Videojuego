@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Kairos.Pruebas
 {
@@ -89,14 +90,16 @@ namespace Kairos.Pruebas
 
         private void HandleKeyboardShortcuts()
         {
-            if (Input.GetKeyDown(KeyCode.Alpha1)) SwitchMode(ShowcaseMode.SonarSweep);
-            if (Input.GetKeyDown(KeyCode.Alpha2)) SwitchMode(ShowcaseMode.ThermalVisor);
-            if (Input.GetKeyDown(KeyCode.Alpha3)) SwitchMode(ShowcaseMode.BridgeAndGuard);
-            if (Input.GetKeyDown(KeyCode.Alpha4)) SwitchMode(ShowcaseMode.EvidenceOutline);
-            if (Input.GetKeyDown(KeyCode.Alpha5)) SwitchMode(ShowcaseMode.MaritimeRainAndFog);
-            if (Input.GetKeyDown(KeyCode.Alpha6)) SwitchMode(ShowcaseMode.TacticalRadio);
-            if (Input.GetKeyDown(KeyCode.Alpha7)) SwitchMode(ShowcaseMode.CinematicTrailer);
-            if (Input.GetKeyDown(KeyCode.H)) showTelemetryHud = !showTelemetryHud;
+            var kb = Keyboard.current;
+            if (kb == null) return;
+            if (kb.digit1Key.wasPressedThisFrame) SwitchMode(ShowcaseMode.SonarSweep);
+            if (kb.digit2Key.wasPressedThisFrame) SwitchMode(ShowcaseMode.ThermalVisor);
+            if (kb.digit3Key.wasPressedThisFrame) SwitchMode(ShowcaseMode.BridgeAndGuard);
+            if (kb.digit4Key.wasPressedThisFrame) SwitchMode(ShowcaseMode.EvidenceOutline);
+            if (kb.digit5Key.wasPressedThisFrame) SwitchMode(ShowcaseMode.MaritimeRainAndFog);
+            if (kb.digit6Key.wasPressedThisFrame) SwitchMode(ShowcaseMode.TacticalRadio);
+            if (kb.digit7Key.wasPressedThisFrame) SwitchMode(ShowcaseMode.CinematicTrailer);
+            if (kb.hKey.wasPressedThisFrame) showTelemetryHud = !showTelemetryHud;
         }
 
         public void SwitchMode(ShowcaseMode newMode)
