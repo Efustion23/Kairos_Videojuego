@@ -14,29 +14,36 @@ namespace Kairos
                 var ghost = new GameObject("CascoFantasma", typeof(MeshFilter), typeof(MeshRenderer));
                 ghost.transform.SetParent(thermalRoot.transform, false);
                 ghost.transform.SetPositionAndRotation(hull.position, hull.rotation);
+                ghost.transform.localScale = hull.localScale;
                 ghost.GetComponent<MeshFilter>().sharedMesh = hull.GetComponent<MeshFilter>().sharedMesh;
                 ghost.GetComponent<MeshRenderer>().material = Mats.Glow(new Color(.1f, .2f, .35f, .16f));
                 ghost.layer = ThermalLayer;
             }
             foreach (var k in CaseData.Compartments)
             {
+                MapCompartment(k, out var mc, out var ms);
                 var b = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 Destroy(b.GetComponent<Collider>());
                 b.layer = ThermalLayer;
                 b.transform.SetParent(thermalRoot.transform, false);
-                b.transform.position = ship.TransformPoint(k.center);
-                b.transform.localScale = k.size;
+                b.transform.position = ship.TransformPoint(mc);
+                b.transform.localScale = ms;
                 Color c = k.kind == 0 ? Pal.ThermCold : k.kind == 2 ? new Color(1f, .55f, .2f) : new Color(Pal.ThermHot.r, Pal.ThermHot.g * .8f, Pal.ThermHot.b * .5f);
                 c.a = k.kind == 1 ? .28f : .42f;
                 b.GetComponent<MeshRenderer>().material = Mats.Glow(c);
             }
             // Siluetas humanas térmicas (36-37 °C) sentadas/confinadas en K4 (3 sobrevivientes; el cuarto trabaja fuera)
-            var k4 = CaseData.Compartments[3];
+            personFoci.Clear();
+            MapCompartment(CaseData.Compartments[3], out var k4Center, out var k4Size);
             var rnd = new System.Random(4);
             var hotMat = Mats.Glow(Pal.ThermHot, true, true);
             for (int i = 0; i < 3; i++)
             {
-                var f = k4.center + new Vector3(((float)rnd.NextDouble() - .5f) * 3.5f, 1.5f, ((float)rnd.NextDouble() - .5f) * 12f);
+                var rawFocus = k4Center + new Vector3(
+                    ((float)rnd.NextDouble() - .5f) * Mathf.Min(2.4f, k4Size.x * .55f),
+                    0.15f,
+                    ((float)rnd.NextDouble() - .5f) * Mathf.Min(9.5f, k4Size.z * .72f));
+                var f = ClampLocalPoint(rawFocus, 0.95f);
                 personFoci.Add(f);
                 var personGo = new GameObject($"SiluetaTermica_{i + 1}");
                 personGo.transform.SetParent(thermalRoot.transform, false);

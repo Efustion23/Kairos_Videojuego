@@ -159,44 +159,131 @@ namespace Kairos
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
-        void EmitPoint(Vector3 p, Color c, float size = .15f, float life = 26f)
+        void EmitPoint(Vector3 p, Color c, float size = .14f, float life = 26f)
         {
             var e = new ParticleSystem.EmitParams { position = p, startColor = c, startSize = size, startLifetime = life, velocity = Vector3.zero, applyShapeToPosition = false };
             cloud.Emit(e, 1);
         }
 
+        /// Dimensiones reales del casco del sector activo (por defecto Hai Feng 77: 14 m manga × 90 m eslora, cubierta a y = 6 m).
+        [HideInInspector] public float beamScale = 1f;
+        [HideInInspector] public float lengthScale = 1f;
+        [HideInInspector] public float hullMinZ = -45f;
+        [HideInInspector] public float hullMaxZ = 45f;
+        [HideInInspector] public float hullDeckY = 6.2f;
+
+        /// Altura mínima segura sobre las olas para evitar que los puntos X-ray del sonar parezcan flotar sobre el océano.
+        public float MinSonarPointY => Mathf.Clamp(Ocean.Amp + 0.95f, 1.55f, Mathf.Max(1.65f, hullDeckY - 2.2f));
+
+        public void SetShipHullBounds(Bounds localHullBounds, float newBeamScale, float newLengthScale)
+        {
+            beamScale = Mathf.Clamp(newBeamScale, .7f, 1.85f);
+            lengthScale = Mathf.Clamp(newLengthScale, .7f, 1.45f);
+            hullMinZ = localHullBounds.min.z;
+            hullMaxZ = localHullBounds.max.z;
+            hullDeckY = Mathf.Clamp(localHullBounds.max.y - 0.8f, 5.8f, 9.6f);
+        }
+
+        /// Semimanga conservadora del casco a una posición (localZ, localY), incluyendo el afinamiento en proa, popa y obra viva.
+        public static float HullHalfWidthAt(float localZ, float localY, float beamScale, float lengthScale, float hullMinZ, float hullMaxZ, float hullDeckY)
+        {
+            float baseHalfW = 7f * Mathf.Max(.5f, beamScale);
+            float zSpan = Mathf.Max(20f, hullMaxZ - hullMinZ);
+            float u = Mathf.Clamp01((localZ - hullMinZ) / zSpan);
+
+            // Afinamiento progresivo en proa (último 35%) y popa (primer 15%) para cualquier casco naval.
+            float bowFactor = u > 0.65f ? Mathf.Sqrt(Mathf.Max(0f, 1f - Mathf.Pow((u - 0.65f) / 0.35f, 2f))) : 1f;
+            float sternFactor = u < 0.14f ? Mathf.Lerp(0.76f, 1f, u / 0.14f) : 1f;
+            // Afinamiento vertical hacia la línea de flotación.
+            float yNorm = Mathf.Clamp01(localY / Mathf.Max(3f, hullDeckY));
+            float vertFactor = Mathf.Lerp(0.78f, 0.96f, yNorm);
+
+            return baseHalfW * bowFactor * sternFactor * vertFactor;
+        }
+
+        /// Garantiza que cualquier punto local de la nube del sonar quede estrictamente dentro del casco visible sobre el agua.
+        public static Vector3 ClampLocalPointInsideHull(Vector3 localPos, float beamScale, float lengthScale, float hullMinZ, float hullMaxZ, float hullDeckY, float minY, float inset = 0.65f)
+        {
+            float safeMinZ = hullMinZ + 3.2f;
+            float safeMaxZ = hullMaxZ - 5.2f;
+            if (safeMinZ > safeMaxZ) { float mid = (hullMinZ + hullMaxZ) * .5f; safeMinZ = mid - 2f; safeMaxZ = mid + 2f; }
+
+            float safeMinY = Mathf.Min(minY, hullDeckY - 0.6f);
+            float safeMaxY = Mathf.Max(safeMinY + 0.4f, hullDeckY - 0.45f);
+
+            float z = Mathf.Clamp(localPos.z, safeMinZ, safeMaxZ);
+            float y = Mathf.Clamp(localPos.y, safeMinY, safeMaxY);
+            float maxHalfX = Mathf.Max(0.6f, HullHalfWidthAt(z, y, beamScale, lengthScale, hullMinZ, hullMaxZ, hullDeckY) - inset);
+            float x = Mathf.Clamp(localPos.x, -maxHalfX, maxHalfX);
+            return new Vector3(x, y, z);
+        }
+
+        Vector3 ClampLocalPoint(Vector3 localPos, float inset = 0.65f) =>
+            ClampLocalPointInsideHull(localPos, beamScale, lengthScale, hullMinZ, hullMaxZ, hullDeckY, MinSonarPointY, inset);
+
+        /// Ajusta cada compartimento al volumen interior visible (sobre el agua y dentro de la manga/eslora real del sector).
+        public static void MapCompartmentBounds(Compartment k, float beamScale, float lengthScale, float hullMinZ, float hullMaxZ, float hullDeckY, float minY, out Vector3 center, out Vector3 size)
+        {
+            float yBottom = Mathf.Min(minY + 0.15f, hullDeckY - 1.2f);
+            float yTop = Mathf.Max(yBottom + 1.2f, hullDeckY - 0.55f);
+            float yCenter = (yBottom + yTop) * 0.5f;
+            float yHeight = Mathf.Max(1.1f, yTop - yBottom);
+
+            float xScale = Mathf.Lerp(1f, Mathf.Clamp(beamScale, 0.78f, 1.35f), 0.75f);
+            float zCenterOffset = (hullMinZ + hullMaxZ) * 0.5f;
+            float zScale = Mathf.Clamp(lengthScale, 0.8f, 1.15f);
+
+            float mappedZ = zCenterOffset + k.center.z * zScale;
+            float mappedZSize = Mathf.Min(k.size.z * zScale, (hullMaxZ - hullMinZ) * 0.28f);
+            float halfW = HullHalfWidthAt(mappedZ, yCenter, beamScale, lengthScale, hullMinZ, hullMaxZ, hullDeckY) - 0.85f;
+            float mappedX = Mathf.Clamp(k.center.x * xScale, -Mathf.Max(1.2f, halfW * 0.58f), Mathf.Max(1.2f, halfW * 0.58f));
+            float mappedXSize = Mathf.Clamp(k.size.x * 0.78f * xScale, 1.8f, Mathf.Max(2.0f, halfW * 0.85f));
+
+            center = new Vector3(mappedX, yCenter, mappedZ);
+            size = new Vector3(mappedXSize, yHeight, mappedZSize);
+        }
+
+        void MapCompartment(Compartment k, out Vector3 center, out Vector3 size) =>
+            MapCompartmentBounds(k, beamScale, lengthScale, hullMinZ, hullMaxZ, hullDeckY, MinSonarPointY, out center, out size);
+
         Vector3 SamplePoint(Compartment k, System.Random rnd)
         {
             float R() => (float)rnd.NextDouble() - .5f;
-            var half = k.size;
+            MapCompartment(k, out var center, out var size);
+            Vector3 local;
             if (k.kind == 0)
             {
-                // Masa densa y homogénea: rejilla de cajas.
-                var v = new Vector3(R() * half.x, R() * half.y, R() * half.z);
-                v = new Vector3(Mathf.Round(v.x / .9f) * .9f, Mathf.Round(v.y / .9f) * .9f, Mathf.Round(v.z / .9f) * .9f);
-                return ship.TransformPoint(k.center + v);
+                // Masa densa y homogénea: rejilla de cajas estrictamente dentro de la bodega.
+                var v = new Vector3(R() * size.x, R() * size.y, R() * size.z);
+                v = new Vector3(Mathf.Round(v.x / .75f) * .75f, Mathf.Round(v.y / .75f) * .75f, Mathf.Round(v.z / .75f) * .75f);
+                local = center + v;
             }
-            if (k.kind == 2)
+            else if (k.kind == 2)
             {
-                // Maquinaria: grandes cilindros.
-                var c = k.center + new Vector3(0, -1, -3 + 6 * (rnd.Next(2)));
+                // Maquinaria: grandes cilindros dentro de la sala de máquinas.
+                var c = center + new Vector3(0, -0.2f, -2.5f + 5f * rnd.Next(2));
                 float a = (float)rnd.NextDouble() * 6.28f;
-                return ship.TransformPoint(c + new Vector3(Mathf.Cos(a) * 1.8f, R() * 5f, Mathf.Sin(a) * 1.8f));
+                float r = Mathf.Min(1.5f, size.x * 0.35f);
+                local = c + new Vector3(Mathf.Cos(a) * r, R() * size.y * 0.85f, Mathf.Sin(a) * r);
             }
-            // Espacio habitable: paredes y objetos dispersos.
-            if (rnd.NextDouble() < .55f)
+            else if (rnd.NextDouble() < .55f)
             {
-                var v = new Vector3(R() * half.x, R() * half.y, R() * half.z);
+                // Espacio habitable: paredes y objetos dispersos.
+                var v = new Vector3(R() * size.x, R() * size.y, R() * size.z);
                 switch (rnd.Next(3))
                 {
-                    case 0: v.x = Mathf.Sign(v.x) * half.x * .5f; break;
-                    case 1: v.z = Mathf.Sign(v.z) * half.z * .5f; break;
-                    default: v.y = Mathf.Sign(v.y) * half.y * .5f; break;
+                    case 0: v.x = Mathf.Sign(v.x) * size.x * .48f; break;
+                    case 1: v.z = Mathf.Sign(v.z) * size.z * .48f; break;
+                    default: v.y = Mathf.Sign(v.y) * size.y * .48f; break;
                 }
-                return ship.TransformPoint(k.center + v);
+                local = center + v;
             }
-            var f = personFoci[rnd.Next(personFoci.Count)];
-            return ship.TransformPoint(f + new Vector3(R() * .7f, R() * 1.6f, R() * .7f));
+            else
+            {
+                var f = personFoci[rnd.Next(personFoci.Count)];
+                local = f + new Vector3(R() * .6f, R() * 1.1f, R() * .6f);
+            }
+            return ship.TransformPoint(ClampLocalPoint(local, 0.70f));
         }
 
         // ---------- Bucle ----------
@@ -317,27 +404,25 @@ namespace Kairos
             cam.transform.SetPositionAndRotation(targetPos, rot);
         }
 
-        /// Manga del barco del sector respecto a los 14 m del Hai Feng: la fija SectorTheme al cambiar el modelo.
-        [HideInInspector] public float beamScale = 1f;
-
-        /// Evita que la lancha atraviese el casco del Hai Feng 77 (90 m de eslora, 14 m de manga).
+        /// Evita que la lancha atraviese el casco del buque del sector activo (incluye eslora real de S2 y S3).
         void KeepBoatOutsideShipHull()
         {
             if (ship == null) return;
             var local = ship.InverseTransformPoint(boat.position);
-            const float halfLen = 47.5f;
-            if (Mathf.Abs(local.z) >= halfLen) return;
-            float zClamped = Mathf.Clamp(local.z, -45f, 45f);
-            float beam = (zClamped < 15f ? 7f : 7f * Mathf.Sqrt(Mathf.Max(0f, 1f - Mathf.Pow((zClamped - 15f) / 30f, 2f)))) * beamScale;
-            float halfW = beam + 2.5f;
+            float minZ = hullMinZ - 2.5f;
+            float maxZ = hullMaxZ + 2.5f;
+            if (local.z <= minZ || local.z >= maxZ) return;
+            float zClamped = Mathf.Clamp(local.z, hullMinZ, hullMaxZ);
+            float beam = HullHalfWidthAt(zClamped, hullDeckY * 0.7f, beamScale, lengthScale, hullMinZ, hullMaxZ, hullDeckY);
+            float halfW = beam + 2.8f;
             if (Mathf.Abs(local.x) >= halfW) return;
 
             float pushX = halfW - Mathf.Abs(local.x);
-            float pushZ = halfLen - Mathf.Abs(local.z);
+            float pushZ = Mathf.Min(local.z - minZ, maxZ - local.z);
             if (pushX < pushZ)
                 local.x = (local.x >= 0f ? 1f : -1f) * halfW;
             else
-                local.z = (local.z >= 0f ? 1f : -1f) * halfLen;
+                local.z = (local.z - minZ) < (maxZ - local.z) ? minZ : maxZ;
 
             var pushed = ship.TransformPoint(local);
             pushed.y = boat.position.y;
@@ -367,7 +452,8 @@ namespace Kairos
             // Sobrevolar un compartimento 2 s da la lectura térmica.
             for (int i = 0; i < 5; i++)
             {
-                var c = ship.TransformPoint(CaseData.Compartments[i].center);
+                MapCompartment(CaseData.Compartments[i], out var mc, out _);
+                var c = ship.TransformPoint(mc);
                 float xz = new Vector2(c.x - p.x, c.z - p.z).magnitude;
                 if (xz < 16f && (C.scanSignals[i] & Bit_Thermal) == 0)
                 {
@@ -400,14 +486,27 @@ namespace Kairos
             float acousticDelay = Mathf.Clamp(d / 450f, 0.15f, 1.25f);
             StartCoroutine(DelayedEco(acousticDelay, crest));
 
-            // El casco se reconstruye con impactos reales; las bodegas, según el lado desde el que disparas.
-            var from = boat.position + Vector3.up * 1.5f;
-            var hullCol = new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, .55f);
+            // El casco se reconstruye con impactos reales sobre la obra muerta (nunca bajo el agua ni fuera del perfil visible).
+            var from = boat.position + Vector3.up * 2.2f;
+            var hullCol = new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, .50f);
+            float minY = MinSonarPointY;
+            float maxTargetX = 7f * beamScale * 0.92f;
             for (int i = 0; i < (crest ? 140 : 55); i++)
             {
-                var target = ship.TransformPoint(new Vector3(Random.Range(-7f, 7f), Random.Range(-4f, 11f), Random.Range(-46f, 46f)));
-                if (Physics.Raycast(from, (target - from).normalized, out var hit, PulseRange + 80f, 1 << Layers.HullShell))
-                    EmitPoint(hit.point, hullCol, .16f, 24f);
+                var targetLocal = new Vector3(
+                    Random.Range(-maxTargetX, maxTargetX),
+                    Random.Range(minY, hullDeckY),
+                    Random.Range(hullMinZ + 2f, hullMaxZ - 2f));
+                var target = ship.TransformPoint(targetLocal);
+                if (Physics.Raycast(from, (target - from).normalized, out var hit, PulseRange + 120f, 1 << Layers.HullShell))
+                {
+                    var localHit = ship.InverseTransformPoint(hit.point);
+                    if (localHit.y >= minY - 0.15f && localHit.y <= hullDeckY + 0.5f &&
+                        localHit.z >= hullMinZ + 1.0f && localHit.z <= hullMaxZ - 1.0f)
+                    {
+                        EmitPoint(hit.point, hullCol, .13f, 24f);
+                    }
+                }
             }
 
             var side = Mathf.Sign(ship.InverseTransformPoint(boat.position).x);
@@ -426,24 +525,24 @@ namespace Kairos
                 Color col = k.kind == 0 ? new Color(.18f, .44f, .78f, .38f)
                     : k.kind == 1 ? new Color(.22f, .78f, .74f, .34f)
                     : new Color(.25f, .60f, .58f, .38f);
+                MapCompartment(k, out var mc, out var ms);
                 for (int n = 0; n < structPoints; n++)
                 {
                     if (k.kind == 1)
                     {
-                        // Solo contorno de paredes de K4 para no confundir estructura con personas
-                        var half = k.size;
-                        var v = new Vector3(((float)rnd.NextDouble() - .5f) * half.x, ((float)rnd.NextDouble() - .5f) * half.y, ((float)rnd.NextDouble() - .5f) * half.z);
+                        // Solo contorno de paredes de K4 dentro de la envolvente real del casco
+                        var v = new Vector3(((float)rnd.NextDouble() - .5f) * ms.x, ((float)rnd.NextDouble() - .5f) * ms.y, ((float)rnd.NextDouble() - .5f) * ms.z);
                         switch (rnd.Next(3))
                         {
-                            case 0: v.x = Mathf.Sign(v.x) * half.x * .5f; break;
-                            case 1: v.z = Mathf.Sign(v.z) * half.z * .5f; break;
-                            default: v.y = Mathf.Sign(v.y) * half.y * .5f; break;
+                            case 0: v.x = Mathf.Sign(v.x) * ms.x * .48f; break;
+                            case 1: v.z = Mathf.Sign(v.z) * ms.z * .48f; break;
+                            default: v.y = Mathf.Sign(v.y) * ms.y * .48f; break;
                         }
-                        EmitPoint(ship.TransformPoint(k.center + v), col, .12f, 24f);
+                        EmitPoint(ship.TransformPoint(ClampLocalPoint(mc + v, 0.70f)), col, .11f, 24f);
                     }
                     else
                     {
-                        EmitPoint(SamplePoint(k, rnd), col, .12f, 24f);
+                        EmitPoint(SamplePoint(k, rnd), col, .11f, 24f);
                     }
                 }
 
@@ -465,7 +564,7 @@ namespace Kairos
                     };
                     foreach (var focus in personFoci)
                         foreach (var off in silhouette)
-                            EmitPoint(ship.TransformPoint(focus + off), bioCol, .20f, 18f);
+                            EmitPoint(ship.TransformPoint(ClampLocalPoint(focus + off, 0.50f)), bioCol, .19f, 18f);
                 }
                 dense += k.densityValue * sideF; total += sideF;
             }
