@@ -36,15 +36,17 @@ namespace Kairos
         Color savedBg; CameraClearFlags savedClear; int savedMask;
 
         // UI
-        TextMeshProUGUI status, confidenceText, crestText, hintText, compassText;
+        TextMeshProUGUI status, confidenceText, crestText, hintText, compassText, leftMiniText, rightMiniText;
         UI.Bar suspBar, crestBar, confBar, listenBar;
         readonly TextMeshProUGUI[] cardText = new TextMeshProUGUI[5];
         readonly Button[] classBtn = new Button[5], selectBtn = new Button[5];
         readonly UI.Bar[] scanBars = new UI.Bar[5];
-        Button board;
+        Button board, rightMiniBtn;
         UI.Toasts toast;
         Transform canvasRoot;
-        GameObject pausePanel;
+        GameObject pausePanel, leftPanelObj, leftMiniObj, rightPanelObj, rightMiniObj, compassPanelObj;
+        RectTransform hintRect, toastRect, compassRect;
+        bool leftCollapsed, rightCollapsed;
 
         float WakeRange => Game.Has(1, 4) ? 100 : Game.Has(1, 1) ? 200 : 300;
         float PulseRange => Game.Has(0, 4) ? 600 : 350;
@@ -296,7 +298,7 @@ namespace Kairos
             pausePanel = panel.gameObject;
             var s = UI.VStack(panel.transform, 26, 10);
             UI.Line(s, "Pausa", 34, Pal.Sonar, true);
-            UI.Line(s, "W/S marcha · A/D timón · Espacio pulso · H hidrófono · T dron · Clic derecho: cámara", 20, Pal.Dim);
+            UI.Line(s, "W/S marcha · A/D timón · Espacio pulso · Tab panel casco · H hidrófono · T dron · V térmica · Clic derecho: cámara", 19, Pal.Dim);
             UI.Btn(s, "Continuar", TogglePause, Pal.Sealed);
             UI.Btn(s, "Volver a la base", Game.GoToMenu, Pal.Dim);
         }
@@ -306,6 +308,11 @@ namespace Kairos
             var kb = Keyboard.current;
             if (kb != null && kb.escapeKey.wasPressedThisFrame) TogglePause();
             if (pausePanel != null) return;
+            if (kb != null && kb.tabKey.wasPressedThisFrame)
+            {
+                Sfx.Play(Sfx.Click, .35f);
+                SetRightCollapsed(!rightCollapsed);
+            }
             Ocean.DriftDouglas(seaBase, seaBase + 2.2f, 5f);
             pulseCooldown -= Time.deltaTime;
             float d = DistToShip;
@@ -362,6 +369,8 @@ namespace Kairos
                 compassText.text = $"<color=#3FE0D0>RUMBO</color> {boatHeading:000}°  |  <color=#FFD27A>BLANCO</color> {Mathf.Abs(bearingToShip):000}° {side} ({d:0} m)";
             }
             status.text = $"Distancia al buque: <b>{d:0} m</b>\nMarcha: {Mathf.Abs(speed):0} m/s\nCombustible: {Game.S.fuel:0} L\nRepuestos de dron: {Game.S.droneParts}\nDouglas: {Ocean.Douglas:0.0}{(droneActive ? $"\n<color=#FFD27A>Batería del dron: {droneBattery:0} s. T: volver</color>" : "")}";
+            if (leftMiniText != null)
+                leftMiniText.text = $"<b>{CaseData.TargetFor(C.sector).name}</b> · {d:0} m · {(onCrest ? "<color=#6CFF8A>OLA</color>" : $"{Mathf.Abs(speed):0} m/s")}";
         }
 
         void DriveBoat(Keyboard kb)
