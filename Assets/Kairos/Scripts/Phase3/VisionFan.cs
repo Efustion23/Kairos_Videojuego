@@ -46,5 +46,11 @@ namespace Kairos
             mesh.vertices = verts;
             mesh.RecalculateBounds();
         }
+
+        void OnDestroy()
+        {
+            if (mesh != null) { if (Application.isPlaying) Destroy(mesh); else DestroyImmediate(mesh); mesh = null; }
+            if (mat != null) { if (Application.isPlaying) Destroy(mat); else DestroyImmediate(mat); mat = null; }
+        }
     }
 }

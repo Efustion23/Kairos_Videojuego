@@ -19,7 +19,8 @@ namespace Kairos.EditorTools
         }
 
         /// Potero de flota: el Hai Feng sin luces, colisiones, textos ni objetos sueltos. Solo su geometría unida
-        /// (Geo_*) y los conos de luz de los focos (Haz), que es lo que se distingue de un potero a 300 m.
+        /// (Geo_*), el casco y la cubierta, y los conos de luz de los focos (Haz), que es lo que se distingue de un potero a 300 m.
+        /// Sin Hull/Deck la superestructura quedaba flotando sobre el agua sin casco.
         static void BakePoteroFleetShip(GameObject shipPrefab)
         {
             var inst = (GameObject)PrefabUtility.InstantiatePrefab(shipPrefab);
@@ -30,9 +31,11 @@ namespace Kairos.EditorTools
             foreach (var c in inst.GetComponentsInChildren<Component>(true))
             {
                 if (c == null || c is Transform || c is MeshFilter) continue;
-                bool keep = c is MeshRenderer && (c.name.StartsWith("Geo_") || c.name == "Haz");
+                bool keep = c is MeshRenderer && (c.name.StartsWith("Geo_") || c.name == "Haz" || c.name == "Hull" || c.name == "Deck");
                 if (!keep) Object.DestroyImmediate(c);
             }
+            // Capa normal: el casco del objetivo usa HullShell (sonar/cámara) y la flota no debe contar como él.
+            foreach (var t in inst.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = 0;
             PrefabUtility.SaveAsPrefabAsset(inst, $"{ShipsOut}/PoteroFlota_3D.prefab");
             Object.DestroyImmediate(inst);
         }
