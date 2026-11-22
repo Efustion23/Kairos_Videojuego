@@ -38,8 +38,10 @@ namespace Kairos.Pruebas
 
         private void Awake()
         {
+            if (Application.isPlaying) RainFx.External = true;
             InitializeRainVfx();
         }
+
 
         private void Start()
         {
@@ -60,7 +62,13 @@ namespace Kairos.Pruebas
                 var cp = cam.transform.position;
                 rainParticleSystem.transform.position = new Vector3(cp.x, cp.y + 12f, cp.z);
                 if (splashParticleSystem != null)
-                    splashParticleSystem.transform.position = new Vector3(cp.x, cp.y - 1.2f, cp.z);
+                {
+                    // Las salpicaduras van en la cubierta que pisa el jugador o, fuera del barco, sobre el agua.
+                    var inf = InfiltrationController.I;
+                    splashParticleSystem.transform.position = inf != null && inf.player != null && inf.player.gameObject.activeInHierarchy
+                        ? inf.player.transform.position + Vector3.up * .05f
+                        : new Vector3(cp.x, Ocean.Height(cp.x, cp.z) + .05f, cp.z);
+                }
             }
 
             bool underCover = false;
@@ -171,7 +179,7 @@ namespace Kairos.Pruebas
             main.maxParticles = maxRainDrops;
             main.startLifetime = 1.0f;
             main.startSpeed = fallSpeed;
-            main.startSize = 0.04f;
+            main.startSize = 0.025f; // gotas finas: a 0.04 las cercanas parecían palos
             main.startColor = rainColor;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
 
@@ -180,7 +188,9 @@ namespace Kairos.Pruebas
 
             var shape = rainParticleSystem.shape;
             shape.shapeType = ParticleSystemShapeType.Box;
-            shape.scale = new Vector3(30f, 0.5f, 30f);
+            // La caja emite por su eje Z: girada 90° en X dispara hacia abajo (sin esto la lluvia volaba en horizontal).
+            shape.rotation = new Vector3(90f, 0f, 0f);
+            shape.scale = new Vector3(30f, 30f, 0.5f);
 
             var rainRenderer = rainObj.GetComponent<ParticleSystemRenderer>();
             if (rainRenderer != null)
@@ -188,7 +198,7 @@ namespace Kairos.Pruebas
                 rainMat = CreateUrpRainMaterial(rainColor, false);
                 if (rainMat != null) rainRenderer.sharedMaterial = rainMat;
                 rainRenderer.renderMode = ParticleSystemRenderMode.Stretch;
-                rainRenderer.velocityScale = 0.03f;
+                rainRenderer.velocityScale = 0.05f; // cayendo en vertical el trazo se ve corto: algo más largo para que se lea como lluvia
                 rainRenderer.lengthScale = 1.6f;
                 rainRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 rainRenderer.receiveShadows = false;
@@ -212,6 +222,13 @@ namespace Kairos.Pruebas
                 sMain.startSize = 0.08f;
                 Color splashCol = new Color(0.85f, 0.95f, 1f, 0.45f);
                 sMain.startColor = splashCol;
+                sMain.simulationSpace = ParticleSystemSimulationSpace.World;
+
+                // Salpicaduras que saltan hacia arriba desde una capa plana en el suelo, no un cono horizontal.
+                var sShape = splashParticleSystem.shape;
+                sShape.shapeType = ParticleSystemShapeType.Box;
+                sShape.rotation = new Vector3(-90f, 0f, 0f);
+                sShape.scale = new Vector3(14f, 14f, 0.05f);
 
                 var sEmission = splashParticleSystem.emission;
                 sEmission.rateOverTime = 80f * rainIntensity;
@@ -322,6 +339,7 @@ namespace Kairos.Pruebas
         {
             if (Application.isPlaying)
             {
+                RainFx.External = false;
                 if (generatedRainClip != null) Destroy(generatedRainClip);
                 if (rainMat != null) Destroy(rainMat);
                 if (splashMat != null) Destroy(splashMat);

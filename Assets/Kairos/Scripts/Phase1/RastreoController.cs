@@ -310,7 +310,7 @@ namespace Kairos
             int ir = selected != null ? IR(selected) : 0;
             if (selected == null)
             {
-                irText.text = zoomed ? "Selecciona un buque en el mapa." : "Abre el Sector 1 en el globo.";
+                irText.text = zoomed ? "Selecciona un buque en el mapa." : $"Abre el sector {CaseData.Sectors[C.sector].name} en el globo.";
                 dossier.text = "";
             }
             else

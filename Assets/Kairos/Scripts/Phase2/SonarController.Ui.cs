@@ -12,8 +12,9 @@ namespace Kairos
             canvasRoot = canvas.transform;
 
             // Brújula táctica náutica superior (Alexander - Tarea S12-1)
-            var compassP = UI.Panel(canvas.transform, new Vector2(.30f, .93f), new Vector2(.70f, .99f));
-            compassText = UI.Text(compassP.transform, "RUMBO: 000°  |  BLANCO: 000°", 17, Pal.Sonar, TextAlignmentOptions.Center);
+            // Entre el panel izquierdo (hasta .27) y el derecho (desde .64): antes se metía bajo el panel del casco.
+            var compassP = UI.Panel(canvas.transform, new Vector2(.29f, .93f), new Vector2(.62f, .99f));
+            compassText = UI.Text(compassP.transform, "RUMBO: 000°  |  BLANCO: 000°", 19, Pal.Sonar, TextAlignmentOptions.Center);
             compassText.margin = new Vector4(6, 2, 6, 2);
             var left = UI.Panel(canvas.transform, new Vector2(0, .62f), new Vector2(.27f, 1));
             var ls = UI.VStack(left.transform, 14, 7);

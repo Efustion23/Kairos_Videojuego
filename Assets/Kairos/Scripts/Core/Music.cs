@@ -8,7 +8,7 @@ namespace Kairos
         const float FadePerSecond = .5f;
         static Music instance;
 
-        readonly AudioSource[] sources = new AudioSource[2];
+        [SerializeField] AudioSource[] sources = new AudioSource[2]; // serializado: sobrevive a recompilar en Play
         int active;
         string current;
 
