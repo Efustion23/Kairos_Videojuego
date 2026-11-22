@@ -34,6 +34,9 @@ namespace Kairos
         Button deploy;
         UI.Toasts toast;
         RectTransform rightPanel, labels;
+        GameObject objPanelObj, objMiniObj, rightPanelObj, rightMiniObj;
+        bool objCollapsed, rightCollapsed;
+        float camWidth = .68f;
 
         static CaseState C => Game.C;
         float Decay => Game.Has(3, 2) ? 2f : 5f;
@@ -199,39 +202,97 @@ namespace Kairos
             canvas = UI.NewCanvas();
             labels = UI.Rect(canvas.transform, "Etiquetas", Vector2.zero, Vector2.one); // primero: quedan bajo los paneles
             var top = UI.Panel(canvas.transform, new Vector2(0, .94f), Vector2.one);
-            topBar = UI.Text(top.transform, "", 22, Pal.Text, TextAlignmentOptions.Left);
+            topBar = UI.Text(top.transform, "", 20, Pal.Text, TextAlignmentOptions.MidlineLeft);
             topBar.margin = new Vector4(20, 0, 20, 0);
+            topBar.enableAutoSizing = true; topBar.fontSizeMin = 13; topBar.fontSizeMax = 20;
 
-            // Paneles a la medida de su contenido: antes quedaban medio vacíos.
-            var obj = UI.FitPanel(canvas.transform, new Vector2(.006f, .93f), new Vector2(0, 1), 570, 16, 4);
-            objective = UI.Line(obj, "", 21);
+            // Panel superior izquierdo (Objetivo guiado) con botón de minimizar
+            var obj = UI.Panel(canvas.transform, new Vector2(.008f, .70f), new Vector2(.305f, .932f));
+            objPanelObj = obj.gameObject;
+            var objHead = UI.Rect(obj.transform, "Header", new Vector2(0, .82f), Vector2.one, new Vector2(12, 2), new Vector2(-10, -4));
+            var objH = objHead.gameObject.AddComponent<HorizontalLayoutGroup>();
+            objH.spacing = 6; objH.childControlHeight = true; objH.childControlWidth = true; objH.childForceExpandWidth = false;
+            var objTitle = UI.Line(objHead, "OBJETIVO DE RASTREO", 15, Pal.Sonar, true, TextAlignmentOptions.MidlineLeft);
+            objTitle.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+            var objMinBtn = UI.Btn(objHead, "–", () => SetObjCollapsed(true), Pal.Dim, 16, 26);
+            var objMinLe = objMinBtn.gameObject.GetComponent<LayoutElement>();
+            objMinLe.minWidth = 32; objMinLe.preferredWidth = 32;
+            var objBody = UI.Rect(obj.transform, "Body", Vector2.zero, new Vector2(1, .82f));
+            objective = UI.Text(objBody, "", 18);
+            objective.margin = new Vector4(14, 4, 14, 8);
+            objective.enableAutoSizing = true; objective.fontSizeMin = 13; objective.fontSizeMax = 18;
 
-            rightPanel = UI.FitPanel(canvas.transform, new Vector2(.994f, .93f), new Vector2(1, 1), 600, 16, 6);
-            UI.Line(rightPanel, "Capas de satélite", 26, Pal.Sonar, true);
+            var objMini = UI.Panel(canvas.transform, new Vector2(.008f, .882f), new Vector2(.18f, .932f));
+            objMiniObj = objMini.gameObject;
+            var omRow = UI.Rect(objMini.transform, "Row", Vector2.zero, Vector2.one, new Vector2(8, 4), new Vector2(-8, -4));
+            UI.Btn(omRow, "+ Objetivo", () => SetObjCollapsed(false), Pal.Sonar, 14, 28);
+            objMiniObj.SetActive(false);
+
+            // Panel derecho (Capas + Índice de Riesgo) con scroll interno, pie fijo y botón Minimizar / Tab
+            var r = UI.Panel(canvas.transform, new Vector2(.68f, .008f), new Vector2(.992f, .932f));
+            rightPanelObj = r.gameObject;
+
+            var rHead = UI.Rect(r.transform, "Header", new Vector2(0, .936f), Vector2.one, new Vector2(14, 4), new Vector2(-12, -6));
+            var rHeadH = rHead.gameObject.AddComponent<HorizontalLayoutGroup>();
+            rHeadH.spacing = 8; rHeadH.childControlHeight = true; rHeadH.childControlWidth = true; rHeadH.childForceExpandWidth = false;
+            var rTitle = UI.Line(rHead, "Capas de satélite", 22, Pal.Sonar, true, TextAlignmentOptions.MidlineLeft);
+            rTitle.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+            var rMinBtn = UI.Btn(rHead, "Minimizar [Tab]", () => SetRightCollapsed(true), Pal.Dim, 14, 30);
+            var rMinLe = rMinBtn.gameObject.GetComponent<LayoutElement>();
+            rMinLe.minWidth = 148; rMinLe.preferredWidth = 148;
+
+            rightPanel = UI.Scroll(r.transform, new Vector2(0, .148f), new Vector2(1, .932f), new Vector2(6, 0), new Vector2(-6, 0));
+            var rpVlg = rightPanel.GetComponent<VerticalLayoutGroup>();
+            if (rpVlg != null) { rpVlg.padding = new RectOffset(8, 12, 4, 8); rpVlg.spacing = 5; }
             layerBtns = new Button[CaseData.Layers.Length];
             layerInfo = new TextMeshProUGUI[CaseData.Layers.Length];
             for (int i = 0; i < CaseData.Layers.Length; i++)
             {
                 int k = i;
-                layerBtns[i] = UI.Btn(rightPanel, CaseData.Layers[i].name, () => BuyLayer(k), null, 21, 42);
-                layerInfo[i] = UI.Line(rightPanel, "", 18, Pal.Dim);
+                layerBtns[i] = UI.Btn(rightPanel, CaseData.Layers[i].name, () => BuyLayer(k), null, 18, 38);
+                layerInfo[i] = UI.Line(rightPanel, "", 15.5f, Pal.Dim);
             }
 
-            UI.Line(rightPanel, "Índice de Riesgo", 26, Pal.Sonar, true);
-            irText = UI.Line(rightPanel, "Selecciona un buque en el mapa.", 22);
-            irBar = UI.NewBar(rightPanel, Pal.DeckLight, 12);
-            dossier = UI.Line(rightPanel, "", 18);
-            deploy = UI.Btn(rightPanel, "Desplegar lancha: Fase 2", () =>
+            UI.Line(rightPanel, "Índice de Riesgo", 22, Pal.Sonar, true);
+            irText = UI.Line(rightPanel, "Selecciona un buque en el mapa.", 19);
+            irBar = UI.NewBar(rightPanel, Pal.DeckLight, 10);
+            dossier = UI.Line(rightPanel, "", 16);
+
+            // Pie fijo: los botones de despliegue y regreso nunca se pierden por debajo de la pantalla
+            var rFoot = UI.VStack(r.transform, 10, 6, Vector2.zero, new Vector2(1, .145f));
+            deploy = UI.Btn(rFoot, "Desplegar lancha: Fase 2", () =>
             {
                 C.ir = selected != null ? IR(selected) : 0;
                 UI.Summary(canvas.transform, $"{selected.name}: IR {C.ir}", Pal.Sealed, new[]
                 {
                     $"El índice de riesgo justifica acercarse. Las incursiones salen siempre de noche, más allá de la milla 200: {Game.FormatClock(Game.NextNight(C.hours))}.",
                 }, "Qué sigue: te acercas en lancha y escaneas el casco para saber dónde están las personas.", "Salir en lancha", () => Game.GoToPhase(2));
-            }, Pal.Sealed, 23, 54);
-            UI.Btn(rightPanel, "Volver a base", Game.GoToMenu, Pal.Dim, 19, 36);
-            toast = UI.Toasts.Create(canvas.transform, new Vector2(.05f, .04f), new Vector2(.65f, .14f));
+            }, Pal.Sealed, 20, 46);
+            UI.Btn(rFoot, "Volver a base", Game.GoToMenu, Pal.Dim, 17, 34);
+
+            // Pastilla minimizada del panel derecho (permite girar el globo 3D a pantalla completa)
+            var rMini = UI.Panel(canvas.transform, new Vector2(.79f, .882f), new Vector2(.992f, .932f));
+            rightMiniObj = rMini.gameObject;
+            var rmRow = UI.Rect(rMini.transform, "Row", Vector2.zero, Vector2.one, new Vector2(8, 4), new Vector2(-8, -4));
+            UI.Btn(rmRow, "+ Capas y Dossier [Tab]", () => SetRightCollapsed(false), Pal.Sonar, 14, 28);
+            rightMiniObj.SetActive(false);
+
+            toast = UI.Toasts.Create(canvas.transform, new Vector2(.05f, .03f), new Vector2(.65f, .12f));
             UI.SceneIntro(canvas.transform, "FASE 1", "Rastreo satelital");
+        }
+
+        void SetObjCollapsed(bool collapsed)
+        {
+            objCollapsed = collapsed;
+            if (objPanelObj != null) objPanelObj.SetActive(!collapsed);
+            if (objMiniObj != null) objMiniObj.SetActive(collapsed);
+        }
+
+        void SetRightCollapsed(bool collapsed)
+        {
+            rightCollapsed = collapsed;
+            if (rightPanelObj != null) rightPanelObj.SetActive(!collapsed);
+            if (rightMiniObj != null) rightMiniObj.SetActive(collapsed);
         }
 
         int IR(ShipDef s) => CaseData.ComputeIR(s, C.revealed, C.hours, C.sarDegraded, Decay);
@@ -339,7 +400,7 @@ namespace Kairos
             else if (ir < CaseData.IrToScan && !selected.target) o = $"<b>{selected.name}</b>\nNo parece nuestro objetivo. Prueba con {targetName}.";
             else if (ir < CaseData.IrToScan) o = $"<b>Sube el IR a {CaseData.IrToScan}</b>\nUsa capas de satélite para confirmar sospechas. Prueba <color=#3FE0D0>{NextLayerTip()}</color>. Si hay que esperar, el botón lo hace por ti.";
             else o = "<b>Índice suficiente</b>\nPulsa <color=#6CFF8A>Desplegar lancha</color>.";
-            o += "\n\n<size=17><color=#8DA2AB>Controles: Arrastrar = girar globo · Clic = seleccionar · Esc = alejar</color></size>";
+            o += "\n\n<size=15><color=#8DA2AB>Controles: Arrastrar = girar globo · Clic = seleccionar · Tab = minimizar · Esc = alejar</color></size>";
             objective.text = o;
 
             foreach (var m in markers) UpdateMarker(m);
@@ -384,10 +445,18 @@ namespace Kairos
         // ---------- Bucle ----------
         void Update()
         {
+            var kb = Keyboard.current;
+            if (kb != null && kb.tabKey.wasPressedThisFrame)
+            {
+                Sfx.Play(Sfx.Click, .35f);
+                SetRightCollapsed(!rightCollapsed);
+            }
+
             dist = Mathf.Lerp(dist, targetDist, Time.deltaTime * 2.5f);
             cam.transform.position = new Vector3(0, 0, -dist);
             cam.transform.rotation = Quaternion.identity;
-            cam.rect = new Rect(0, 0, .68f, .94f); // centra el globo en el hueco que dejan los paneles
+            camWidth = Mathf.Lerp(camWidth, rightCollapsed ? 1f : .68f, Time.deltaTime * 8f);
+            cam.rect = new Rect(0, 0, camWidth, .94f); // centra el globo en el hueco que dejan los paneles
 
             var mouse = Mouse.current;
             bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
@@ -405,7 +474,7 @@ namespace Kairos
             }
             globe.rotation = Quaternion.Slerp(globe.rotation, targetRot, Time.deltaTime * 4f);
 
-            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame && zoomed) ZoomOut();
+            if (kb != null && kb.escapeKey.wasPressedThisFrame && zoomed) ZoomOut();
             UpdateLabels();
         }
 
