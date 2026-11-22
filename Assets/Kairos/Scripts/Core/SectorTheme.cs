@@ -10,7 +10,10 @@ namespace Kairos
     {
         public static void Apply(int sector, Transform shipRoot = null, Light[] deckLights = null)
         {
-            var root = shipRoot != null ? shipRoot : GameObject.Find("HaiFeng77")?.transform;
+            // Cada sector de la Fase 3 tiene su propio barco: sin esto S2/S3 no encontraban casco y
+            // seguían pintados "HAI FENG 77", sin paleta ni balizas del sector.
+            var root = shipRoot != null ? shipRoot
+                : (GameObject.Find("HaiFeng77") ?? GameObject.Find("KestrelExplorer") ?? GameObject.Find("OceanicCrown9"))?.transform;
             var targetName = CaseData.TargetFor(sector).name.ToUpperInvariant();
             var cam = Camera.main;
             if (cam != null) cam.clearFlags = CameraClearFlags.Skybox;
@@ -77,6 +80,17 @@ namespace Kairos
                 {
                     if (tmp.text != null && tmp.text.ToUpperInvariant().Contains("HAI FENG"))
                         tmp.text = targetName;
+                    if (tmp.name != "Nombre") continue;
+                    // Nombres largos (KESTREL EXPLORER, OCEANIC CROWN 9) se encogen para caber en la popa de 14 m
+                    // en vez de sobresalir del casco y quedar flotando en el aire.
+                    var size = tmp.rectTransform.sizeDelta;
+                    tmp.rectTransform.sizeDelta = new Vector2(Mathf.Min(size.x, 12.5f), size.y);
+                    if (!tmp.enableAutoSizing)
+                    {
+                        tmp.fontSizeMax = tmp.fontSize;
+                        tmp.fontSizeMin = tmp.fontSize * .35f;
+                        tmp.enableAutoSizing = true;
+                    }
                 }
             }
         }

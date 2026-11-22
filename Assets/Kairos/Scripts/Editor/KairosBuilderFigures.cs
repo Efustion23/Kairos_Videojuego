@@ -233,18 +233,25 @@ namespace Kairos.EditorTools
             motion = model.AddComponent<HumanoidMotion>();
             motion.animator = animator;
 
-            // Accesorios 3D distintivos sobre los huesos del rig (gorra de plato, casco de tormenta, chaleco reflectante)
+            // Accesorios 3D distintivos sobre los huesos del rig (gorra de plato, casco de tormenta, chaleco reflectante).
+            // Medidas en metros: se compensa la escala del modelo (~1,7) que heredan los huesos, si no salen
+            // gigantes y separados del cuerpo.
+            Transform Acc(Transform bone, PrimitiveType t, Material m, Vector3 pos, Vector3 size)
+            {
+                float k = 1f / bone.lossyScale.x;
+                return Part(bone, t, m, pos * k, size * k);
+            }
             var headBone = animator.GetBoneTransform(HumanBodyBones.Head);
             if (headBone != null)
             {
                 if (isCaptain)
                 {
-                    Part(headBone, PrimitiveType.Cylinder, coat, new Vector3(0, 0.14f, 0.01f), new Vector3(0.22f, 0.04f, 0.24f));
-                    Part(headBone, PrimitiveType.Cube, yellow, new Vector3(0, 0.11f, 0.11f), new Vector3(0.16f, 0.018f, 0.08f));
+                    Acc(headBone, PrimitiveType.Cylinder, coat, new Vector3(0, 0.14f, 0.01f), new Vector3(0.22f, 0.04f, 0.24f));
+                    Acc(headBone, PrimitiveType.Cube, yellow, new Vector3(0, 0.11f, 0.11f), new Vector3(0.16f, 0.018f, 0.08f));
                 }
                 else
                 {
-                    Part(headBone, PrimitiveType.Sphere, isBosun ? yellow : hatMat, new Vector3(0, 0.12f, 0f), new Vector3(0.23f, 0.14f, 0.25f));
+                    Acc(headBone, PrimitiveType.Sphere, isBosun ? yellow : hatMat, new Vector3(0, 0.12f, 0f), new Vector3(0.23f, 0.14f, 0.25f));
                 }
             }
             var chestBone = animator.GetBoneTransform(HumanBodyBones.UpperChest) ?? animator.GetBoneTransform(HumanBodyBones.Chest);
@@ -252,12 +259,12 @@ namespace Kairos.EditorTools
             {
                 if (isCaptain)
                 {
-                    Part(chestBone, PrimitiveType.Cube, yellow, new Vector3(-0.18f, 0.12f, 0f), new Vector3(0.08f, 0.025f, 0.12f));
-                    Part(chestBone, PrimitiveType.Cube, yellow, new Vector3(0.18f, 0.12f, 0f), new Vector3(0.08f, 0.025f, 0.12f));
+                    Acc(chestBone, PrimitiveType.Cube, yellow, new Vector3(-0.18f, 0.12f, 0f), new Vector3(0.08f, 0.025f, 0.12f));
+                    Acc(chestBone, PrimitiveType.Cube, yellow, new Vector3(0.18f, 0.12f, 0f), new Vector3(0.08f, 0.025f, 0.12f));
                 }
                 else
                 {
-                    Part(chestBone, PrimitiveType.Cube, vest, new Vector3(0f, 0.02f, 0.11f), new Vector3(0.32f, 0.045f, 0.04f));
+                    Acc(chestBone, PrimitiveType.Cube, vest, new Vector3(0f, 0.02f, 0.11f), new Vector3(0.32f, 0.045f, 0.04f));
                 }
             }
 
@@ -332,6 +339,7 @@ namespace Kairos.EditorTools
             var def = System.Array.Find(CaseData.PeopleFor(buildSector), p => p.id == id);
             string name = "Persona " + id, dir = Root + "/Models/" + def.name;
             var files = Fbx(dir);
+            string personId = id; // la estatura es de la persona, no del modelo de reserva (si no, los clones miden igual)
             if (files.Length == 0 && buildSector > 0)
             {
                 id = FallbackModel[buildSector][id];
@@ -356,7 +364,7 @@ namespace Kairos.EditorTools
             skin.gameObject.name = "Cuerpo";
             skin.updateWhenOffscreen = true; // igual que el protagonista: el FBX trae límites diminutos
             skin.forceMeshLod = 4;           // unos 780 mil triángulos bajan a una fracción
-            model.transform.localScale = Vector3.one * (PersonHeight[id] / skin.bounds.size.y);
+            model.transform.localScale = Vector3.one * (PersonHeight[personId] / skin.bounds.size.y);
 
             var animator = model.GetComponent<Animator>();
             animator.applyRootMotion = false;
