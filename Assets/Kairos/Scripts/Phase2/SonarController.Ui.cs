@@ -16,8 +16,7 @@ namespace Kairos
             var compassP = UI.Panel(canvas.transform, new Vector2(.29f, .93f), new Vector2(.62f, .99f));
             compassText = UI.Text(compassP.transform, "RUMBO: 000°  |  BLANCO: 000°", 19, Pal.Sonar, TextAlignmentOptions.Center);
             compassText.margin = new Vector4(6, 2, 6, 2);
-            var left = UI.Panel(canvas.transform, new Vector2(0, .62f), new Vector2(.27f, 1));
-            var ls = UI.VStack(left.transform, 14, 7);
+            var ls = UI.FitPanel(canvas.transform, new Vector2(.006f, .99f), new Vector2(0, 1), 510, 16, 7);
             UI.Line(ls, $"FASE 2 · {CaseData.TargetFor(C.sector).name.ToUpperInvariant()}", 22, Pal.Sonar, true);
             status = UI.Line(ls, "", 20);
             UI.Line(ls, "Sospecha del buque", 18, Pal.Dim);
@@ -26,8 +25,7 @@ namespace Kairos
             crestBar = UI.NewBar(ls, Pal.Sonar, 18);
             UI.Line(ls, "W/S marcha · A/D timón · Espacio pulso\nH hidrófono · T dron · Clic der. cámara · Esc pausa", 18, Pal.Dim);
 
-            var right = UI.Panel(canvas.transform, new Vector2(.64f, .3f), new Vector2(1, 1));
-            var rs = UI.VStack(right.transform, 12, 5);
+            var rs = UI.FitPanel(canvas.transform, new Vector2(.994f, .99f), new Vector2(1, 1), 680, 14, 5);
             UI.Line(rs, "Lectura del casco", 24, Pal.Sonar, true);
             UI.Line(rs, "Encuentra dónde hay personas. La carga da una masa densa y homogénea; un espacio habitado suena hueco y con objetos sueltos.", 18, Pal.Dim);
             for (int i = 0; i < 5; i++)
@@ -52,9 +50,8 @@ namespace Kairos
             UI.Btn(bottom, "Volver a base", Game.GoToMenu, Pal.Dim, 19, 46);
             toast = UI.Toasts.Create(canvas.transform, new Vector2(.05f, .03f), new Vector2(.62f, .13f));
 
-            var hintP = UI.Panel(canvas.transform, new Vector2(.08f, .15f), new Vector2(.62f, .24f), default, default, new Color(.02f, .16f, .17f, .92f));
-            hintText = UI.Text(hintP.transform, "", 23, Pal.Sonar, TextAlignmentOptions.Center);
-            hintText.margin = new Vector4(12, 4, 12, 4);
+            var hintP = UI.FitPanel(canvas.transform, new Vector2(.35f, .15f), new Vector2(.5f, 0), 1000, 14, 0, new Color(.02f, .16f, .17f, .92f));
+            hintText = UI.Line(hintP, "", 23, Pal.Sonar, false, TextAlignmentOptions.Center);
             UI.SceneIntro(canvas.transform, "FASE 2", "Escaneo con sonar");
         }
 

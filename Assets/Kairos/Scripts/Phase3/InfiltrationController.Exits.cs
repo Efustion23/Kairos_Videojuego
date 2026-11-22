@@ -113,30 +113,31 @@ namespace Kairos
         void OpenPause()
         {
             SetOverlay(Mode.Menu);
-            var p = UI.Panel(overlay, new Vector2(.26f, .24f), new Vector2(.74f, .76f));
-            var s = UI.VStack(p.transform, 24, 10);
+            toast.Show(""); // el aviso que estaba en pantalla no se monta sobre el título
+            var s = UI.FitPanel(overlay, new Vector2(.5f, .5f), new Vector2(.5f, .5f), 900, 30, 10);
 
             // Cabecera estilizada de Pausa (Alexander - S15-1)
             UI.Line(s, "KAIROS · OPERACIÓN EN PAUSA", 32, Pal.Sonar, true);
-            UI.Line(s, $"Misión en Curso: <b>{CaseData.TargetFor(C.sector).name}</b>  |  {CaseData.Sectors[C.sector].name}  |  Agente: {Game.Inspector}", 18, Pal.Dim);
+            UI.Line(s, $"{CaseData.TargetFor(C.sector).name}  ·  {CaseData.Sectors[C.sector].name}  ·  {Game.Inspector}", 18, Pal.Dim);
 
             // Resumen de estado de misión
-            UI.Line(s, $"\n<b>Estado Táctico:</b> Pruebas selladas: <color=#6CFF8A>{C.evidence.Count}/{CaseData.MaxEvidence}</color>  ·  Clima: <color=#3FE0D0>Douglas {Ocean.Douglas:0.0}</color>", 19, Pal.Text);
+            UI.Line(s, $"Pruebas selladas <color=#6CFF8A><b>{C.evidence.Count}/{CaseData.MaxEvidence}</b></color>   ·   Pruebas A <color=#6CFF8A><b>{Game.CountCategoryA()}</b></color>   ·   Mar <color=#3FE0D0><b>Douglas {Ocean.Douglas:0.0}</b></color>", 20, Pal.Text);
 
-            // Guía de Controles y Usabilidad
-            UI.Line(s, "\n<b>Controles de Operación:</b>", 19, Pal.DeckLight);
-            UI.Line(s, "- <color=#3FE0D0>WASD</color>: Desplazamiento  |  <color=#3FE0D0>[C / Ctrl]</color>: Agacharse (sigilo)  |  <color=#3FE0D0>Shift</color>: Correr\n- <color=#3FE0D0>[E]</color>: Usar / Cortar / Fotografiar  |  <color=#3FE0D0>[F]</color>: Visor térmico-acústico\n- <color=#3FE0D0>[Q]</color>: Dispositivo táctico (Aturdir/Bloqueador)  |  <color=#3FE0D0>[Tab]</color>: Maletín forense\n- <color=#3FE0D0>Clic Derecho</color>: Teleobjetivo de cámara forense", 17, Pal.Dim);
+            // Guía de Controles y Usabilidad, en dos columnas
+            UI.Line(s, "CONTROLES", 17, Pal.DeckLight, true);
+            var cols = UI.HStack(s, 112, 24);
+            UI.Line(cols, "<color=#3FE0D0>WASD</color>  moverse\n<color=#3FE0D0>C / Ctrl</color>  agacharse\n<color=#3FE0D0>Shift</color>  correr\n<color=#3FE0D0>Clic der.</color>  cámara forense", 18, Pal.Text);
+            UI.Line(cols, "<color=#3FE0D0>E</color>  usar · cortar · fotografiar\n<color=#3FE0D0>F</color>  visor térmico-acústico\n<color=#3FE0D0>Q</color>  aturdir / bloqueador\n<color=#3FE0D0>Tab</color>  maletín forense", 18, Pal.Text);
 
-            UI.Line(s, " ", 8);
-            UI.Btn(s, "Reanudar Misión", CloseOverlay, Pal.Sealed, 22, 48);
-            UI.Btn(s, "Regresar a la Base (Progreso guardado)", Game.GoToMenu, Pal.Dim, 19, 44);
+            var btns = UI.HStack(s, 52, 12);
+            UI.Btn(btns, "Reanudar misión", CloseOverlay, Pal.Sealed, 21, 52);
+            UI.Btn(btns, "Volver a la base (se guarda)", Game.GoToMenu, Pal.Dim, 19, 52);
         }
 
         public void OpenExitMenu()
         {
             SetOverlay(Mode.Menu);
-            var p = UI.Panel(overlay, new Vector2(.28f, .26f), new Vector2(.72f, .74f));
-            var s = UI.VStack(p.transform, 26, 10);
+            var s = UI.FitPanel(overlay, new Vector2(.5f, .5f), new Vector2(.5f, .5f), 860, 28, 12);
             UI.Line(s, "Salida por popa", 34, Pal.Sonar, true);
             int here = 0;
             foreach (var n in people)

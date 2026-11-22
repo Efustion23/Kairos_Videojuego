@@ -110,9 +110,7 @@ namespace Kairos
         {
             Screen();
             UI.Fullscreen(root, new Color(.01f, .03f, .05f, .76f));
-            var p = UI.Panel(root, new Vector2(.24f, .20f), new Vector2(.76f, .80f));
-            var s = UI.VStack(p.transform, 34, 14);
-            s.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
+            var s = UI.FitPanel(root, new Vector2(.5f, .5f), new Vector2(.5f, .5f), 980, 36, 14);
             UI.Line(s, "Aviso de contenido", 34, Pal.DeckLight, true);
             UI.Line(s, "- Trata sobre pesca ilegal y trabajo forzado en altamar.\n- Sin violencia gráfica: todo se investiga con pruebas y testimonios.\n- Buques, empresas y personajes son ficticios.", 21);
             var toggle = UI.Btn(s, "", null, Pal.Sonar, 21, 50);
@@ -129,9 +127,7 @@ namespace Kairos
         {
             Screen();
             UI.Fullscreen(root, new Color(.01f, .03f, .05f, .76f));
-            var p = UI.Panel(root, new Vector2(.30f, .18f), new Vector2(.70f, .82f));
-            var s = UI.VStack(p.transform, 32, 12);
-            s.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
+            var s = UI.FitPanel(root, new Vector2(.5f, .5f), new Vector2(.5f, .5f), 760, 34, 12);
             UI.Line(s, "Tu inspector o inspectora", 32, Pal.Sonar, true);
             UI.Line(s, "Nombre", 19, Pal.Dim);
             UI.Input(s, Game.S.playerName, "Nombre", v => Game.S.playerName = string.IsNullOrWhiteSpace(v) ? "Inspector" : v);

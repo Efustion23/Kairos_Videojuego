@@ -202,12 +202,11 @@ namespace Kairos
             topBar = UI.Text(top.transform, "", 22, Pal.Text, TextAlignmentOptions.Left);
             topBar.margin = new Vector4(20, 0, 20, 0);
 
-            var obj = UI.Panel(canvas.transform, new Vector2(0, .72f), new Vector2(.3f, .94f));
-            objective = UI.Text(obj.transform, "", 21);
-            objective.margin = new Vector4(16, 12, 16, 12);
+            // Paneles a la medida de su contenido: antes quedaban medio vacíos.
+            var obj = UI.FitPanel(canvas.transform, new Vector2(.006f, .93f), new Vector2(0, 1), 570, 16, 4);
+            objective = UI.Line(obj, "", 21);
 
-            var r = UI.Panel(canvas.transform, new Vector2(.68f, 0), new Vector2(1, .94f));
-            rightPanel = UI.VStack(r.transform, 14, 6);
+            rightPanel = UI.FitPanel(canvas.transform, new Vector2(.994f, .93f), new Vector2(1, 1), 600, 16, 6);
             UI.Line(rightPanel, "Capas de satélite", 26, Pal.Sonar, true);
             layerBtns = new Button[CaseData.Layers.Length];
             layerInfo = new TextMeshProUGUI[CaseData.Layers.Length];

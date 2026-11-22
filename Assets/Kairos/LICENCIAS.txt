@@ -39,6 +39,17 @@ OBJETOS 3D (Assets/Kairos/Models/Props), CC0, Poly Haven: https://polyhaven.com/
 - classic_laptop (Plotter GPS náutico): Arrangemonk
 - clipboard (manifiesto, planilla de turnos y facturas): ProgrammerOnCoffee
 - office_notepads (contratos falsos): Ulan Cabanilla
+- life_jacket, plastic_crate_01: PierreB3D
+- fish_knife: Mateusz Sadek
+- plastic_crate_03: Pacific Penguin
+- cardboard_box_01, plastic_bottle_gallon: Rahul Chaudhary
+- long_life_food: Mia Pecina Zorko
+- old_bed_frame: Luca B
+- trashbag: Benny Weimer
+- metal_tool_chest: Yann Kervran y John Hutcheson
+- oil_tin: Niklas
+- old_tyre: MP
+- binoculars: Derek Wight
 
 BARCOS 3D (Assets/Kairos/Models/Vehicles), CC BY 4.0, Sketchfab
 - motorboat (lancha de la Fase 2): Remi Remix https://sketchfab.com/3d-models/motorboat-e534f2b396a847289a0afeb8744fba88

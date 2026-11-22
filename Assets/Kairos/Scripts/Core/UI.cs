@@ -143,12 +143,30 @@ namespace Kairos
             var i = r.gameObject.AddComponent<Image>();
             i.sprite = RoundedSprite(); i.type = Image.Type.Sliced;
             i.color = color ?? new Color(.032f, .062f, .092f, .88f);
-            AddFrameBorder(r, new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, .35f));
+            var border = AddFrameBorder(r, new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, .35f));
             // Filo táctico superior: identifica cada módulo de la consola KAIROS.
             var edge = Rect(r, "Filo", new Vector2(0, 1), Vector2.one, new Vector2(18, -2.5f), new Vector2(-10, 0));
             var edgeImg = edge.gameObject.AddComponent<Image>();
             edgeImg.color = new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, .72f); edgeImg.raycastTarget = false;
+            // Adornos fuera del layout: si el panel lleva un VerticalLayoutGroup no ocupan hueco.
+            border.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            edge.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
             return i;
+        }
+
+        /// Panel que crece con su contenido: ancho fijo (px de la resolución de referencia 1920x1080) y alto
+        /// justo para lo que lleva, sin huecos vacíos abajo. 'anchor' es el punto de pantalla donde se pega y
+        /// 'pivot' qué punto del panel va ahí (centro, esquina...). El propio panel hace de VStack.
+        public static RectTransform FitPanel(Transform parent, Vector2 anchor, Vector2 pivot, float width, float pad = 24, float space = 10, Color? color = null)
+        {
+            var r = (RectTransform)Panel(parent, anchor, anchor, default, default, color).transform;
+            r.pivot = pivot; r.sizeDelta = new Vector2(width, 0); r.anchoredPosition = Vector2.zero;
+            var v = r.gameObject.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset((int)pad, (int)pad, (int)pad, (int)pad);
+            v.spacing = space; v.childControlHeight = true; v.childControlWidth = true;
+            v.childForceExpandHeight = false; v.childForceExpandWidth = true;
+            r.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            return r;
         }
 
         /// Oscurecido de izquierda a derecha para que un texto se lea sobre la escena.
@@ -346,9 +364,7 @@ namespace Kairos
         public static void Summary(Transform parent, string title, Color titleColor, string[] lines, string next, string button, Action onClick)
         {
             Fullscreen(parent, new Color(.02f, .05f, .07f, .97f));
-            var p = Panel(parent, new Vector2(.22f, .24f), new Vector2(.78f, .76f));
-            var s = VStack(p.transform, 34, 14);
-            s.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleLeft;
+            var s = FitPanel(parent, new Vector2(.5f, .5f), new Vector2(.5f, .5f), 1060, 36, 14);
             Line(s, title, 40, titleColor, true);
             foreach (var l in lines) Line(s, l, 24);
             Line(s, next, 22, Pal.Dim);
