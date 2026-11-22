@@ -384,10 +384,7 @@ namespace Kairos
             }
             UI.Line(s, " ", 10);
             UI.Line(s, success ? $"Caso cerrado: +50.000 ¢. Reputación {Game.S.reputation}/100. Sentencias: {Game.S.sentences}." : "Caso sin sentencia. Puedes repetirlo desde la base.", 22, Pal.Sealed);
-            bool allDone = Game.S.completedSectors != null && Game.S.completedSectors.Length >= CaseData.Sectors.Length;
-            if (allDone)
-                for (int i = 0; i < CaseData.Sectors.Length; i++)
-                    if (!Game.S.completedSectors[i]) { allDone = false; break; }
+            bool allDone = CaseData.CountCompletedSectors(Game.S.completedSectors) >= CaseData.Sectors.Length;
             UI.Line(s, $"Expediente de {Game.Inspector}. {CaseData.EpilogueFooterFor(C.sector, C.verdict, allDone)}", 20, Pal.Dim);
             UI.Line(s, "Ningún océano es tan vasto ni ninguna noche tan oscura como para ocultar la dignidad humana.", 26, Pal.Sonar, false, TextAlignmentOptions.Center);
             UI.Btn(s, "Volver a la base", Game.GoToMenu, Pal.Sealed, 24, 56);

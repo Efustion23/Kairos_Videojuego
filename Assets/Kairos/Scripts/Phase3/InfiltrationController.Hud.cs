@@ -77,7 +77,7 @@ namespace Kairos
             hudPanels = new[] { tl.gameObject, tr.gameObject, bl.gameObject };
             reticle.SetActive(false); holdRoot.SetActive(false); hintRoot.SetActive(false); objMarker.gameObject.SetActive(false);
 
-            UI.SceneIntro(canvas.transform, "FASE 3", "Infiltración");
+            UI.SceneIntro(canvas.transform, "FASE 3", "Infiltración", CaseData.SectorIntroSubtitle(C.sector));
 
             foreach (var g in guards) AddMark(g.transform, g.displayName, Pal.Danger, 2.2f, g);
             foreach (var p in people) AddMark(p.transform, p.Def.name, Pal.ThermHot, 2.1f);
@@ -210,7 +210,7 @@ namespace Kairos
             }
 
             int a = Game.CountCategoryA();
-            objectives.text = $"<color=#3FE0D0><b>OBJETIVO</b></color>\n<b>{objective}</b>\n<size=18><color=#8A9AA0>Pruebas A: {a}   ·   Te siguen: {Followers.Count}</color></size>";
+            objectives.text = $"<color=#3FE0D0><b>OBJETIVO · {CaseData.TargetFor(C.sector).name.ToUpperInvariant()}</b></color>\n<b>{objective}</b>\n<size=18><color=#8A9AA0>Pruebas A: {a}   ·   Te siguen: {Followers.Count}</color></size>";
 
             // Al llegar sobra el marcador: manda el aviso de lo que puedes hacer.
             bool showMarker = playing && objTarget != null && !player.Aiming && (routeLine.positionCount == 0 || RouteLength() > 2.5f);

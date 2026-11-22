@@ -138,6 +138,9 @@ namespace Kairos
             : "Potero industrial de 90 m con señal AIS apagada fuera de la zona económica exclusiva.";
         public static string CaseFileCodeFor(int sector) => $"KAIROS-JUD-2026-S{Mathf.Clamp(sector, 0, Sectors.Length - 1) + 1}";
 
+        public static string SectorIntroSubtitle(int sector) =>
+            $"{TargetFor(sector).name}  ·  {Sectors[Mathf.Clamp(sector, 0, Sectors.Length - 1)].name}  ·  {FormatGps(sector)}";
+
         public static string EpilogueFooterFor(int sector, int verdict, bool allSectorsDone)
         {
             if (allSectorsDone && verdict > 0)
@@ -149,6 +152,25 @@ namespace Kairos
             if (sector == 1 && verdict > 0)
                 return "Golfo de Guinea documentado. La pista financiera apunta ahora hacia el Océano Índico y Tidewater Holdings.";
             return "Tidewater Holdings sigue ahí fuera.";
+        }
+
+        public static int CountCompletedSectors(bool[] completedSectors)
+        {
+            if (completedSectors == null) return 0;
+            int n = Mathf.Min(completedSectors.Length, Sectors.Length);
+            int done = 0;
+            for (int i = 0; i < n; i++)
+                if (completedSectors[i]) done++;
+            return done;
+        }
+
+        public static string CampaignProgressLabel(bool[] completedSectors)
+        {
+            int done = CountCompletedSectors(completedSectors);
+            int total = Sectors.Length;
+            return done >= total
+                ? $"CAMPAÑA COMPLETADA  ·  {total}/{total} SECTORES"
+                : $"PROGRESO DE CAMPAÑA: {done}/{total} SECTORES RESUELTOS";
         }
 
         public static int DouglasFor(int sector, float hours) => Mathf.Min(9, DouglasAt(hours) + (sector == 1 ? 1 : sector == 2 ? 2 : 0));

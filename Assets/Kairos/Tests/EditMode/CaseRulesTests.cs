@@ -215,5 +215,32 @@ namespace Kairos.Tests
             StringAssert.Contains("Oceanic Crown 9", CaseData.EpilogueFooterFor(2, 1, false));
             StringAssert.Contains("Campaña completada", CaseData.EpilogueFooterFor(2, 2, true));
         }
+
+        [Test]
+        public void SubtituloDeIntroIncluyeBuqueSectorYGps()
+        {
+            for (int sector = 0; sector <= 2; sector++)
+            {
+                string sub = CaseData.SectorIntroSubtitle(sector);
+                StringAssert.Contains(CaseData.TargetFor(sector).name, sub);
+                StringAssert.Contains(CaseData.Sectors[sector].name, sub);
+                StringAssert.Contains(CaseData.FormatGps(sector), sub);
+            }
+        }
+
+        [Test]
+        public void ProgresoGlobalDeCampanaCuentaSectoresYFormateaEtiqueta()
+        {
+            Assert.AreEqual(0, CaseData.CountCompletedSectors(null));
+            Assert.AreEqual(1, CaseData.CountCompletedSectors(new[] { true }));
+            Assert.AreEqual(0, CaseData.CountCompletedSectors(new[] { false, false, false }));
+            Assert.AreEqual(2, CaseData.CountCompletedSectors(new[] { true, false, true }));
+            Assert.AreEqual(3, CaseData.CountCompletedSectors(new[] { true, true, true }));
+
+            StringAssert.Contains("0/3 SECTORES RESUELTOS", CaseData.CampaignProgressLabel(new[] { false, false, false }));
+            StringAssert.Contains("2/3 SECTORES RESUELTOS", CaseData.CampaignProgressLabel(new[] { true, true, false }));
+            StringAssert.Contains("CAMPAÑA COMPLETADA", CaseData.CampaignProgressLabel(new[] { true, true, true }));
+            StringAssert.Contains("3/3 SECTORES", CaseData.CampaignProgressLabel(new[] { true, true, true }));
+        }
     }
 }

@@ -163,16 +163,16 @@ namespace Kairos
         }
 
         /// Entrada a una escena: sale del negro y muestra un momento en qué fase estás.
-        public static void SceneIntro(Transform canvas, string kicker, string title)
+        public static void SceneIntro(Transform canvas, string kicker, string title, string subtitle = null)
         {
             var r = Rect(canvas, "Entrada", Vector2.zero, Vector2.one);
-            r.gameObject.AddComponent<Intro>().Build(kicker, title);
+            r.gameObject.AddComponent<Intro>().Build(kicker, title, subtitle);
         }
 
         class Intro : MonoBehaviour
         {
-            Image black; TextMeshProUGUI kick, big; RectTransform line; float t;
-            public void Build(string kicker, string title)
+            Image black; TextMeshProUGUI kick, big, sub; RectTransform line; float t;
+            public void Build(string kicker, string title, string subtitle)
             {
                 black = Fullscreen(transform, Color.black);
                 black.raycastTarget = false;
@@ -181,6 +181,11 @@ namespace Kairos
                 big.characterSpacing = 6;
                 kick = Text(Rect(transform, "Fase", new Vector2(.1f, .6f), new Vector2(.9f, .66f)), kicker, 26, Pal.Sonar, TextAlignmentOptions.Center, true);
                 kick.characterSpacing = 30;
+                if (!string.IsNullOrEmpty(subtitle))
+                {
+                    sub = Text(Rect(transform, "Subtitulo", new Vector2(.1f, .39f), new Vector2(.9f, .445f)), subtitle, 22, Pal.Dim, TextAlignmentOptions.Center);
+                    sub.characterSpacing = 4;
+                }
                 line = Rect(transform, "Linea", new Vector2(.5f, .455f), new Vector2(.5f, .455f));
                 line.sizeDelta = new Vector2(0, 2);
                 var img = line.gameObject.AddComponent<Image>(); img.color = Pal.Sonar; img.raycastTarget = false;
@@ -195,6 +200,7 @@ namespace Kairos
                 {
                     float show = Mathf.Clamp01(t / .35f) * Mathf.Clamp01(1f - (t - 1.5f) / .4f);
                     big.alpha = kick.alpha = show;
+                    if (sub != null) sub.alpha = show;
                     line.sizeDelta = new Vector2(Mathf.SmoothStep(0, 480, Mathf.Clamp01(t / .7f)), 2) * show;
                 }
                 if (a <= 0) Destroy(gameObject);
