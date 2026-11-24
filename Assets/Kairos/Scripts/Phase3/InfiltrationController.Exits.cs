@@ -41,13 +41,15 @@ namespace Kairos
             var s = UI.Scroll(p.transform, Vector2.zero, Vector2.one);
 
             // Cabecera de Maletín Forense Estanco (Alexander - S14-1)
-            int oitIds = CaseData.CountIndicators(C.evidence.ConvertAll(e => e.id));
+            var evIds = C.evidence.ConvertAll(e => e.id);
+            int oitIds = CaseData.CountIndicators(evIds);
             UI.Line(s, $"MALETÍN ESTANCO KAIROS · {C.evidence.Count}/{CaseData.MaxEvidence} RANURAS", 30, Pal.Sealed, true);
-            UI.Line(s, $"Expediente Oficial: {Game.Inspector}  |  Cadena de Custodia: <color=#3FE0D0>SHA-256 VERIFICADA</color>  |  Indicadores OIT: <b>{oitIds}/11</b>", 17, Pal.Dim);
+            UI.Line(s, $"Expediente: <b>{CaseData.CaseFileCodeFor(C.sector)}</b>  |  Buque: <b>{CaseData.TargetFor(C.sector).name}</b> ({CaseData.FormatGps(C.sector)})  |  Agente: {Game.Inspector}", 17, Pal.Dim);
 
             var evBar = UI.NewBar(s, Pal.Sealed, 8);
             evBar.Set((float)C.evidence.Count / CaseData.MaxEvidence);
-            UI.Line(s, $"Índice de Carga Probatoria: <b>{(float)C.evidence.Count / CaseData.MaxEvidence * 100:0}%</b> · Umbrales Tribunal: 4 Retención · 7 Congelación · 11 Condena", 16, Pal.Sonar);
+            UI.Line(s, $"Índice de Carga Probatoria: <b>{(float)C.evidence.Count / CaseData.MaxEvidence * 100:0}%</b> · Cadena de Custodia: <color=#3FE0D0>SHA-256 VERIFICADA</color> · Indicadores OIT: <b>{oitIds}/11</b>", 16, Pal.Sonar);
+            UI.Line(s, CaseData.BriefcaseReadinessSummary(evIds, C.sector), 16, Pal.Text);
 
             // Cuadrícula 5x3 de 15 ranuras estancas con sello criptográfico
             var gridGo = new GameObject("MaletinGrid", typeof(RectTransform), typeof(UnityEngine.UI.GridLayoutGroup), typeof(UnityEngine.UI.LayoutElement));

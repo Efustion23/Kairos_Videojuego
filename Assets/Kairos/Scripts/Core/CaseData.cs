@@ -512,6 +512,42 @@ namespace Kairos
         }
 
         public static int VerdictFor(int indicators) => indicators >= 11 ? 3 : indicators >= 7 ? 2 : indicators >= 4 ? 1 : 0;
+
+        public static bool BriefcaseCoversChain(List<string> evidenceIds)
+        {
+            if (evidenceIds == null || evidenceIds.Count == 0) return false;
+            var links = new List<string>();
+            foreach (var id in evidenceIds)
+            {
+                var ev = Evidence(id);
+                if (ev != null && ev.edges != null) links.AddRange(ev.edges);
+            }
+            return ChainComplete(links);
+        }
+
+        public static string BriefcaseReadinessSummary(List<string> evidenceIds, int sector)
+        {
+            int inds = evidenceIds != null ? CountIndicators(evidenceIds) : 0;
+            int verdict = VerdictFor(inds);
+            bool chain = BriefcaseCoversChain(evidenceIds);
+            string ben = NodesFor(sector)[5].name;
+            string chainTag = chain
+                ? $"<color=#6CFF8A>Cadena hacia {ben}: COMPLETA</color>"
+                : $"<color=#F2A73B>Cadena hacia {ben}: INCOMPLETA (faltan vínculos)</color>";
+            return $"{chainTag}  ·  Proyección judicial: <b>{VerdictNames[verdict]}</b> ({inds}/11 indicadores OIT)";
+        }
+
+        public static string SectorCodexDossier(int sector, bool completed)
+        {
+            int s = Mathf.Clamp(sector, 0, Sectors.Length - 1);
+            var sec = Sectors[s];
+            var target = TargetFor(s);
+            var ben = NodesFor(s)[5].name;
+            string status = completed
+                ? "<color=#6CFF8A>[EXPEDIENTE RESUELTO]</color>"
+                : "<color=#3FE0D0>[EN INVESTIGACIÓN]</color>";
+            return $"{status} <b>{sec.name}</b> — Objetivo: <b>{target.name}</b> ({FormatGps(s)})\nBeneficiario investigado: {ben}  ·  Marco legal: Convenio C188 OIT / Acuerdo PSMA (FAO).";
+        }
         public static readonly string[] VerdictNames = { "Sin sentencia", "Orden de Retención: bloqueo en aduana", "Congelación de cuentas y cierre de puertos", "Condena penal del beneficiario final" };
         public static readonly int[] VerdictEmbargo = { 0, 400000, 1200000, 3000000 };
         public static readonly float[] ExitEmbargoMul = { 1f, .8f, 1f, 1.5f };

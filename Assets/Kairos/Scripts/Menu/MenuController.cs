@@ -566,6 +566,14 @@ namespace Kairos
                 UI.Line(card, e.body, 20, Pal.Text);
                 UI.Line(card, $"Fuente: {e.source} · {CaseData.CodexReviewed}", 18, Pal.Dim);
                 UI.Line(card, "Qué puedes hacer: " + e.action, 19, Pal.Sealed);
+
+                var dossiers = Card(s, Pal.Sonar, 20, 8);
+                UI.Line(dossiers, "DOSSIERS DE TEATRO OCEÁNICO · ARCHIVO KAIROS", 20, Pal.Sonar, true);
+                for (int i = 0; i < CaseData.Sectors.Length; i++)
+                {
+                    bool done = Game.S.completedSectors != null && i < Game.S.completedSectors.Length && Game.S.completedSectors[i];
+                    UI.Line(dossiers, CaseData.SectorCodexDossier(i, done), 17, Pal.Text);
+                }
             }
             else
             {

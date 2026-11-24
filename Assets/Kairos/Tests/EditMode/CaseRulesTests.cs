@@ -242,5 +242,39 @@ namespace Kairos.Tests
             StringAssert.Contains("CAMPAÑA COMPLETADA", CaseData.CampaignProgressLabel(new[] { true, true, true }));
             StringAssert.Contains("3/3 SECTORES", CaseData.CampaignProgressLabel(new[] { true, true, true }));
         }
+
+        [Test]
+        public void MaletinEvaluaCadenaSocietariaYProyeccionDeSentencia()
+        {
+            var empty = new List<string>();
+            Assert.IsFalse(CaseData.BriefcaseCoversChain(empty));
+            string emptySummary = CaseData.BriefcaseReadinessSummary(empty, 0);
+            StringAssert.Contains("INCOMPLETA", emptySummary);
+            StringAssert.Contains("Sin sentencia", emptySummary);
+            StringAssert.Contains("0/11", emptySummary);
+
+            var path = new List<string> { "e_facturas", "e_celda", "t_ari", "e_manifiesto" };
+            Assert.IsTrue(CaseData.BriefcaseCoversChain(path));
+            string readySummary = CaseData.BriefcaseReadinessSummary(path, 1);
+            StringAssert.Contains("COMPLETA", readySummary);
+            StringAssert.Contains("Gulf Maritime Holdings", readySummary);
+            StringAssert.Contains("Orden de Retención", readySummary);
+        }
+
+        [Test]
+        public void DossierDeCodiceDocumentaLosTresSectores()
+        {
+            for (int sector = 0; sector <= 2; sector++)
+            {
+                string open = CaseData.SectorCodexDossier(sector, false);
+                string closed = CaseData.SectorCodexDossier(sector, true);
+                StringAssert.Contains("[EN INVESTIGACIÓN]", open);
+                StringAssert.Contains("[EXPEDIENTE RESUELTO]", closed);
+                StringAssert.Contains(CaseData.Sectors[sector].name, open);
+                StringAssert.Contains(CaseData.TargetFor(sector).name, open);
+                StringAssert.Contains(CaseData.FormatGps(sector), open);
+                StringAssert.Contains(CaseData.NodesFor(sector)[5].name, open);
+            }
+        }
     }
 }
