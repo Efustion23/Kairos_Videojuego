@@ -61,16 +61,39 @@ namespace Kairos.EditorTools
                     binder.transform.localScale = Vector3.one * 1.7f;
                     break;
                 case "e_pasaportes":
-                    var cover = EvidenceGlowMat("pasaportes", new Color(.2f, .05f, .07f), cyanGlowCol);
-                    e.GetComponent<MeshRenderer>().sharedMaterial = cover;
-                    Part(holder, PrimitiveType.Cube, cover, new Vector3(.02f, .13f, -.03f), new Vector3(.28f, .02f, .2f)).localRotation = Quaternion.Euler(0, 12, 0);
+                    HideBox();
+                    var pageMat = Lit("M_Ev_PassportPages", new Color(.84f, .81f, .74f), .18f, 0f);
+                    var goldEmblem = Lit("M_Ev_PassportGold", new Color(.85f, .68f, .24f), .55f, .75f);
+                    void Passport(Vector3 pPos, float yaw, string tag, Color coverCol)
+                    {
+                        var group = new GameObject("Pasaporte_" + tag).transform;
+                        group.SetParent(holder, false);
+                        group.localPosition = pPos;
+                        group.localRotation = Quaternion.Euler(0, yaw, 0);
+                        var cov = EvidenceGlowMat("pasaporte_" + tag, coverCol, cyanGlowCol);
+                        Part(group, PrimitiveType.Cube, pageMat, new Vector3(.003f, 0, .002f), new Vector3(.126f, .012f, .186f));
+                        Part(group, PrimitiveType.Cube, cov, new Vector3(0, .009f, 0), new Vector3(.134f, .005f, .194f));
+                        Part(group, PrimitiveType.Cube, cov, new Vector3(0, -.009f, 0), new Vector3(.134f, .005f, .194f));
+                        Part(group, PrimitiveType.Cube, cov, new Vector3(-.065f, 0, 0), new Vector3(.006f, .021f, .194f));
+                        Part(group, PrimitiveType.Cube, goldEmblem, new Vector3(.006f, .013f, .018f), new Vector3(.036f, .002f, .036f));
+                    }
+                    Passport(new Vector3(-.018f, -.112f, -.01f), -12f, "burdeos", new Color(.28f, .06f, .09f));
+                    Passport(new Vector3(.012f, -.086f, .015f), 8f, "marino", new Color(.06f, .12f, .26f));
+                    Passport(new Vector3(-.004f, -.060f, -.005f), 24f, "verde", new Color(.07f, .20f, .14f));
+                    Part(holder, PrimitiveType.Cube, darkMetal, new Vector3(0, -.086f, 0), new Vector3(.148f, .078f, .022f)).localRotation = Quaternion.Euler(0, 8f, 0);
                     break;
                 case "e_candados":
                     HideBox();
-                    Part(holder, PrimitiveType.Cube, steel, Vector3.zero, new Vector3(.05f, .14f, .13f));
-                    Part(holder, PrimitiveType.Cylinder, darkMetal, new Vector3(0, .1f, -.04f), new Vector3(.018f, .05f, .018f));
-                    Part(holder, PrimitiveType.Cylinder, darkMetal, new Vector3(0, .1f, .04f), new Vector3(.018f, .05f, .018f));
-                    Part(holder, PrimitiveType.Cube, darkMetal, new Vector3(0, .15f, 0), new Vector3(.018f, .02f, .1f));
+                    var brassLock = EvidenceGlowMat("candados", new Color(.70f, .54f, .22f), cyanGlowCol);
+                    Part(holder, PrimitiveType.Cube, brassLock, new Vector3(0, -.03f, 0), new Vector3(.074f, .136f, .126f));
+                    Part(holder, PrimitiveType.Cube, darkMetal, new Vector3(.038f, -.04f, 0), new Vector3(.006f, .05f, .03f));
+                    Part(holder, PrimitiveType.Cube, darkMetal, new Vector3(-.038f, -.04f, 0), new Vector3(.006f, .05f, .03f));
+                    Part(holder, PrimitiveType.Cylinder, steel, new Vector3(0, .075f, -.038f), new Vector3(.020f, .055f, .020f));
+                    Part(holder, PrimitiveType.Cylinder, steel, new Vector3(0, .075f, .038f), new Vector3(.020f, .055f, .020f));
+                    Part(holder, PrimitiveType.Cube, steel, new Vector3(0, .126f, 0), new Vector3(.020f, .020f, .096f));
+                    Part(holder, PrimitiveType.Cube, darkMetal, new Vector3(0, .144f, .075f), new Vector3(.022f, .032f, .064f)).localRotation = Quaternion.Euler(22f, 0, 0);
+                    Part(holder, PrimitiveType.Cube, steel, new Vector3(0, .112f, .108f), new Vector3(.032f, .022f, .064f)).localRotation = Quaternion.Euler(-30f, 0, 0);
+                    Part(holder, PrimitiveType.Cube, darkMetal, new Vector3(0, .076f, .138f), new Vector3(.022f, .032f, .064f)).localRotation = Quaternion.Euler(40f, 0, 0);
                     break;
                 default:
                     var mr = e.GetComponent<MeshRenderer>();

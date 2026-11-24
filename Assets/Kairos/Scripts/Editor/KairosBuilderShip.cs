@@ -338,6 +338,10 @@ namespace Kairos.EditorTools
             b.Solid(new Vector3(-3.5f, 6.45f, -18.8f), new Vector3(2.4f, .9f, 1f));        // camarote capitán
             b.PropFit("metal_office_desk", new Vector3(-3.5f, 6, -18.8f), 0, new Vector3(2.4f, .9f, 1f));
             b.Box(darkMetal, new Vector3(-4.4f, 6.8f, -14f), new Vector3(.8f, 1.6f, 1f));  // caja fuerte
+            b.Box(steel, new Vector3(-3.99f, 6.8f, -14f), new Vector3(.03f, 1.44f, .84f), null, false);
+            b.Box(darkMetal, new Vector3(-3.97f, 6.8f, -14f), new Vector3(.02f, 1.32f, .74f), null, false);
+            b.Pipe(steel, new Vector3(-3.97f, 7.02f, -13.92f), new Vector3(-3.91f, 7.02f, -13.92f), .07f, 12);
+            b.Box(steel, new Vector3(-3.93f, 6.72f, -13.68f), new Vector3(.06f, .035f, .16f), null, false);
             b.Prop("old_bed_frame", new Vector3(-3.9f, 6, -12.6f), 90, 2f);                 // cama del capitán, contra el mamparo
             b.Solid(new Vector3(-3.9f, 6.3f, -12.6f), new Vector3(2f, .6f, .9f));
             b.Solid(new Vector3(3.5f, 6.45f, -18.8f), new Vector3(2.4f, .9f, 1f));         // camarote oficial
@@ -374,6 +378,22 @@ namespace Kairos.EditorTools
             b.Box(super, new Vector3(0, 12.05f, -9), new Vector3(8.4f, .12f, 10.4f));
             b.Box(darkMetal, new Vector3(0, 9.6f, -5f), new Vector3(5f, 1f, .9f));            // consola
             b.Box(cyanGlow, new Vector3(0, 10.12f, -5.1f), new Vector3(4.6f, .04f, .6f), null, false);
+            // Timón central, telégrafo de máquinas, bitácora y carcasas de monitores en el puente
+            b.Box(darkMetal, new Vector3(0, 10.22f, -5.28f), new Vector3(.24f, .24f, .22f), new Vector3(-25, 0, 0), false);
+            b.Pipe(steel, new Vector3(0, 10.28f, -5.28f), new Vector3(0, 10.42f, -5.52f), .035f, 8);
+            for (int spoke = 0; spoke < 6; spoke++)
+            {
+                float ang = spoke * 60f * Mathf.Deg2Rad;
+                var rim = new Vector3(Mathf.Cos(ang) * .21f, Mathf.Sin(ang) * .21f, 0);
+                b.Pipe(darkMetal, new Vector3(0, 10.42f, -5.52f), new Vector3(rim.x, 10.42f + rim.y, -5.52f), .016f, 6);
+                b.Box(steel, new Vector3(rim.x, 10.42f + rim.y, -5.52f), new Vector3(.06f, .06f, .035f), null, false);
+            }
+            b.Box(darkMetal, new Vector3(.55f, 10.18f, -5.12f), new Vector3(.20f, .16f, .22f), null, false);
+            b.Pipe(steel, new Vector3(.50f, 10.24f, -5.12f), new Vector3(.50f, 10.42f, -5.22f), .016f, 6);
+            b.Pipe(steel, new Vector3(.60f, 10.24f, -5.12f), new Vector3(.60f, 10.42f, -5.06f), .016f, 6);
+            b.Pipe(steel, new Vector3(-.55f, 10.12f, -5.12f), new Vector3(-.55f, 10.30f, -5.12f), .11f, 12);
+            b.Box(darkMetal, new Vector3(-1.3f, 10.4f, -4.67f), new Vector3(.82f, .50f, .05f), new Vector3(-15, 0, 0), false);
+            b.Box(darkMetal, new Vector3(1.3f, 10.4f, -4.67f), new Vector3(.82f, .50f, .05f), new Vector3(-15, 0, 0), false);
             b.Box(crate, new Vector3(-2.6f, 9.55f, -11.8f), new Vector3(1.6f, .9f, 1.2f));    // mesa de cartas
             b.Lamp("Luz Puente", new Vector3(0, 11.8f, -9), new Color(.5f, .9f, .85f), 9, 1.6f);
             b.Box(darkMetal, new Vector3(0, 13.8f, -9), new Vector3(.3f, 3.5f, .3f), null, false);   // mástil

@@ -20,6 +20,26 @@ namespace Kairos
         {
             agent = GetComponent<NavMeshAgent>();
             agent.enabled = true;
+            ApplySectorLook();
+        }
+
+        void ApplySectorLook()
+        {
+            int sector = Game.S?.c?.sector ?? 0;
+            Color tint = CaseData.CrewOutfitTintFor(sector, personId);
+            if (tint == Color.white) return;
+
+            var block = new MaterialPropertyBlock();
+            foreach (var r in GetComponentsInChildren<Renderer>(true))
+            {
+                var mat = r.sharedMaterial;
+                if (mat == null || mat.name.Contains($"_S{sector + 1}_")) continue;
+                Color baseCol = mat.HasProperty("_BaseColor") ? mat.GetColor("_BaseColor") : Color.white;
+                r.GetPropertyBlock(block);
+                block.SetColor("_BaseColor", baseCol * tint);
+                block.SetColor("_Color", baseCol * tint);
+                r.SetPropertyBlock(block);
+            }
         }
 
         void Update()

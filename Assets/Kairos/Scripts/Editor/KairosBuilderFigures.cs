@@ -327,7 +327,7 @@ namespace Kairos.EditorTools
         static readonly Dictionary<string, string>[] FallbackModel =
         {
             null,
-            new Dictionary<string, string> { { "rodel", "moussa" }, { "ari", "moussa" }, { "moussa", "moussa" }, { "thant", "moussa" } }, // Golfo de Guinea
+            new Dictionary<string, string> { { "rodel", "moussa" }, { "ari", "rodel" }, { "moussa", "ari" }, { "thant", "thant" } }, // Golfo de Guinea
             new Dictionary<string, string> { { "rodel", "ari" }, { "ari", "thant" }, { "moussa", "rodel" }, { "thant", "moussa" } },      // Índico
         };
 
@@ -360,7 +360,9 @@ namespace Kairos.EditorTools
             foreach (var t in model.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = Layers.Actor;
 
             var skin = model.GetComponentInChildren<SkinnedMeshRenderer>();
-            skin.sharedMaterial = CharacterMaterial(id, dir);
+            string matName = buildSector > 0 ? $"M_Persona_S{buildSector + 1}_{personId}" : "M_Persona_" + id;
+            Color tint = CaseData.CrewOutfitTintFor(buildSector, personId);
+            skin.sharedMaterial = CharacterMaterial(id, dir, matName, tint);
             skin.gameObject.name = "Cuerpo";
             skin.updateWhenOffscreen = true; // igual que el protagonista: el FBX trae límites diminutos
             skin.forceMeshLod = 4;           // unos 780 mil triángulos bajan a una fracción
@@ -388,12 +390,13 @@ namespace Kairos.EditorTools
         }
 
         /// Texturas/<Id>_Color.jpg y <Id>_Normal.png a 1024 px. Sin texturas, un tono de ropa neutro.
-        static Material CharacterMaterial(string id, string dir)
+        static Material CharacterMaterial(string id, string dir, string matName = null, Color? tint = null)
         {
             string prefix = dir + "/Texturas/" + char.ToUpper(id[0]) + id.Substring(1);
             var color = CharacterTexture(prefix + "_Color.jpg", false);
             var normal = CharacterTexture(prefix + "_Normal.png", true);
-            return Lit("M_Persona_" + id, color ? Color.white : new Color(.45f, .47f, .5f), .35f, .05f, color, null, normal);
+            Color baseCol = color ? (tint ?? Color.white) : (tint.HasValue ? Color.Lerp(new Color(.45f, .47f, .5f), tint.Value, .6f) : new Color(.45f, .47f, .5f));
+            return Lit(matName ?? "M_Persona_" + id, baseCol, .35f, .05f, color, null, normal);
         }
 
         static Texture2D CharacterTexture(string path, bool normal)

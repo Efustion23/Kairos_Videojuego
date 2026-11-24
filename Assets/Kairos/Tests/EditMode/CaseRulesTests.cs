@@ -276,5 +276,24 @@ namespace Kairos.Tests
                 StringAssert.Contains(CaseData.NodesFor(sector)[5].name, open);
             }
         }
+
+        [Test]
+        public void TripulacionDeSectoresDosYTresTieneTintesDeVestimentaDistintos()
+        {
+            string[] ids = { "rodel", "ari", "moussa", "thant" };
+            foreach (var id in ids)
+                Assert.AreEqual(UnityEngine.Color.white, CaseData.CrewOutfitTintFor(0, id));
+
+            for (int sector = 1; sector <= 2; sector++)
+            {
+                var seen = new HashSet<UnityEngine.Color>();
+                foreach (var id in ids)
+                {
+                    var tint = CaseData.CrewOutfitTintFor(sector, id);
+                    Assert.AreNotEqual(UnityEngine.Color.white, tint);
+                    Assert.IsTrue(seen.Add(tint), $"Sector {sector + 1} repite tinte para {id}");
+                }
+            }
+        }
     }
 }

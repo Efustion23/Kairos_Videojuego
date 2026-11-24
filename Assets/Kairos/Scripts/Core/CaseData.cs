@@ -330,6 +330,28 @@ namespace Kairos
         public static PersonDef[] PeopleFor(int sector) => sector == 1 ? PeopleSector2 : sector == 2 ? PeopleSector3 : People;
         public static PersonDef PersonDefOf(string id) => System.Array.Find(PeopleFor(Game.S?.c?.sector ?? 0), p => p.id == id);
 
+        public static Color CrewOutfitTintFor(int sector, string personId)
+        {
+            if (sector <= 0) return Color.white;
+            if (sector == 1)
+                return personId switch
+                {
+                    "rodel" => new Color(.95f, .64f, .34f, 1f),
+                    "ari" => new Color(.36f, .76f, .68f, 1f),
+                    "moussa" => new Color(.48f, .68f, .96f, 1f),
+                    "thant" => new Color(.84f, .78f, .44f, 1f),
+                    _ => Color.white
+                };
+            return personId switch
+            {
+                "rodel" => new Color(.38f, .72f, .92f, 1f),
+                "ari" => new Color(.92f, .52f, .38f, 1f),
+                "moussa" => new Color(.70f, .82f, .52f, 1f),
+                "thant" => new Color(.78f, .64f, .92f, 1f),
+                _ => Color.white
+            };
+        }
+
         /// Lo que fue de cada persona: se cuenta desde lo que ocurrió de verdad en esta partida.
         public static string Epilogue(PersonDef d, PersonState st, int verdict)
         {
