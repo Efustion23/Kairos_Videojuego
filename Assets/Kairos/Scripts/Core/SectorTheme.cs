@@ -10,7 +10,10 @@ namespace Kairos
     {
         public static void Apply(int sector, Transform shipRoot = null, Light[] deckLights = null)
         {
-            var root = shipRoot != null ? shipRoot : GameObject.Find("HaiFeng77")?.transform;
+            // Cada sector de la Fase 3 tiene su propio barco: sin esto S2/S3 no encontraban casco y
+            // seguían pintados "HAI FENG 77", sin paleta ni balizas del sector.
+            var root = shipRoot != null ? shipRoot
+                : (GameObject.Find("HaiFeng77") ?? GameObject.Find("KestrelExplorer") ?? GameObject.Find("OceanicCrown9"))?.transform;
             var targetName = CaseData.TargetFor(sector).name.ToUpperInvariant();
             var cam = Camera.main;
             if (cam != null) cam.clearFlags = CameraClearFlags.Skybox;
@@ -77,6 +80,17 @@ namespace Kairos
                 {
                     if (tmp.text != null && tmp.text.ToUpperInvariant().Contains("HAI FENG"))
                         tmp.text = targetName;
+                    if (tmp.name != "Nombre") continue;
+                    // Nombres largos (KESTREL EXPLORER, OCEANIC CROWN 9) se encogen para caber en la popa de 14 m
+                    // en vez de sobresalir del casco y quedar flotando en el aire.
+                    var size = tmp.rectTransform.sizeDelta;
+                    tmp.rectTransform.sizeDelta = new Vector2(Mathf.Min(size.x, 12.5f), size.y);
+                    if (!tmp.enableAutoSizing)
+                    {
+                        tmp.fontSizeMax = tmp.fontSize;
+                        tmp.fontSizeMin = tmp.fontSize * .35f;
+                        tmp.enableAutoSizing = true;
+                    }
                 }
             }
         }
@@ -106,7 +120,7 @@ namespace Kairos
             }
         }
 
-        /// En 02_Sonar reemplaza la malla visual de HaiFeng77 por el barco 3D real del sector, conservando el HullShell para el sonar.
+        /// En 02_Sonar reemplaza la malla visual de HaiFeng77 por el barco 3D real del sector y ajusta el volumen del sonar al casco real.
         static void SwapSonarShipVisual(Transform shipRoot, string resourcePath)
         {
             var prefab = Resources.Load<GameObject>(resourcePath);
@@ -120,20 +134,71 @@ namespace Kairos
             inst.transform.localPosition = Vector3.zero;
             inst.transform.localRotation = Quaternion.identity;
 
-            // Manga real del barco nuevo (su pieza de mayor planta) frente a los 14 m del Hai Feng:
-            // el casco que lee el sonar y el choque de la lancha la siguen.
-            float beam = 14f, best = 0f;
-            foreach (var r in inst.GetComponentsInChildren<Renderer>())
+            // Seleccionar la malla del casco real (la que toca la línea de flotación con mayor planta),
+            // evitando confundirla con grúas o superestructura alta.
+            MeshRenderer hullRenderer = null;
+            Bounds hullLocalBounds = new Bounds(new Vector3(0f, 3.5f, 0f), new Vector3(14f, 8f, 90f));
+            float bestWaterlineArea = 0f, bestAnyArea = 0f;
+            MeshRenderer fallbackRenderer = null;
+            Bounds fallbackBounds = hullLocalBounds;
+
+            foreach (var r in inst.GetComponentsInChildren<MeshRenderer>(true))
             {
-                var size = shipRoot.InverseTransformVector(r.bounds.size);
-                float area = Mathf.Abs(size.x * size.z);
-                if (area > best) { best = area; beam = Mathf.Abs(size.x); }
+                if (r == null) continue;
+                var mf = r.GetComponent<MeshFilter>();
+                if (mf == null || mf.sharedMesh == null) continue;
+                var b = mf.sharedMesh.bounds;
+                var localMin = shipRoot.InverseTransformPoint(r.transform.TransformPoint(b.min));
+                var localMax = shipRoot.InverseTransformPoint(r.transform.TransformPoint(b.max));
+                var lb = new Bounds();
+                lb.SetMinMax(Vector3.Min(localMin, localMax), Vector3.Max(localMin, localMax));
+                float area = lb.size.x * lb.size.z;
+                if (area > bestAnyArea)
+                {
+                    bestAnyArea = area;
+                    fallbackRenderer = r;
+                    fallbackBounds = lb;
+                }
+                if (lb.min.y <= 2.5f && area > bestWaterlineArea)
+                {
+                    bestWaterlineArea = area;
+                    hullRenderer = r;
+                    hullLocalBounds = lb;
+                }
             }
-            float beamScale = Mathf.Clamp(beam / 14f, .7f, 2f);
-            var hull = shipRoot.Find("Hull");
-            if (hull != null) hull.localScale = Vector3.Scale(hull.localScale, new Vector3(beamScale, 1f, 1f));
+
+            if (hullRenderer == null)
+            {
+                hullRenderer = fallbackRenderer;
+                hullLocalBounds = fallbackBounds;
+            }
+
+            float beamScale = Mathf.Clamp(hullLocalBounds.size.x / 14f, .7f, 1.85f);
+            float lengthScale = Mathf.Clamp(hullLocalBounds.size.z / 90f, .7f, 1.45f);
+
+            var oldHull = shipRoot.Find("Hull");
+            if (oldHull != null)
+            {
+                oldHull.localScale = Vector3.Scale(oldHull.localScale, new Vector3(beamScale, 1f, lengthScale));
+                // Si la malla real del sector tiene geometría propia, los raycasts del sonar golpean el casco visible exacto.
+                if (hullRenderer != null)
+                {
+                    var oldCol = oldHull.GetComponent<Collider>();
+                    if (oldCol != null) oldCol.enabled = false;
+                }
+            }
+
+            if (hullRenderer != null)
+            {
+                hullRenderer.gameObject.layer = Layers.HullShell;
+                var mc = hullRenderer.GetComponent<MeshCollider>();
+                if (mc == null) mc = hullRenderer.gameObject.AddComponent<MeshCollider>();
+                mc.sharedMesh = hullRenderer.GetComponent<MeshFilter>().sharedMesh;
+            }
+
             var sonar = Object.FindFirstObjectByType<SonarController>();
-            if (sonar != null) sonar.beamScale = beamScale;
+            if (sonar != null)
+                sonar.SetShipHullBounds(hullLocalBounds, beamScale, lengthScale);
         }
 
         static void HideLegacyFleet()

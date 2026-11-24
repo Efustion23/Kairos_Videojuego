@@ -31,7 +31,8 @@ namespace Kairos
             orbit += Time.deltaTime * .012f;
             cam.transform.position = new Vector3(Mathf.Sin(orbit + 2.2f) * 115, 9 + Ocean.Height(0, 0) * .3f, Mathf.Cos(orbit + 2.2f) * 115);
             cam.transform.LookAt(new Vector3(0, 11, 0));
-            cam.lensShift = new Vector2(-.14f, 0);
+            // El barco queda a la derecha, fuera de la columna del menú (lensShift solo actúa en cámara física).
+            cam.transform.Rotate(0, -17f, 0, Space.World);
         }
 
         void Screen() => UI.Clear(root);
@@ -58,23 +59,33 @@ namespace Kairos
         {
             Screen();
             UI.SideShade(root, .64f);
-            var col = UI.VStack(root, 64, 12, new Vector2(0, 0), new Vector2(.42f, 1));
-            col.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleLeft;
-            UI.Line(col, "UNIDAD INTERNACIONAL DE INSPECCION MARITIMA  ·  v1.0", 14, Pal.Sonar, true);
-            UI.Line(col, "KAIROS", 104, Pal.Sonar, true).characterSpacing = 20;
-            UI.Line(col, "SOMBRAS EN ALTAMAR", 28, Pal.Text).characterSpacing = 5;
+            var col = UI.VStack(root, 72, 12, new Vector2(0, 0), new Vector2(.40f, 1));
+            var colLayout = col.GetComponent<VerticalLayoutGroup>();
+            colLayout.childAlignment = TextAnchor.MiddleLeft;
+            colLayout.padding.left = 96;
+            UI.Line(col, "UNIDAD INTERNACIONAL DE INSPECCIÓN MARÍTIMA", 15, Pal.Sonar, true).characterSpacing = 6;
+            UI.Line(col, "KAIROS", 112, Pal.Sonar, true).characterSpacing = 22;
+            UI.Line(col, "SOMBRAS EN ALTAMAR", 30, Pal.Text).characterSpacing = 8;
             var div = UI.Rect(col, "Div", Vector2.zero, Vector2.one);
             var divImg = div.gameObject.AddComponent<Image>(); divImg.color = new Color(Pal.Sonar.r, Pal.Sonar.g, Pal.Sonar.b, .55f); divImg.raycastTarget = false;
             var divLe = div.gameObject.AddComponent<LayoutElement>(); divLe.minHeight = 2; divLe.preferredHeight = 2;
-            UI.Line(col, "Investigación marítima, sigilo sin armas y justicia documental.", 19, Pal.Dim);
-            UI.Line(col, " ", 14);
-            if (Game.HasSave) UI.Btn(col, "Continuar partida", () => ShowBase(), Pal.Sealed, 24, 56);
-            UI.Btn(col, "Nueva partida", () => { Game.NewGame(); ShowWarning(); }, Pal.Sonar, 24, 56);
-            UI.Btn(col, "Cómo jugar", ShowTitleGuide, Pal.DeckLight, 22, 50);
-            UI.Btn(col, "Créditos del equipo", () => { ShowBase(3); TabOptions(2); }, Pal.Sonar, 20, 48);
+            UI.Line(col, "Investigación marítima, sigilo sin armas y justicia documental.", 20, Pal.Dim);
+            Gap(col, 18);
+            // Jerarquía: una acción principal (verde), las secundarias en cian y salir en gris.
+            if (Game.HasSave) UI.Btn(col, "Continuar partida", () => ShowBase(), Pal.Sealed, 25, 60);
+            UI.Btn(col, "Nueva partida", () => { Game.NewGame(); ShowWarning(); }, Game.HasSave ? Pal.Sonar : Pal.Sealed, Game.HasSave ? 22 : 25, Game.HasSave ? 52 : 60);
+            UI.Btn(col, "Cómo jugar", ShowTitleGuide, Pal.Sonar, 21, 50);
+            UI.Btn(col, "Créditos del equipo", () => { ShowBase(3); TabOptions(2); }, Pal.Sonar, 21, 50);
             UI.Btn(col, "Salir", Application.Quit, Pal.Dim, 20, 46);
-            UI.Line(col, " ", 10);
-            UI.Line(col, "Alexander Benites · Diego Tornero · Christopher Veliz", 14, Pal.Dim);
+            Gap(col, 14);
+            UI.Line(col, "Alexander Benites  ·  Diego Tornero  ·  Christopher Veliz", 15, Pal.Dim);
+            UI.Line(col, "v1.0", 13, new Color(Pal.Dim.r, Pal.Dim.g, Pal.Dim.b, .6f));
+        }
+
+        static void Gap(Transform stack, float h)
+        {
+            var g = UI.Rect(stack, "Gap", Vector2.zero, Vector2.one);
+            var le = g.gameObject.AddComponent<LayoutElement>(); le.minHeight = le.preferredHeight = h;
         }
 
         void ShowTitleGuide()
@@ -99,9 +110,7 @@ namespace Kairos
         {
             Screen();
             UI.Fullscreen(root, new Color(.01f, .03f, .05f, .76f));
-            var p = UI.Panel(root, new Vector2(.24f, .20f), new Vector2(.76f, .80f));
-            var s = UI.VStack(p.transform, 34, 14);
-            s.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
+            var s = UI.FitPanel(root, new Vector2(.5f, .5f), new Vector2(.5f, .5f), 980, 36, 14);
             UI.Line(s, "Aviso de contenido", 34, Pal.DeckLight, true);
             UI.Line(s, "- Trata sobre pesca ilegal y trabajo forzado en altamar.\n- Sin violencia gráfica: todo se investiga con pruebas y testimonios.\n- Buques, empresas y personajes son ficticios.", 21);
             var toggle = UI.Btn(s, "", null, Pal.Sonar, 21, 50);
@@ -118,9 +127,7 @@ namespace Kairos
         {
             Screen();
             UI.Fullscreen(root, new Color(.01f, .03f, .05f, .76f));
-            var p = UI.Panel(root, new Vector2(.30f, .18f), new Vector2(.70f, .82f));
-            var s = UI.VStack(p.transform, 32, 12);
-            s.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
+            var s = UI.FitPanel(root, new Vector2(.5f, .5f), new Vector2(.5f, .5f), 760, 34, 12);
             UI.Line(s, "Tu inspector o inspectora", 32, Pal.Sonar, true);
             UI.Line(s, "Nombre", 19, Pal.Dim);
             UI.Input(s, Game.S.playerName, "Nombre", v => Game.S.playerName = string.IsNullOrWhiteSpace(v) ? "Inspector" : v);
@@ -252,7 +259,7 @@ namespace Kairos
                 if (fb != null) fb.color = new Color(col.r, col.g, col.b, now ? .95f : .45f);
                 var filo = sc.transform.Find("Filo")?.GetComponent<Image>();
                 if (filo != null) filo.color = col;
-                var txt = UI.Text(sc.transform, $"<size=13><color=#8DA2AB>{stepNums[i]}</color></size>  <b>{stepTitles[i]}</b>\n<size=15>{stepGoals[i]}</size>\n<size=12>{badge}</size>", 16, col, TextAlignmentOptions.Center);
+                var txt = UI.Text(sc.transform, $"<size=14><color=#8DA2AB>{stepNums[i]}</color></size>  <b>{stepTitles[i]}</b>\n<size=16><color=#D8E4EA>{stepGoals[i]}</color></size>\n<size=13><b>{badge}</b></size>", 18, col, TextAlignmentOptions.Center);
                 txt.margin = new Vector4(6, 8, 6, 6);
             }
 
@@ -278,7 +285,7 @@ namespace Kairos
                 UI.Btn(actions, "REPETIR CASO (conservas mejoras)", () => { Game.StartCase(c.sector); Game.GoToPhase(1); }, Pal.Sonar, 20, 60);
             else
                 UI.Btn(actions, "DESPLEGAR  ·  " + PhaseNames[c.phase].ToUpperInvariant(), () => Game.GoToPhase(c.phase), Pal.Sealed, 20, 60);
-            var guideBtn = UI.Btn(actions, "Guía y controles", () => OpenTab(1), Pal.DeckLight, 18, 60);
+            var guideBtn = UI.Btn(actions, "Guía y controles", () => OpenTab(1), Pal.Sonar, 18, 60);
             guideBtn.gameObject.GetComponent<LayoutElement>().preferredWidth = 240;
 
             // Panel derecho: Vista visual del buque objetivo + telemetría del caso

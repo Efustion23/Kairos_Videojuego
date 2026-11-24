@@ -38,7 +38,7 @@ namespace Kairos
         public static AudioClip Radio => radio ??= Make("radio", .45f, (t, u) => (N() * .5f + Sin(1100, t) * .25f * (u > .25f && u < .75f ? Mathf.Sign(Sin(35, t)) : 0)) * (u < .06f || u > .9f ? 1f : .55f) * .55f);
         public static AudioClip StepWet => stepWet ??= Make("stepWet", .16f, (t, u) => (Sin(75, t) * .6f + N() * .55f) * Mathf.Exp(-u * 6) * .65f);
 
-        static AudioClip click, shutter, step, creak, grapple, plasma, alarm, sealedTone, knock, slip, stun, pingDense, pingHollow, pingAcoustic, ecoMetallic, hum, wind, voices, breath, rain, engine, seal;
+        static AudioClip click, shutter, step, creak, grapple, plasma, alarm, knock, slip, stun, pingDense, pingHollow, pingAcoustic, ecoMetallic, hum, wind, voices, breath, rain, engine, seal;
 
         public static AudioClip Click => click ??= Rec("click") ?? Make("click", .05f, (t, u) => Sin(1400, t) * (1 - u) * .5f);
         public static AudioClip Shutter => shutter ??= Rec("shutter") ?? Make("shutter", .14f, (t, u) => N() * Mathf.Exp(-u * 9) * (u < .4f || u > .6f ? 1 : .1f) * .6f);

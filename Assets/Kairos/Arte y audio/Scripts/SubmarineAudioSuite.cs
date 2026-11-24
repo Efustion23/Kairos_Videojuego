@@ -166,7 +166,7 @@ namespace Kairos.Pruebas
                 if (sharedSource == null)
                 {
                     var go = new GameObject("Prueba_SubmarineAudioPlayer");
-                    UnityEngine.Object.DontDestroyOnLoad(go);
+                    if (Application.isPlaying) UnityEngine.Object.DontDestroyOnLoad(go); // en modo edición (pruebas) no existe
                     sharedSource = go.AddComponent<AudioSource>();
                     sharedSource.playOnAwake = false;
                     sharedSource.ignoreListenerPause = true;

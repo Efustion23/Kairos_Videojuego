@@ -273,7 +273,7 @@ namespace Kairos
             // Bajo cubierta no llueve.
             bool outside = OnWetDeck(player.transform.position);
             var rainEmission = rainFx.emission; rainEmission.enabled = outside;
-            rainSrc.volume = Mathf.MoveTowards(rainSrc.volume, outside ? .25f : .04f, dt);
+            rainSrc.volume = Mathf.MoveTowards(rainSrc.volume, RainFx.External ? 0f : outside ? .25f : .04f, dt);
 
             // El oleaje ayuda: la escora distrae 3 s, el crujido tapa tus pasos 2 s.
             nextHeel -= dt;

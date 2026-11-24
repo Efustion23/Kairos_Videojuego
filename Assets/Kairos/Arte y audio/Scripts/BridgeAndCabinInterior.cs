@@ -48,6 +48,7 @@ namespace Kairos.Pruebas
             lampLight.intensity = 1.6f;
             lampLight.range = 3.5f;
             lampLight.spotAngle = 65f;
+            lampLight.shadows = LightShadows.None;
 
             return bridgeRoot;
         }
@@ -80,6 +81,7 @@ namespace Kairos.Pruebas
             l.color = nightCabinLight;
             l.intensity = 0.85f;
             l.range = 4.2f;
+            l.shadows = LightShadows.None;
 
             return cabinRoot;
         }

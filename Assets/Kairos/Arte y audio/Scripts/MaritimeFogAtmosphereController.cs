@@ -62,6 +62,8 @@ namespace Kairos.Pruebas
 
         private void Update()
         {
+            if (Time.timeScale <= 0f) return;
+
             if (enableSaltyFlicker && deckFloodlights != null)
             {
                 for (int i = 0; i < deckFloodlights.Count; i++)
@@ -127,6 +129,7 @@ namespace Kairos.Pruebas
             lightBow.intensity = 2.8f;
             lightBow.range = 28f;
             lightBow.spotAngle = 70f;
+            lightBow.shadows = LightShadows.None;
             ctrl.deckFloodlights.Add(lightBow);
 
             // 2. Reflector halógeno de Popa (maniobra de redes)
@@ -140,6 +143,7 @@ namespace Kairos.Pruebas
             lightStern.intensity = 2.4f;
             lightStern.range = 24f;
             lightStern.spotAngle = 75f;
+            lightStern.shadows = LightShadows.None;
             ctrl.deckFloodlights.Add(lightStern);
 
             // 3. Baliza estroboscópica de peligro en el mástil
@@ -151,6 +155,7 @@ namespace Kairos.Pruebas
             beacon.color = ctrl.mastBeaconColor;
             beacon.intensity = 3.5f;
             beacon.range = 40f;
+            beacon.shadows = LightShadows.None;
             ctrl.mastBeaconLight = beacon;
 
             // 4. Volume Profile de Post-Processing

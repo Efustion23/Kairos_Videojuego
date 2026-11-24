@@ -195,9 +195,29 @@ namespace Kairos.EditorTools
         static readonly string[] ShipPrefix = { "HaiFeng", "Kestrel", "Crown" };
         static readonly string[] ShipPrefabName = { "HaiFeng77", "KestrelExplorer", "OceanicCrown9" };
 
+        /// Pintura de cada barco (multiplica la textura): casco sobre la flotación y superestructura.
+        /// Hai Feng: óxido rojo y gris sucio · Kestrel: casco azul marino y superestructura blanca · Crown: casco negro y crema.
+        static readonly Color[] HullTint = { Color.white, new Color(.8f, 1.6f, 3.4f), new Color(.5f, .5f, .58f) };
+        static readonly Color[] SuperTint = { Color.white, new Color(1.95f, 1.95f, 1.9f), new Color(2.05f, 1.9f, 1.5f) };
+
+        /// Copia de un material con otro tinte, guardada junto a los generados (M_Super_Kestrel...).
+        static Material Variant(Material src, string suffix, Color tint)
+        {
+            string path = $"{GenDir}/{src.name}_{suffix}.mat";
+            var m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (m == null) { m = new Material(src); AssetDatabase.CreateAsset(m, path); }
+            else m.CopyPropertiesFromMaterial(src);
+            m.SetColor("_BaseColor", src.GetColor("_BaseColor") * tint);
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+
         static GameObject BuildShip(int kind = 0)
         {
             string prefix = ShipPrefix[kind];
+            // Cada barco con su pintura: durante su construcción 'super' y 'rust' apuntan a sus variantes.
+            var (super0, rust0) = (super, rust);
+            if (kind > 0) { super = Variant(super0, prefix, SuperTint[kind]); rust = Variant(rust0, prefix, HullTint[kind]); }
             // La raíz se llama siempre HaiFeng77: SectorTheme y los rótulos la buscan por ese nombre.
             var b = new ShipBuild { root = new GameObject("HaiFeng77") };
             b.colliders = new GameObject("Colliders").transform;
@@ -318,6 +338,8 @@ namespace Kairos.EditorTools
             b.Solid(new Vector3(-3.5f, 6.45f, -18.8f), new Vector3(2.4f, .9f, 1f));        // camarote capitán
             b.PropFit("metal_office_desk", new Vector3(-3.5f, 6, -18.8f), 0, new Vector3(2.4f, .9f, 1f));
             b.Box(darkMetal, new Vector3(-4.4f, 6.8f, -14f), new Vector3(.8f, 1.6f, 1f));  // caja fuerte
+            b.Prop("old_bed_frame", new Vector3(-3.9f, 6, -12.6f), 90, 2f);                 // cama del capitán, contra el mamparo
+            b.Solid(new Vector3(-3.9f, 6.3f, -12.6f), new Vector3(2f, .6f, .9f));
             b.Solid(new Vector3(3.5f, 6.45f, -18.8f), new Vector3(2.4f, .9f, 1f));         // camarote oficial
             b.PropFit("metal_office_desk", new Vector3(3.5f, 6, -18.8f), 0, new Vector3(2.4f, .9f, 1f));
             b.Solid(new Vector3(-3.4f, 6.4f, -5f), new Vector3(1.6f, .8f, 5f));            // comedor: deja paso junto a la puerta
@@ -375,6 +397,7 @@ namespace Kairos.EditorTools
             if (kind == 0) PoteroGear(b);
             else if (kind == 1) TrawlerGear(b);
             else LonglinerGear(b);
+            ShipIdentity(b, kind);
 
             // Focos de cubierta: zonas de peligro. El color avisa.
             // Usamos Point sin sombras para el relleno + Spot cenital con sombras (1 mapa vs 6 en URP) para evitar downsampling del atlas.
@@ -387,12 +410,13 @@ namespace Kairos.EditorTools
             b.Lamp("Luz Tejado", new Vector3(5.8f, 11f, -3), amber, 8, 3.5f);
             b.Spot("Foco Mastil", new Vector3(0, 12.5f, -2.5f), new Vector3(72, 0, 0), amber, 40, 70, 12);
 
-            ShipDetails(b);
+            ShipDetails(b, kind == 0 ? redPaint : kind == 1 ? orange : yellow);
             Combine(b, prefix); // una malla por material, como un único asset cada una
 
             var prefabPath = $"{Root}/Prefabs/{ShipPrefabName[kind]}.prefab";
             PrefabUtility.SaveAsPrefabAsset(b.root, prefabPath);
             Object.DestroyImmediate(b.root);
+            (super, rust) = (super0, rust0);
             return AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
         }
 
@@ -440,6 +464,7 @@ namespace Kairos.EditorTools
             foreach (var z in new[] { 22f, 26.5f })
             {
                 b.Box(steel, new Vector3(-5.1f, 7f, z), new Vector3(1.1f, .08f, 3f), null, false);             // mesa de carnada
+                b.Prop("fish_knife", new Vector3(-5f, 7.06f, z + .4f), 70, .22f).localRotation = Quaternion.Euler(90, 70, 0); // tumbado sobre la mesa
                 b.Box(darkMetal, new Vector3(-5.1f, 6.48f, z), new Vector3(.9f, .95f, 2.6f));
             }
             for (float z = -12; z <= -2; z += 2.5f)
@@ -450,6 +475,80 @@ namespace Kairos.EditorTools
                 b.Box(darkMetal, new Vector3(5.9f, 8.2f, z), new Vector3(.04f, 1.6f, .04f), null, false);       // banderolas
             }
             b.Box(darkMetal, new Vector3(0, 7.4f, -44.2f), new Vector3(.6f, .25f, 2.6f), new Vector3(-28, 0, 0), false); // tolva de calado
+        }
+
+        /// Franja de pintura por fuera del casco, justo bajo la borda, siguiendo su curva.
+        static void HullStripe(ShipBuild b, Material m, float y, float h)
+        {
+            var st = Stations();
+            for (int side = -1; side <= 1; side += 2)
+                for (int i = 0; i < st.Length - 1; i++)
+                {
+                    var a = new Vector3(side * (Beam(st[i]) + .03f), y, st[i]); var c = new Vector3(side * (Beam(st[i + 1]) + .03f), y, st[i + 1]);
+                    var d = c - a;
+                    b.Box(m, (a + c) / 2, new Vector3(.04f, h, d.magnitude + .05f), new Vector3(0, Mathf.Atan2(d.x, d.z) * Mathf.Rad2Deg, 0), false);
+                }
+            b.Box(m, new Vector3(0, y, -45.03f), new Vector3(14.06f, h, .04f), null, false);
+        }
+
+        /// Lo que distingue a cada barco desde fuera, sin tocar lo que se pisa: todo va sobre la borda, en los
+        /// techos o fuera de las rondas. El interior (pasillos, celdas, puente) es el mismo en los tres.
+        static void ShipIdentity(ShipBuild b, int kind)
+        {
+            if (kind == 0)
+            {
+                // Potero: máquinas poteras a lo largo de la borda, con sus tambores y el brazo hacia el agua.
+                for (float z = -14; z <= 36; z += 3.2f)
+                    foreach (var side in new[] { -1f, 1f })
+                    {
+                        if (z > -21 && z < 3) continue; // junto a la habilitación no caben
+                        float x = side * (Beam(z) - .05f);
+                        b.Box(darkMetal, new Vector3(x, 7.45f, z), new Vector3(.3f, .32f, .5f), null, false);
+                        b.Pipe(steel, new Vector3(x, 7.52f, z - .42f), new Vector3(x, 7.52f, z + .42f), .11f, 10);
+                        b.Pipe(steel, new Vector3(x, 7.6f, z), new Vector3(side * (Beam(z) + .65f), 7.95f, z), .025f, 5);
+                    }
+                return;
+            }
+
+            if (kind == 1)
+            {
+                // Arrastrero: franja blanca, puente volante con barandilla y radomo, y flotadores en el pórtico.
+                HullStripe(b, super, 5.85f, .3f);
+                foreach (var (a, c) in new[] { (new Vector3(-4.1f, 12.9f, -14.1f), new Vector3(4.1f, 12.9f, -14.1f)), (new Vector3(-4.1f, 12.9f, -14.1f), new Vector3(-4.1f, 12.9f, -3.9f)), (new Vector3(4.1f, 12.9f, -14.1f), new Vector3(4.1f, 12.9f, -3.9f)) })
+                {
+                    b.Pipe(super, a, c, .04f, 6);
+                    for (float t = 0; t <= 1.001f; t += .2f) { var p = Vector3.Lerp(a, c, t); b.Pipe(super, p + Vector3.down * .8f, p, .03f, 5); }
+                }
+                b.Pipe(super, new Vector3(2.6f, 12.1f, -12.8f), new Vector3(2.6f, 12.4f, -12.8f), .18f, 8);
+                b.Ellipsoid(super, new Vector3(2.6f, 12.65f, -12.8f), new Vector3(.5f, .4f, .5f));
+                for (float x = -4f; x <= 4.01f; x += 1.6f)
+                {
+                    b.Pipe(rope, new Vector3(x, 13.35f, -43.6f), new Vector3(x, 13.05f, -43.6f), .02f, 4);
+                    b.Ellipsoid(orange, new Vector3(x, 12.85f, -43.6f), Vector3.one * .26f);
+                }
+                return;
+            }
+
+            // Palangrero: franja roja, palo trinquete con cofa, domos de satélite y techo sobre el halador.
+            HullStripe(b, redPaint, 5.85f, .25f);
+            b.Pipe(darkMetal, new Vector3(0, 6, 37.5f), new Vector3(0, 16.5f, 37.5f), .14f, 10);
+            b.Solid(new Vector3(0, 7, 37.5f), new Vector3(.35f, 2, .35f));
+            b.Box(darkMetal, new Vector3(0, 13.2f, 37.5f), new Vector3(1.1f, .08f, 1.1f), null, false);
+            foreach (var (a, c) in new[] { (new Vector3(-.55f, 13.7f, 36.95f), new Vector3(.55f, 13.7f, 36.95f)), (new Vector3(-.55f, 13.7f, 38.05f), new Vector3(.55f, 13.7f, 38.05f)), (new Vector3(-.55f, 13.7f, 36.95f), new Vector3(-.55f, 13.7f, 38.05f)), (new Vector3(.55f, 13.7f, 36.95f), new Vector3(.55f, 13.7f, 38.05f)) })
+                b.Pipe(darkMetal, a, c, .03f, 5);
+            b.Box(darkMetal, new Vector3(0, 15.2f, 37.5f), new Vector3(3.4f, .12f, .12f), null, false);
+            b.Ellipsoid(navWhite, new Vector3(0, 16.6f, 37.5f), Vector3.one * .09f);
+            foreach (var (x, r) in new[] { (2.2f, .55f), (-2.2f, .42f) })
+            {
+                b.Pipe(super, new Vector3(x, 12.1f, -13.4f), new Vector3(x, 12.4f, -13.4f), .16f, 8);
+                b.Ellipsoid(super, new Vector3(x, 12.4f + r * .9f, -13.4f), new Vector3(r, r * .95f, r));
+            }
+            b.Box(super, new Vector3(6.05f, 9.35f, 9), new Vector3(1.8f, .1f, 4.6f), null, false);
+            foreach (var z in new[] { 6.9f, 11.1f })
+            {
+                b.Pipe(darkMetal, new Vector3(6.75f, 6, z), new Vector3(6.75f, 9.3f, z), .06f, 6);
+                b.Solid(new Vector3(6.75f, 7.6f, z), new Vector3(.15f, 3.2f, .15f));
+            }
         }
     }
 }

@@ -312,7 +312,7 @@ namespace Kairos
                 {
                     int need = n;
                     var row = UI.HStack(body, 42);
-                    UI.Line(row, CaseData.Needs[n], 20).gameObject.AddComponent<LayoutElement>().preferredWidth = 1; // columnas iguales
+                    UI.Line(row, CaseData.Needs[n], 20, null, false, TextAlignmentOptions.MidlineLeft).gameObject.AddComponent<LayoutElement>().preferredWidth = 1; // columnas iguales
                     string basicLabel = CaseData.NeedCostBasic[n] > 0 ? $"Básica: {CaseData.NeedCostBasic[n]:N0} ¢" : "Sin cubrir: 0 ¢";
                     var b1 = UI.Btn(row, basicLabel, null, st.dignified[n] ? Pal.Dim : Pal.DeckLight, 18, 40);
                     var b2 = UI.Btn(row, $"Digna: {CaseData.NeedCostDignified[n]:N0} ¢", null, st.dignified[n] ? Pal.Sealed : Pal.Dim, 18, 40);

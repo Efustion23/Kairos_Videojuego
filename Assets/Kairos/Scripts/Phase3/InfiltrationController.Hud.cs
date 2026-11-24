@@ -14,21 +14,27 @@ namespace Kairos
             visorTint.raycastTarget = false;
             marksRoot = UI.Rect(canvas.transform, "Marcas", Vector2.zero, Vector2.one);
 
-            var tl = UI.Panel(canvas.transform, new Vector2(.012f, .845f), new Vector2(.355f, .985f));
-            objectives = UI.Text(tl.transform, "", 20);
-            objectives.margin = new Vector4(16, 12, 16, 10);
+            // Paneles del HUD a la medida de su texto: sin franjas vacías bajo el objetivo o el estado.
+            var tl = UI.FitPanel(canvas.transform, new Vector2(.012f, .985f), new Vector2(0, 1), 620, 14, 2);
+            objectives = UI.Line(tl, "", 20);
 
-            var tr = UI.Panel(canvas.transform, new Vector2(.79f, .845f), new Vector2(.988f, .985f));
-            var trs = UI.VStack(tr.transform, 12, 5);
+            var tr = UI.FitPanel(canvas.transform, new Vector2(.988f, .985f), new Vector2(1, 1), 380, 12, 5);
+            var trs = tr;
             stateText = UI.Line(trs, "", 21, Pal.Sonar, true);
             suspBar = UI.NewBar(trs, Pal.DeckLight, 12);
             envText = UI.Line(trs, "", 16, Pal.Dim);
             breathText = UI.Line(trs, "Aliento", 16, Pal.Dim);
             staminaBar = UI.NewBar(trs, Pal.Sonar, 6);
 
-            var bl = UI.Panel(canvas.transform, new Vector2(.012f, .015f), new Vector2(.64f, .072f));
-            tools = UI.Text(bl.transform, "", 17, Pal.Text, TextAlignmentOptions.MidlineLeft);
-            tools.margin = new Vector4(14, 2, 14, 2);
+            // Barra de herramientas que mide lo que su texto (antes ocupaba media pantalla con la mitad vacía).
+            var bl = (RectTransform)UI.Panel(canvas.transform, new Vector2(.012f, .015f), new Vector2(.012f, .015f)).transform;
+            bl.pivot = Vector2.zero;
+            var blh = bl.gameObject.AddComponent<HorizontalLayoutGroup>();
+            blh.padding = new RectOffset(18, 18, 10, 10); blh.childControlWidth = blh.childControlHeight = true;
+            var blFit = bl.gameObject.AddComponent<ContentSizeFitter>();
+            blFit.horizontalFit = blFit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            tools = UI.Text(bl, "", 18, Pal.Text, TextAlignmentOptions.MidlineLeft);
+            tools.textWrappingMode = TextWrappingModes.NoWrap;
 
             compass = UI.Text(UI.Rect(canvas.transform, "Brujula", new Vector2(.4f, .95f), new Vector2(.6f, 1)), "", 22, Pal.Sonar, TextAlignmentOptions.Center);
             lockText = UI.Text(UI.Rect(canvas.transform, "Lock", new Vector2(.28f, .86f), new Vector2(.72f, .95f)), "", 28, Pal.Danger, TextAlignmentOptions.Center, true);
@@ -39,10 +45,9 @@ namespace Kairos
             var hs = UI.VStack(holdR, 0, 0);
             holdBar = UI.NewBar(hs, Pal.Sonar, 14);
 
-            var hintP = UI.Panel(canvas.transform, new Vector2(.28f, .065f), new Vector2(.72f, .135f), default, default, new Color(.02f, .16f, .17f, .92f));
+            var hintP = UI.FitPanel(canvas.transform, new Vector2(.5f, .07f), new Vector2(.5f, 0), 840, 12, 0, new Color(.02f, .16f, .17f, .92f));
             hintRoot = hintP.gameObject;
-            hintText = UI.Text(hintP.transform, "", 22, Pal.Sonar, TextAlignmentOptions.Center);
-            hintText.margin = new Vector4(12, 4, 12, 4);
+            hintText = UI.Line(hintP, "", 22, Pal.Sonar, false, TextAlignmentOptions.Center);
 
             // Marcador del objetivo
             objMarker = UI.Rect(canvas.transform, "Objetivo", Vector2.zero, Vector2.zero, new Vector2(-70, -30), new Vector2(70, 30));
@@ -60,9 +65,8 @@ namespace Kairos
             var fb = UI.Rect(ret, "FocusBar", new Vector2(0, 1.02f), new Vector2(1, 1.06f));
             focusBar = UI.NewBar(fb, Pal.Sealed, 8);
 
-            var bR = UI.Panel(canvas.transform, new Vector2(.28f, .05f), new Vector2(.72f, .34f));
-            boardingRoot = bR.gameObject;
-            var bs = UI.VStack(bR.transform, 18, 8);
+            var bs = UI.FitPanel(canvas.transform, new Vector2(.5f, .05f), new Vector2(.5f, 0), 860, 20, 10);
+            boardingRoot = bs.gameObject;
             boardingText = UI.Line(bs, "", 23);
             boardBar = UI.NewBar(bs, Pal.DeckLight, 22);
 
