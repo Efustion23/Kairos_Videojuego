@@ -34,15 +34,16 @@ namespace Kairos
                 C.links.Add("3-4");
             if (C.phase >= 5) ShowRepatriation(); else BuildBoard();
             if (C.phase >= 5) UI.SceneIntro(canvas.transform, "", "");
-            else UI.SceneIntro(canvas.transform, "FASE 4", "Juicio financiero");
+            else UI.SceneIntro(canvas.transform, "FASE 4", "Juicio financiero", CaseData.TrialIntroSubtitle(C.sector));
         }
 
         // ---------- Tablero ----------
         void BuildBoard()
         {
             var top = UI.Panel(root, new Vector2(0, .93f), Vector2.one);
-            clock = UI.Text(top.transform, "", 24, Pal.Text, TextAlignmentOptions.Left);
+            clock = UI.Text(top.transform, "", 22, Pal.Text, TextAlignmentOptions.MidlineLeft);
             clock.margin = new Vector4(24, 0, 24, 0);
+            clock.enableAutoSizing = true; clock.fontSizeMin = 15; clock.fontSizeMax = 22;
 
             var left = UI.Panel(root, new Vector2(0, 0), new Vector2(.25f, .93f));
             cards = UI.Scroll(left.transform, Vector2.zero, Vector2.one);
@@ -188,7 +189,7 @@ namespace Kairos
             }
             if (boardLegend != null)
                 boardLegend.text = $"PIZARRA DE CONEXIÓN  ·  Enlaces probados: <b>{C.links.Count}</b>  ·  Cadena: {(chain ? "<color=#6CFF8A>COMPLETA</color>" : "<color=#F2A73B>EN CONSTRUCCIÓN</color>")}  ·  <color=#6CFF8A>[X] Probado</color>  <color=#F2A73B>[+] Disponible</color>";
-            clock.text = $"<b>FASE 4 · JUICIO FINANCIERO</b>     Antes de que cambie de nombre y bandera: <color={(C.trialDays <= 3 ? "#FF5940" : "#F2A73B")}>{C.trialDays:0.#} días</color>     Salida: {CaseData.ExitNames[C.exitUsed]}";
+            clock.text = $"<b>FASE 4 · {CaseData.CaseFileCodeFor(C.sector)}</b>   <color=#3FE0D0>{CaseData.TargetFor(C.sector).name} → {CaseData.NodesFor(C.sector)[5].name}</color>   |   Reloj judicial: <color={(C.trialDays <= 3 ? "#FF5940" : "#F2A73B")}>{C.trialDays:0.#} días</color>   |   Salida: {CaseData.ExitNames[C.exitUsed]}";
 
             UI.Clear(actions);
             if (selected != null)

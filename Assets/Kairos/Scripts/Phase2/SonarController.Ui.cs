@@ -119,7 +119,7 @@ namespace Kairos
             toast = UI.Toasts.Create(canvas.transform, new Vector2(.10f, .080f), new Vector2(.645f, .150f));
             toastRect = (RectTransform)toast.transform;
 
-            UI.SceneIntro(canvas.transform, "FASE 2", "Escaneo con sonar");
+            UI.SceneIntro(canvas.transform, "FASE 2", "Escaneo con sonar", CaseData.SectorIntroSubtitle(C.sector));
         }
 
         void SetLeftCollapsed(bool collapsed)

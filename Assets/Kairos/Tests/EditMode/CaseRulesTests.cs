@@ -295,5 +295,21 @@ namespace Kairos.Tests
                 }
             }
         }
+
+        [Test]
+        public void DespliegueYSubtituloDeJuicioSeAdaptanACadaSector()
+        {
+            StringAssert.Contains("Atlántico Sur", CaseData.DeploymentSummaryFor(0, "23:00"));
+            StringAssert.Contains("Golfo de Guinea", CaseData.DeploymentSummaryFor(1, "23:00"));
+            StringAssert.Contains("Océano Índico", CaseData.DeploymentSummaryFor(2, "23:00"));
+
+            for (int sector = 0; sector <= 2; sector++)
+            {
+                string sub = CaseData.TrialIntroSubtitle(sector);
+                StringAssert.Contains(CaseData.CaseFileCodeFor(sector), sub);
+                StringAssert.Contains(CaseData.TargetFor(sector).name, sub);
+                StringAssert.Contains(CaseData.NodesFor(sector)[5].name, sub);
+            }
+        }
     }
 }

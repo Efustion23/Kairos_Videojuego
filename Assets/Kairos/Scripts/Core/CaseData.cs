@@ -141,6 +141,18 @@ namespace Kairos
         public static string SectorIntroSubtitle(int sector) =>
             $"{TargetFor(sector).name}  ·  {Sectors[Mathf.Clamp(sector, 0, Sectors.Length - 1)].name}  ·  {FormatGps(sector)}";
 
+        public static string DeploymentSummaryFor(int sector, string formattedTime)
+        {
+            if (sector == 1)
+                return $"El índice de riesgo justifica acercarse. Las incursiones salen siempre de noche hacia la zona de apagón de AIS en el Golfo de Guinea: {formattedTime}.";
+            if (sector == 2)
+                return $"El índice de riesgo justifica acercarse. Las incursiones salen siempre de noche hacia aguas internacionales del Océano Índico: {formattedTime}.";
+            return $"El índice de riesgo justifica acercarse. Las incursiones salen siempre de noche, más allá de la milla 200 en el Atlántico Sur: {formattedTime}.";
+        }
+
+        public static string TrialIntroSubtitle(int sector) =>
+            $"{CaseFileCodeFor(sector)}  ·  {TargetFor(sector).name} → {NodesFor(sector)[5].name}";
+
         public static string EpilogueFooterFor(int sector, int verdict, bool allSectorsDone)
         {
             if (allSectorsDone && verdict > 0)
