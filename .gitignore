@@ -12,6 +12,8 @@
 /[Mm]emoryCaptures/
 /[Rr]ecordings/
 /[Aa]ssets/[Aa]ssetStoreTools*
+/[Aa]ssets/_Recovery/
+/[Aa]ssets/_Recovery.meta
 
 # Archivos de cache y locks
 /[Tt]emp/UnityLockfile
