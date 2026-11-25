@@ -166,5 +166,150 @@ namespace Kairos.Tests
             Assert.AreEqual("2°18'N 2°24'E", CaseData.FormatGps(1));
             Assert.AreEqual("10°12'S 58°18'E", CaseData.FormatGps(2));
         }
+
+        [Test]
+        public void EvidenciasFisicasYTestimoniosSeAdaptanACadaSector()
+        {
+            string[] ids = { "e_comms", "e_deudas", "e_contratos", "e_manifiesto", "e_registro", "e_facturas", "e_radio" };
+            for (int sector = 0; sector <= 2; sector++)
+            {
+                var n = CaseData.NodesFor(sector);
+                var tRodel = CaseData.Evidence("t_rodel", sector);
+                StringAssert.Contains(CaseData.PeopleFor(sector)[0].name, tRodel.title);
+
+                StringAssert.Contains(n[4].name, CaseData.Evidence("e_comms", sector).desc);
+                StringAssert.Contains(n[5].name, CaseData.Evidence("e_comms", sector).desc);
+                StringAssert.Contains(n[4].name, CaseData.Evidence("e_deudas", sector).desc);
+                StringAssert.Contains(n[2].name, CaseData.Evidence("e_contratos", sector).desc);
+                StringAssert.Contains(n[1].name, CaseData.Evidence("e_manifiesto", sector).desc);
+                StringAssert.Contains(n[3].name, CaseData.Evidence("e_registro", sector).desc);
+                StringAssert.Contains(n[4].name, CaseData.Evidence("e_registro", sector).desc);
+                StringAssert.Contains(n[1].name, CaseData.Evidence("e_facturas", sector).desc);
+                StringAssert.Contains(n[5].name, CaseData.Evidence("e_facturas", sector).desc);
+                StringAssert.Contains(n[4].name, CaseData.Evidence("e_radio", sector).desc);
+
+                if (sector > 0)
+                {
+                    foreach (var id in ids)
+                    {
+                        var ev = CaseData.Evidence(id, sector);
+                        StringAssert.DoesNotContain("Polar Meridian", ev.desc);
+                        StringAssert.DoesNotContain("Cormorán Trade", ev.desc);
+                        StringAssert.DoesNotContain("Tidewater Austral", ev.desc);
+                        Assert.AreEqual(ev.desc, ev.descSafe);
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void ExpedienteYEpilogoReflejanElSectorYVeredicto()
+        {
+            Assert.AreEqual("KAIROS-JUD-2026-S1", CaseData.CaseFileCodeFor(0));
+            Assert.AreEqual("KAIROS-JUD-2026-S2", CaseData.CaseFileCodeFor(1));
+            Assert.AreEqual("KAIROS-JUD-2026-S3", CaseData.CaseFileCodeFor(2));
+
+            StringAssert.Contains("sigue ahí fuera", CaseData.EpilogueFooterFor(0, 1, false));
+            StringAssert.Contains("Golfo de Guinea", CaseData.EpilogueFooterFor(1, 2, false));
+            StringAssert.Contains("condena penal", CaseData.EpilogueFooterFor(2, 3, false));
+            StringAssert.Contains("Oceanic Crown 9", CaseData.EpilogueFooterFor(2, 1, false));
+            StringAssert.Contains("Campaña completada", CaseData.EpilogueFooterFor(2, 2, true));
+        }
+
+        [Test]
+        public void SubtituloDeIntroIncluyeBuqueSectorYGps()
+        {
+            for (int sector = 0; sector <= 2; sector++)
+            {
+                string sub = CaseData.SectorIntroSubtitle(sector);
+                StringAssert.Contains(CaseData.TargetFor(sector).name, sub);
+                StringAssert.Contains(CaseData.Sectors[sector].name, sub);
+                StringAssert.Contains(CaseData.FormatGps(sector), sub);
+            }
+        }
+
+        [Test]
+        public void ProgresoGlobalDeCampanaCuentaSectoresYFormateaEtiqueta()
+        {
+            Assert.AreEqual(0, CaseData.CountCompletedSectors(null));
+            Assert.AreEqual(1, CaseData.CountCompletedSectors(new[] { true }));
+            Assert.AreEqual(0, CaseData.CountCompletedSectors(new[] { false, false, false }));
+            Assert.AreEqual(2, CaseData.CountCompletedSectors(new[] { true, false, true }));
+            Assert.AreEqual(3, CaseData.CountCompletedSectors(new[] { true, true, true }));
+
+            StringAssert.Contains("0/3 SECTORES RESUELTOS", CaseData.CampaignProgressLabel(new[] { false, false, false }));
+            StringAssert.Contains("2/3 SECTORES RESUELTOS", CaseData.CampaignProgressLabel(new[] { true, true, false }));
+            StringAssert.Contains("CAMPAÑA COMPLETADA", CaseData.CampaignProgressLabel(new[] { true, true, true }));
+            StringAssert.Contains("3/3 SECTORES", CaseData.CampaignProgressLabel(new[] { true, true, true }));
+        }
+
+        [Test]
+        public void MaletinEvaluaCadenaSocietariaYProyeccionDeSentencia()
+        {
+            var empty = new List<string>();
+            Assert.IsFalse(CaseData.BriefcaseCoversChain(empty));
+            string emptySummary = CaseData.BriefcaseReadinessSummary(empty, 0);
+            StringAssert.Contains("INCOMPLETA", emptySummary);
+            StringAssert.Contains("Sin sentencia", emptySummary);
+            StringAssert.Contains("0/11", emptySummary);
+
+            var path = new List<string> { "e_facturas", "e_celda", "t_ari", "e_manifiesto" };
+            Assert.IsTrue(CaseData.BriefcaseCoversChain(path));
+            string readySummary = CaseData.BriefcaseReadinessSummary(path, 1);
+            StringAssert.Contains("COMPLETA", readySummary);
+            StringAssert.Contains("Gulf Maritime Holdings", readySummary);
+            StringAssert.Contains("Orden de Retención", readySummary);
+        }
+
+        [Test]
+        public void DossierDeCodiceDocumentaLosTresSectores()
+        {
+            for (int sector = 0; sector <= 2; sector++)
+            {
+                string open = CaseData.SectorCodexDossier(sector, false);
+                string closed = CaseData.SectorCodexDossier(sector, true);
+                StringAssert.Contains("[EN INVESTIGACIÓN]", open);
+                StringAssert.Contains("[EXPEDIENTE RESUELTO]", closed);
+                StringAssert.Contains(CaseData.Sectors[sector].name, open);
+                StringAssert.Contains(CaseData.TargetFor(sector).name, open);
+                StringAssert.Contains(CaseData.FormatGps(sector), open);
+                StringAssert.Contains(CaseData.NodesFor(sector)[5].name, open);
+            }
+        }
+
+        [Test]
+        public void TripulacionDeSectoresDosYTresTieneTintesDeVestimentaDistintos()
+        {
+            string[] ids = { "rodel", "ari", "moussa", "thant" };
+            foreach (var id in ids)
+                Assert.AreEqual(UnityEngine.Color.white, CaseData.CrewOutfitTintFor(0, id));
+
+            for (int sector = 1; sector <= 2; sector++)
+            {
+                var seen = new HashSet<UnityEngine.Color>();
+                foreach (var id in ids)
+                {
+                    var tint = CaseData.CrewOutfitTintFor(sector, id);
+                    Assert.AreNotEqual(UnityEngine.Color.white, tint);
+                    Assert.IsTrue(seen.Add(tint), $"Sector {sector + 1} repite tinte para {id}");
+                }
+            }
+        }
+
+        [Test]
+        public void DespliegueYSubtituloDeJuicioSeAdaptanACadaSector()
+        {
+            StringAssert.Contains("Atlántico Sur", CaseData.DeploymentSummaryFor(0, "23:00"));
+            StringAssert.Contains("Golfo de Guinea", CaseData.DeploymentSummaryFor(1, "23:00"));
+            StringAssert.Contains("Océano Índico", CaseData.DeploymentSummaryFor(2, "23:00"));
+
+            for (int sector = 0; sector <= 2; sector++)
+            {
+                string sub = CaseData.TrialIntroSubtitle(sector);
+                StringAssert.Contains(CaseData.CaseFileCodeFor(sector), sub);
+                StringAssert.Contains(CaseData.TargetFor(sector).name, sub);
+                StringAssert.Contains(CaseData.NodesFor(sector)[5].name, sub);
+            }
+        }
     }
 }

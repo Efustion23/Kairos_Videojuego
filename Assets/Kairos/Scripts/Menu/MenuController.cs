@@ -222,6 +222,10 @@ namespace Kairos
             "Caso cerrado. Puedes repetirlo conservando tus mejoras y recursos."
         };
 
+        static string PhaseTipFor(int phase, int sector) => phase == 4
+            ? $"Objetivo ahora: conecta las pruebas en el grafo hasta {CaseData.NodesFor(sector)[5].name} y ejecuta la sentencia."
+            : PhaseTips[Mathf.Clamp(phase, 1, 6)];
+
         static readonly string[] SectorArtKeys = { "UI/sector_atlantico", "UI/sector_guinea", "UI/sector_indico" };
 
         // ---------- 1. MISIÓN ACTUAL (Layout táctico 2 zonas: alineado al 100%, cero huecos, cero glifos rotos) ----------
@@ -265,7 +269,7 @@ namespace Kairos
             objLe.minHeight = 52; objLe.preferredHeight = 52;
             var objBorder = objBox.transform.Find("FrameBorder")?.GetComponent<Image>(); if (objBorder != null) objBorder.color = new Color(Pal.DeckLight.r, Pal.DeckLight.g, Pal.DeckLight.b, .78f);
             var objFilo = objBox.transform.Find("Filo")?.GetComponent<Image>(); if (objFilo != null) objFilo.color = Pal.DeckLight;
-            var objTxt = UI.Text(objBox.transform, ">  " + PhaseTips[Mathf.Clamp(c.phase, 1, 6)], 18, Pal.DeckLight, TextAlignmentOptions.MidlineLeft, true);
+            var objTxt = UI.Text(objBox.transform, ">  " + PhaseTipFor(c.phase, c.sector), 18, Pal.DeckLight, TextAlignmentOptions.MidlineLeft, true);
             objTxt.margin = new Vector4(16, 4, 16, 4);
 
             if (c.phase >= 6)
@@ -297,10 +301,17 @@ namespace Kairos
             }
             UI.BottomScrim(artFrame, .96f);
 
+            int completedSectors = CaseData.CountCompletedSectors(Game.S.completedSectors);
+            bool allSectorsDone = completedSectors >= CaseData.Sectors.Length;
+            bool activeSectorDone = Game.S.completedSectors != null && c.sector < Game.S.completedSectors.Length && Game.S.completedSectors[c.sector];
+
             // Badge superior derecho sobre la foto
-            var badgePill = UI.Panel(artFrame, new Vector2(.54f, .86f), new Vector2(.97f, .96f), default, default, new Color(.02f, .10f, .08f, .90f));
+            var badgePill = UI.Panel(artFrame, new Vector2(.46f, .86f), new Vector2(.97f, .96f), default, default, new Color(.02f, .10f, .08f, .90f));
             var bFb = badgePill.transform.Find("FrameBorder")?.GetComponent<Image>(); if (bFb != null) bFb.color = Pal.Sealed;
-            UI.Text(badgePill.transform, "OBJETIVO EN SEGUIMIENTO", 13, Pal.Sealed, TextAlignmentOptions.Center, true);
+            string heroBadge = allSectorsDone
+                ? $"CAMPAÑA COMPLETADA · {CaseData.Sectors.Length}/{CaseData.Sectors.Length}"
+                : activeSectorDone ? "SECTOR DOCUMENTADO" : "OBJETIVO EN SEGUIMIENTO";
+            UI.Text(badgePill.transform, heroBadge, 13, Pal.Sealed, TextAlignmentOptions.Center, true);
 
             // Datos del dossier sobre el degradado inferior
             var dossier = UI.VStack(artFrame, 20, 4, new Vector2(0, 0), new Vector2(1, .46f));
@@ -309,11 +320,18 @@ namespace Kairos
             foreach (var p in c.persons) if (p.rescued) rescuedNow++;
             UI.Line(dossier, $"DOSSIER SATELITAL  ·  {CaseData.TargetFor(c.sector).name.ToUpperInvariant()}", 14, Pal.Sonar, true);
             UI.Line(dossier, $"Pruebas selladas: <b>{c.evidence.Count}/{CaseData.MaxEvidence}</b>   ·   Tripulantes rescatados: <b>{rescuedNow}/4</b>", 18, Pal.Text);
-            UI.Line(dossier, $"Fase actual: <color=#6CFF8A><b>{PhaseNames[Mathf.Clamp(c.phase, 1, 6)]}</b></color>   ·   Sentencias: <b>{Game.S.sentences}</b>", 16, Pal.Dim);
+            UI.Line(dossier, $"Fase actual: <color=#6CFF8A><b>{PhaseNames[Mathf.Clamp(c.phase, 1, 6)]}</b></color>   ·   Sentencias: <b>{Game.S.sentences}</b>   ·   Campaña: <b>{completedSectors}/{CaseData.Sectors.Length}</b>", 16, Pal.Dim);
 
             // ===== ZONA INFERIOR (42%): 3 Tarjetas Visuales de Sectores Oceánicos =====
             var secHeader = UI.Rect(tabBody, "SecHeader", new Vector2(0f, .375f), new Vector2(1f, .425f));
-            UI.Text(secHeader, "SECTORES OCEÁNICOS DE CAMPAÑA   <size=15><color=#7F9098>·  Selecciona teatro de operaciones</color></size>", 19, Pal.Sonar, TextAlignmentOptions.MidlineLeft, true);
+            var secTitle = UI.Rect(secHeader, "SecTitle", new Vector2(0f, 0f), new Vector2(.55f, 1f));
+            UI.Text(secTitle, "SECTORES OCEÁNICOS DE CAMPAÑA   <size=15><color=#7F9098>·  Selecciona teatro de operaciones</color></size>", 19, Pal.Sonar, TextAlignmentOptions.MidlineLeft, true);
+            var campTextRect = UI.Rect(secHeader, "CampText", new Vector2(.55f, 0f), new Vector2(.865f, 1f));
+            var campTxt = UI.Text(campTextRect, CaseData.CampaignProgressLabel(Game.S.completedSectors), 15, allSectorsDone ? Pal.Sealed : Pal.Text, TextAlignmentOptions.MidlineRight, true);
+            campTxt.margin = new Vector4(0, 0, 12, 0);
+            var campBarRect = UI.Rect(secHeader, "CampBar", new Vector2(.875f, .30f), new Vector2(1f, .70f));
+            var campBar = UI.NewBar(campBarRect, allSectorsDone ? Pal.Sealed : Pal.Sonar, 10);
+            campBar.Set(completedSectors / (float)CaseData.Sectors.Length);
 
             var secRow = UI.Rect(tabBody, "SecRow", new Vector2(0f, 0f), new Vector2(1f, .372f));
             var sH = secRow.gameObject.AddComponent<HorizontalLayoutGroup>();
@@ -327,7 +345,7 @@ namespace Kairos
                 bool current = c.sector == i;
                 bool done = Game.S.completedSectors != null && i < Game.S.completedSectors.Length && Game.S.completedSectors[i];
                 Color col = current ? Pal.Sealed : done ? Pal.DeckLight : Pal.Sonar;
-                string badge = current ? "ACTIVO" : done ? "COMPLETADO" : "DISPONIBLE";
+                string badge = current && done ? "ACTIVO · RESUELTO" : current ? "ACTIVO" : done ? "COMPLETADO" : "DISPONIBLE";
 
                 var card = UI.Panel(secRow, Vector2.zero, Vector2.one, default, default, new Color(.02f, .048f, .075f, .94f));
                 var cFb = card.transform.Find("FrameBorder")?.GetComponent<Image>(); if (cFb != null) cFb.color = new Color(col.r, col.g, col.b, current ? .95f : .42f);
@@ -347,7 +365,7 @@ namespace Kairos
                 UI.BottomScrim(imgWrap, .92f);
 
                 // Etiqueta de estado arriba a la derecha sobre la foto
-                var stPill = UI.Panel(imgWrap, new Vector2(.62f, .78f), new Vector2(.97f, .94f), default, default, new Color(.015f, .04f, .06f, .90f));
+                var stPill = UI.Panel(imgWrap, new Vector2(.48f, .78f), new Vector2(.97f, .94f), default, default, new Color(.015f, .04f, .06f, .90f));
                 var stFb = stPill.transform.Find("FrameBorder")?.GetComponent<Image>(); if (stFb != null) stFb.color = col;
                 UI.Text(stPill.transform, badge, 12, col, TextAlignmentOptions.Center, true);
 
@@ -357,7 +375,7 @@ namespace Kairos
 
                 // Pie de tarjeta compacto (26% altura) con botón estilizado y centrado
                 var footer = UI.Rect(card.transform, "Footer", Vector2.zero, new Vector2(1, .26f), new Vector2(12, 8), new Vector2(-12, -8));
-                string btnLabel = !unlocked ? "BLOQUEADO  ·  PRÓXIMAMENTE" : current ? "SECTOR EN CURSO" : "SELECCIONAR SECTOR";
+                string btnLabel = !unlocked ? "BLOQUEADO  ·  PRÓXIMAMENTE" : current ? "SECTOR EN CURSO" : done ? "REPETIR SECTOR" : "SELECCIONAR SECTOR";
                 var btn = UI.Btn(footer, btnLabel, () => { if (unlocked && !current) { Game.StartCase(sec); Game.Write(); TabMission(); } }, col, 15, 40);
                 btn.interactable = unlocked && !current;
             }
@@ -548,6 +566,14 @@ namespace Kairos
                 UI.Line(card, e.body, 20, Pal.Text);
                 UI.Line(card, $"Fuente: {e.source} · {CaseData.CodexReviewed}", 18, Pal.Dim);
                 UI.Line(card, "Qué puedes hacer: " + e.action, 19, Pal.Sealed);
+
+                var dossiers = Card(s, Pal.Sonar, 20, 8);
+                UI.Line(dossiers, "DOSSIERS DE TEATRO OCEÁNICO · ARCHIVO KAIROS", 20, Pal.Sonar, true);
+                for (int i = 0; i < CaseData.Sectors.Length; i++)
+                {
+                    bool done = Game.S.completedSectors != null && i < Game.S.completedSectors.Length && Game.S.completedSectors[i];
+                    UI.Line(dossiers, CaseData.SectorCodexDossier(i, done), 17, Pal.Text);
+                }
             }
             else
             {

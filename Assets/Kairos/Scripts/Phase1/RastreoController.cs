@@ -265,7 +265,7 @@ namespace Kairos
                 C.ir = selected != null ? IR(selected) : 0;
                 UI.Summary(canvas.transform, $"{selected.name}: IR {C.ir}", Pal.Sealed, new[]
                 {
-                    $"El índice de riesgo justifica acercarse. Las incursiones salen siempre de noche, más allá de la milla 200: {Game.FormatClock(Game.NextNight(C.hours))}.",
+                    CaseData.DeploymentSummaryFor(C.sector, Game.FormatClock(Game.NextNight(C.hours))),
                 }, "Qué sigue: te acercas en lancha y escaneas el casco para saber dónde están las personas.", "Salir en lancha", () => Game.GoToPhase(2));
             }, Pal.Sealed, 20, 46);
             UI.Btn(rFoot, "Volver a base", Game.GoToMenu, Pal.Dim, 17, 34);
@@ -278,7 +278,7 @@ namespace Kairos
             rightMiniObj.SetActive(false);
 
             toast = UI.Toasts.Create(canvas.transform, new Vector2(.05f, .03f), new Vector2(.65f, .12f));
-            UI.SceneIntro(canvas.transform, "FASE 1", "Rastreo satelital");
+            UI.SceneIntro(canvas.transform, "FASE 1", "Rastreo satelital", CaseData.SectorIntroSubtitle(C.sector));
         }
 
         void SetObjCollapsed(bool collapsed)

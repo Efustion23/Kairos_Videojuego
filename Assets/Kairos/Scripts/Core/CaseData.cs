@@ -136,6 +136,55 @@ namespace Kairos
             : sector == 2
             ? "Palangrero de atún de 95 m que lleva 2 años sin tocar puerto bajo la red de Tidewater Holdings."
             : "Potero industrial de 90 m con señal AIS apagada fuera de la zona económica exclusiva.";
+        public static string CaseFileCodeFor(int sector) => $"KAIROS-JUD-2026-S{Mathf.Clamp(sector, 0, Sectors.Length - 1) + 1}";
+
+        public static string SectorIntroSubtitle(int sector) =>
+            $"{TargetFor(sector).name}  ·  {Sectors[Mathf.Clamp(sector, 0, Sectors.Length - 1)].name}  ·  {FormatGps(sector)}";
+
+        public static string DeploymentSummaryFor(int sector, string formattedTime)
+        {
+            if (sector == 1)
+                return $"El índice de riesgo justifica acercarse. Las incursiones salen siempre de noche hacia la zona de apagón de AIS en el Golfo de Guinea: {formattedTime}.";
+            if (sector == 2)
+                return $"El índice de riesgo justifica acercarse. Las incursiones salen siempre de noche hacia aguas internacionales del Océano Índico: {formattedTime}.";
+            return $"El índice de riesgo justifica acercarse. Las incursiones salen siempre de noche, más allá de la milla 200 en el Atlántico Sur: {formattedTime}.";
+        }
+
+        public static string TrialIntroSubtitle(int sector) =>
+            $"{CaseFileCodeFor(sector)}  ·  {TargetFor(sector).name} → {NodesFor(sector)[5].name}";
+
+        public static string EpilogueFooterFor(int sector, int verdict, bool allSectorsDone)
+        {
+            if (allSectorsDone && verdict > 0)
+                return "Campaña completada: los tres sectores oceánicos han sido documentados y la red de Tidewater Holdings quedó expuesta ante la justicia.";
+            if (sector == 2 && verdict == 3)
+                return "Cierre de red: Tidewater Holdings ha recibido condena penal en el Océano Índico.";
+            if (sector == 2 && verdict > 0)
+                return "Tidewater Holdings pierde el Oceanic Crown 9, aunque su estructura central aún requiere seguimiento.";
+            if (sector == 1 && verdict > 0)
+                return "Golfo de Guinea documentado. La pista financiera apunta ahora hacia el Océano Índico y Tidewater Holdings.";
+            return "Tidewater Holdings sigue ahí fuera.";
+        }
+
+        public static int CountCompletedSectors(bool[] completedSectors)
+        {
+            if (completedSectors == null) return 0;
+            int n = Mathf.Min(completedSectors.Length, Sectors.Length);
+            int done = 0;
+            for (int i = 0; i < n; i++)
+                if (completedSectors[i]) done++;
+            return done;
+        }
+
+        public static string CampaignProgressLabel(bool[] completedSectors)
+        {
+            int done = CountCompletedSectors(completedSectors);
+            int total = Sectors.Length;
+            return done >= total
+                ? $"CAMPAÑA COMPLETADA  ·  {total}/{total} SECTORES"
+                : $"PROGRESO DE CAMPAÑA: {done}/{total} SECTORES RESUELTOS";
+        }
+
         public static int DouglasFor(int sector, float hours) => Mathf.Min(9, DouglasAt(hours) + (sector == 1 ? 1 : sector == 2 ? 2 : 0));
 
         /// Formatea en grados y minutos (DMS) las coordenadas reales del buque objetivo de cada sector.
@@ -293,6 +342,28 @@ namespace Kairos
         public static PersonDef[] PeopleFor(int sector) => sector == 1 ? PeopleSector2 : sector == 2 ? PeopleSector3 : People;
         public static PersonDef PersonDefOf(string id) => System.Array.Find(PeopleFor(Game.S?.c?.sector ?? 0), p => p.id == id);
 
+        public static Color CrewOutfitTintFor(int sector, string personId)
+        {
+            if (sector <= 0) return Color.white;
+            if (sector == 1)
+                return personId switch
+                {
+                    "rodel" => new Color(.95f, .64f, .34f, 1f),
+                    "ari" => new Color(.36f, .76f, .68f, 1f),
+                    "moussa" => new Color(.48f, .68f, .96f, 1f),
+                    "thant" => new Color(.84f, .78f, .44f, 1f),
+                    _ => Color.white
+                };
+            return personId switch
+            {
+                "rodel" => new Color(.38f, .72f, .92f, 1f),
+                "ari" => new Color(.92f, .52f, .38f, 1f),
+                "moussa" => new Color(.70f, .82f, .52f, 1f),
+                "thant" => new Color(.78f, .64f, .92f, 1f),
+                _ => Color.white
+            };
+        }
+
         /// Lo que fue de cada persona: se cuenta desde lo que ocurrió de verdad en esta partida.
         public static string Epilogue(PersonDef d, PersonState st, int verdict)
         {
@@ -365,16 +436,45 @@ namespace Kairos
             E("t_ari", "Testimonio de Ari Wibowo", 'A', "Testimonio con consentimiento y lector biométrico.", new[] { 4, 5 }, NoEdge, "Testimonio con consentimiento. Descripción omitida por tus ajustes."),
             E("t_moussa", "Testimonio de Moussa Diallo", 'A', "Testimonio con consentimiento y lector biométrico.", new[] { 0, 8 }, new[] { "0-2" }),
         };
-        public static EvidenceDef Evidence(string id)
+        public static EvidenceDef Evidence(string id) => Evidence(id, Game.S?.c?.sector ?? 0);
+
+        public static EvidenceDef Evidence(string id, int sector)
         {
             var e = System.Array.Find(EvidenceDefs, x => x.id == id);
-            if (e != null && (id == "t_rodel" || id == "t_ari" || id == "t_moussa"))
+            if (e == null) return null;
+
+            if (id == "t_rodel" || id == "t_ari" || id == "t_moussa")
             {
-                var p = PersonDefOf(id.Substring(2));
+                var p = System.Array.Find(PeopleFor(sector), x => x.id == id.Substring(2));
                 if (p != null)
                     return new EvidenceDef { id = e.id, title = $"Testimonio de {p.name}", cat = e.cat, desc = e.desc, descSafe = e.descSafe, indicators = e.indicators, edges = e.edges };
+                return e;
             }
-            return e;
+
+            var n = NodesFor(sector);
+            string sectorDesc = id switch
+            {
+                "e_comms" => $"Órdenes por radio de {n[4].name} a un enlace de {n[5].name}.",
+                "e_deudas" => $"Cuentas por persona, con cargos por comida y equipo pagados a {n[4].name}.",
+                "e_contratos" => $"Contratos de seis meses de {n[2].name}, con cláusulas en un idioma que no leían.",
+                "e_manifiesto" => $"Carga traspasada a {n[1].name} en altamar.",
+                "e_registro" => $"{n[3].name} figura como armador; su único socio es {n[4].name}.",
+                "e_facturas" => $"Ventas de {n[1].name} a una filial de {n[5].name}.",
+                "e_radio" => $"Emisora de banda oculta sintonizada con {n[4].name} sin acceso para la tripulación.",
+                _ => null
+            };
+            if (sectorDesc == null) return e;
+
+            return new EvidenceDef
+            {
+                id = e.id,
+                title = e.title,
+                cat = e.cat,
+                desc = sectorDesc,
+                descSafe = e.descSafe == e.desc ? sectorDesc : e.descSafe,
+                indicators = e.indicators,
+                edges = e.edges
+            };
         }
         // Lo que se puede perder nunca incluye lo necesario para llegar al beneficiario final.
         public static readonly string[] DumpedWhenDetected = { "e_turnos", "e_candados" };
@@ -446,6 +546,42 @@ namespace Kairos
         }
 
         public static int VerdictFor(int indicators) => indicators >= 11 ? 3 : indicators >= 7 ? 2 : indicators >= 4 ? 1 : 0;
+
+        public static bool BriefcaseCoversChain(List<string> evidenceIds)
+        {
+            if (evidenceIds == null || evidenceIds.Count == 0) return false;
+            var links = new List<string>();
+            foreach (var id in evidenceIds)
+            {
+                var ev = Evidence(id);
+                if (ev != null && ev.edges != null) links.AddRange(ev.edges);
+            }
+            return ChainComplete(links);
+        }
+
+        public static string BriefcaseReadinessSummary(List<string> evidenceIds, int sector)
+        {
+            int inds = evidenceIds != null ? CountIndicators(evidenceIds) : 0;
+            int verdict = VerdictFor(inds);
+            bool chain = BriefcaseCoversChain(evidenceIds);
+            string ben = NodesFor(sector)[5].name;
+            string chainTag = chain
+                ? $"<color=#6CFF8A>Cadena hacia {ben}: COMPLETA</color>"
+                : $"<color=#F2A73B>Cadena hacia {ben}: INCOMPLETA (faltan vínculos)</color>";
+            return $"{chainTag}  ·  Proyección judicial: <b>{VerdictNames[verdict]}</b> ({inds}/11 indicadores OIT)";
+        }
+
+        public static string SectorCodexDossier(int sector, bool completed)
+        {
+            int s = Mathf.Clamp(sector, 0, Sectors.Length - 1);
+            var sec = Sectors[s];
+            var target = TargetFor(s);
+            var ben = NodesFor(s)[5].name;
+            string status = completed
+                ? "<color=#6CFF8A>[EXPEDIENTE RESUELTO]</color>"
+                : "<color=#3FE0D0>[EN INVESTIGACIÓN]</color>";
+            return $"{status} <b>{sec.name}</b> — Objetivo: <b>{target.name}</b> ({FormatGps(s)})\nBeneficiario investigado: {ben}  ·  Marco legal: Convenio C188 OIT / Acuerdo PSMA (FAO).";
+        }
         public static readonly string[] VerdictNames = { "Sin sentencia", "Orden de Retención: bloqueo en aduana", "Congelación de cuentas y cierre de puertos", "Condena penal del beneficiario final" };
         public static readonly int[] VerdictEmbargo = { 0, 400000, 1200000, 3000000 };
         public static readonly float[] ExitEmbargoMul = { 1f, .8f, 1f, 1.5f };

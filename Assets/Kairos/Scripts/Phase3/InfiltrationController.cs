@@ -170,7 +170,7 @@ namespace Kairos
             bool inWindow = Ocean.SecondsFromTrough(bp.x, bp.z) <= halfWindow;
             boardBar.Set((sw + 1) * .5f);
             boardBar.img.color = inWindow ? Pal.Sealed : Pal.DeckLight;
-            boardingText.text = $"<b>Abordaje por popa</b>\nLanza el garfio cuando la barra esté en verde: la ola baja y nadie mira hacia abajo.\n\n{(inWindow ? "<color=#6CFF8A>AHORA: pulsa E</color>" : "<color=#F2A73B>Espera a que la barra se ponga verde…</color>")}";
+            boardingText.text = $"<b>Abordaje por popa · {CaseData.TargetFor(C.sector).name}</b>\nLanza el garfio cuando la barra esté en verde: la ola baja y nadie mira hacia abajo.\n\n{(inWindow ? "<color=#6CFF8A>AHORA: pulsa E</color>" : "<color=#F2A73B>Espera a que la barra se ponga verde…</color>")}";
             var kb = Keyboard.current;
             if (kb != null && kb.eKey.wasPressedThisFrame)
             {
@@ -185,7 +185,7 @@ namespace Kairos
             C.boarded = true;
             boardingRoot.SetActive(false);
             player.gameObject.SetActive(true);
-            EnterPlay("A bordo. Sigue la línea del suelo hasta tu objetivo.");
+            EnterPlay($"A bordo de {CaseData.TargetFor(C.sector).name}. Sigue la línea del suelo hasta tu objetivo.");
             StoreCheckpoint();
             Game.Write();
         }
