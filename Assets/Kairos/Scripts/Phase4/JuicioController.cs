@@ -40,18 +40,20 @@ namespace Kairos
         // ---------- Tablero ----------
         void BuildBoard()
         {
-            var top = UI.Panel(root, new Vector2(0, .93f), Vector2.one);
-            clock = UI.Text(top.transform, "", 22, Pal.Text, TextAlignmentOptions.MidlineLeft);
-            clock.margin = new Vector4(24, 0, 24, 0);
-            clock.enableAutoSizing = true; clock.fontSizeMin = 15; clock.fontSizeMax = 22;
+            var top = UI.Panel(root, new Vector2(.010f, .928f), new Vector2(.990f, .988f));
+            clock = UI.Text(top.transform, "", 21, Pal.Text, TextAlignmentOptions.MidlineLeft);
+            clock.margin = new Vector4(20, 4, 20, 4);
+            clock.enableAutoSizing = true; clock.fontSizeMin = 14; clock.fontSizeMax = 21;
 
-            var left = UI.Panel(root, new Vector2(0, 0), new Vector2(.25f, .93f));
-            cards = UI.Scroll(left.transform, Vector2.zero, Vector2.one);
+            // Columnas con separación limpia entre ventanas y bordes de pantalla
+            var left = UI.Panel(root, new Vector2(.010f, .016f), new Vector2(.252f, .916f));
+            cards = UI.Scroll(left.transform, Vector2.zero, Vector2.one, new Vector2(4, 6), new Vector2(-4, -6));
 
-            var center = UI.Panel(root, new Vector2(.25f, .36f), new Vector2(.75f, .93f), default, default, new Color(.02f, .06f, .09f, .95f));
+            var center = UI.Panel(root, new Vector2(.262f, .372f), new Vector2(.738f, .916f), default, default, new Color(.02f, .06f, .09f, .95f));
             board = (RectTransform)center.transform;
-            var legRect = UI.Rect(board, "BoardLegend", new Vector2(0, .92f), Vector2.one);
+            var legRect = UI.Rect(board, "BoardLegend", new Vector2(0, .915f), Vector2.one, new Vector2(12, 0), new Vector2(-12, -4));
             boardLegend = UI.Text(legRect, "", 15, Pal.Dim, TextAlignmentOptions.Center);
+            boardLegend.enableAutoSizing = true; boardLegend.fontSizeMin = 12; boardLegend.fontSizeMax = 15;
 
             var nodes = CaseData.NodesFor(C.sector);
             for (int i = 0; i < nodes.Length; i++)
@@ -59,30 +61,33 @@ namespace Kairos
                 var n = nodes[i];
                 var col = i == 5 ? Pal.Danger : i == 0 ? Pal.DeckLight : Pal.Sonar;
                 string tag = i == 0 ? "BUQUE OBJETIVO" : i == 1 ? "FRIGORÍFICO" : i == 2 ? "RECLUTADORA" : i == 3 ? "ARMADOR" : i == 4 ? "EMPRESA FACHADA" : "BENEFICIARIO FINAL";
-                var node = UI.Panel(board, n.pos, n.pos, new Vector2(-105, -46), new Vector2(105, 46), new Color(col.r * .16f, col.g * .16f, col.b * .16f, .95f));
+                var node = UI.Panel(board, n.pos, n.pos, new Vector2(-102, -44), new Vector2(102, 44), new Color(col.r * .16f, col.g * .16f, col.b * .16f, .95f));
                 var t = UI.Text(node.transform, $"<size=13><color=#8DA2AB>[{tag}]</color></size>\n<b>{n.name}</b>\n<size=15>{n.role}</size>", 17, col, TextAlignmentOptions.Center);
                 t.margin = new Vector4(6, 2, 6, 2);
             }
 
-            var det = UI.Panel(root, new Vector2(.25f, 0), new Vector2(.75f, .36f));
-            var ds = UI.VStack(det.transform, 16, 6);
-            detail = UI.Line(ds, "", 19);
-            hint = UI.Line(ds, "", 18, Pal.Dim);
-            actions = UI.VStack(ds, 0, 6);
-            actions.gameObject.AddComponent<LayoutElement>().minHeight = 50;
+            // Panel inferior central con scroll para descripciones largas + zona de acciones siempre visible
+            var det = UI.Panel(root, new Vector2(.262f, .016f), new Vector2(.738f, .358f));
+            var detScroll = UI.Scroll(det.transform, new Vector2(0, .34f), Vector2.one, new Vector2(6, 4), new Vector2(-6, -6));
+            detail = UI.Line(detScroll, "", 18);
+            hint = UI.Line(detScroll, "", 16.5f, Pal.Dim);
+            actions = UI.VStack(det.transform, 12, 6, Vector2.zero, new Vector2(1, .34f));
 
-            var right = UI.Panel(root, new Vector2(.75f, 0), new Vector2(1, .93f));
-            var rs = UI.VStack(right.transform, 14, 4);
-            UI.Line(rs, "Indicadores OIT probados", 22, Pal.Sonar, true);
-            oitBar = UI.NewBar(rs, Pal.Sealed, 8);
-            indicatorText = UI.Line(rs, "", 18);
-            verdictText = UI.Line(rs, "", 19, Pal.ThermHot);
-            sentenceBtn = UI.Btn(rs, "Ejecutar sentencia", ExecuteSentence, Pal.Sealed, 22, 52);
-            reboardBtn = UI.Btn(rs, "Volver a abordar en busca de más pruebas (-3 días)", () => { C.trialDays -= 3; Game.GoToPhase(3); }, Pal.DeckLight, 17, 44);
-            closeBtn = UI.Btn(rs, "Cerrar el caso sin sentencia", () => CaseLost("Caso cerrado sin sentencia"), Pal.Danger, 18, 44);
-            UI.Btn(rs, "Volver a la base", Game.GoToMenu, Pal.Dim, 18, 40);
+            // Panel derecho con encabezado fijo, scroll para los 11 indicadores OIT y pie fijo con botones
+            var right = UI.Panel(root, new Vector2(.748f, .016f), new Vector2(.990f, .916f));
+            var rHead = UI.VStack(right.transform, 14, 6, new Vector2(0, .89f), Vector2.one);
+            UI.Line(rHead, "Indicadores OIT probados", 21, Pal.Sonar, true);
+            oitBar = UI.NewBar(rHead, Pal.Sealed, 8);
+            var rScroll = UI.Scroll(right.transform, new Vector2(0, .295f), new Vector2(1, .89f), new Vector2(4, 0), new Vector2(-4, 0));
+            indicatorText = UI.Line(rScroll, "", 17);
+            verdictText = UI.Line(rScroll, "", 17.5f, Pal.ThermHot);
+            var rFoot = UI.VStack(right.transform, 12, 6, Vector2.zero, new Vector2(1, .295f));
+            sentenceBtn = UI.Btn(rFoot, "Ejecutar sentencia", ExecuteSentence, Pal.Sealed, 20, 46);
+            reboardBtn = UI.Btn(rFoot, "Volver a abordar (-3 días)", () => { C.trialDays -= 3; Game.GoToPhase(3); }, Pal.DeckLight, 16, 40);
+            closeBtn = UI.Btn(rFoot, "Cerrar el caso sin sentencia", () => CaseLost("Caso cerrado sin sentencia"), Pal.Danger, 16, 40);
+            UI.Btn(rFoot, "Volver a la base", Game.GoToMenu, Pal.Dim, 16, 38);
 
-            toast = UI.Toasts.Create(canvas.transform, new Vector2(.25f, .02f), new Vector2(.75f, .1f));
+            toast = UI.Toasts.Create(canvas.transform, new Vector2(.262f, .375f), new Vector2(.738f, .445f));
             selected = FirstUnused();
             Canvas.ForceUpdateCanvases();
             Refresh();
