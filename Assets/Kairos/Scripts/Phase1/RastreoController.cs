@@ -33,7 +33,7 @@ namespace Kairos
         TextMeshProUGUI[] layerInfo;
         Button deploy;
         UI.Toasts toast;
-        RectTransform rightPanel, labels;
+        RectTransform rightPanel, labels, toastRect;
         GameObject objPanelObj, objMiniObj, rightPanelObj, rightMiniObj;
         bool objCollapsed, rightCollapsed;
         float camWidth = .68f;
@@ -207,43 +207,51 @@ namespace Kairos
             topBar.enableAutoSizing = true; topBar.fontSizeMin = 13; topBar.fontSizeMax = 20;
 
             // Panel superior izquierdo (Objetivo guiado) con botón de minimizar
-            var obj = UI.Panel(canvas.transform, new Vector2(.008f, .70f), new Vector2(.305f, .932f));
+            var obj = UI.Panel(canvas.transform, new Vector2(.012f, .675f), new Vector2(.310f, .930f));
             objPanelObj = obj.gameObject;
-            var objHead = UI.Rect(obj.transform, "Header", new Vector2(0, .82f), Vector2.one, new Vector2(12, 2), new Vector2(-10, -4));
+            var objHead = UI.Rect(obj.transform, "Header", new Vector2(0, .82f), Vector2.one, new Vector2(14, 4), new Vector2(-12, -6));
             var objH = objHead.gameObject.AddComponent<HorizontalLayoutGroup>();
-            objH.spacing = 6; objH.childControlHeight = true; objH.childControlWidth = true; objH.childForceExpandWidth = false;
+            objH.spacing = 8; objH.childControlHeight = true; objH.childControlWidth = true; objH.childForceExpandWidth = false;
             var objTitle = UI.Line(objHead, "OBJETIVO DE RASTREO", 15, Pal.Sonar, true, TextAlignmentOptions.MidlineLeft);
             objTitle.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
-            var objMinBtn = UI.Btn(objHead, "–", () => SetObjCollapsed(true), Pal.Dim, 16, 26);
+            var objMinBtn = UI.Btn(objHead, "–", () => SetObjCollapsed(true), Pal.Dim, 17, 28);
             var objMinLe = objMinBtn.gameObject.GetComponent<LayoutElement>();
-            objMinLe.minWidth = 32; objMinLe.preferredWidth = 32;
-            var objBody = UI.Rect(obj.transform, "Body", Vector2.zero, new Vector2(1, .82f));
+            objMinLe.minWidth = 36; objMinLe.preferredWidth = 36;
+            var objBody = UI.Rect(obj.transform, "Body", Vector2.zero, new Vector2(1, .815f));
             objective = UI.Text(objBody, "", 18);
-            objective.margin = new Vector4(14, 4, 14, 8);
+            objective.margin = new Vector4(16, 6, 16, 10);
             objective.enableAutoSizing = true; objective.fontSizeMin = 13; objective.fontSizeMax = 18;
 
-            var objMini = UI.Panel(canvas.transform, new Vector2(.008f, .882f), new Vector2(.18f, .932f));
+            // Pastilla minimizada limpia (sin doble marco ni botón aplastado)
+            var objMini = UI.Panel(canvas.transform, new Vector2(.012f, .872f), new Vector2(.185f, .930f));
             objMiniObj = objMini.gameObject;
-            var omRow = UI.Rect(objMini.transform, "Row", Vector2.zero, Vector2.one, new Vector2(8, 4), new Vector2(-8, -4));
-            UI.Btn(omRow, "+ Objetivo", () => SetObjCollapsed(false), Pal.Sonar, 14, 28);
+            var omRow = UI.Rect(objMini.transform, "Row", Vector2.zero, Vector2.one, new Vector2(12, 6), new Vector2(-10, -6));
+            var omH = omRow.gameObject.AddComponent<HorizontalLayoutGroup>();
+            omH.spacing = 8; omH.childControlHeight = true; omH.childControlWidth = true; omH.childForceExpandWidth = false;
+            var omLabel = UI.Line(omRow, "Objetivo", 15, Pal.Sonar, true, TextAlignmentOptions.MidlineLeft);
+            omLabel.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+            var omBtn = UI.Btn(omRow, "+", () => SetObjCollapsed(false), Pal.Sonar, 17, 30);
+            var omBtnLe = omBtn.gameObject.GetComponent<LayoutElement>();
+            omBtnLe.minWidth = 38; omBtnLe.preferredWidth = 38;
             objMiniObj.SetActive(false);
 
             // Panel derecho (Capas + Índice de Riesgo) con scroll interno, pie fijo y botón Minimizar / Tab
-            var r = UI.Panel(canvas.transform, new Vector2(.68f, .008f), new Vector2(.992f, .932f));
+            var r = UI.Panel(canvas.transform, new Vector2(.676f, .016f), new Vector2(.988f, .930f));
             rightPanelObj = r.gameObject;
 
-            var rHead = UI.Rect(r.transform, "Header", new Vector2(0, .936f), Vector2.one, new Vector2(14, 4), new Vector2(-12, -6));
+            var rHead = UI.Rect(r.transform, "Header", new Vector2(0, .926f), Vector2.one, new Vector2(16, 6), new Vector2(-14, -8));
             var rHeadH = rHead.gameObject.AddComponent<HorizontalLayoutGroup>();
-            rHeadH.spacing = 8; rHeadH.childControlHeight = true; rHeadH.childControlWidth = true; rHeadH.childForceExpandWidth = false;
-            var rTitle = UI.Line(rHead, "Capas de satélite", 22, Pal.Sonar, true, TextAlignmentOptions.MidlineLeft);
+            rHeadH.spacing = 10; rHeadH.childControlHeight = true; rHeadH.childControlWidth = true; rHeadH.childForceExpandWidth = false;
+            var rTitle = UI.Line(rHead, "Capas de satélite", 21, Pal.Sonar, true, TextAlignmentOptions.MidlineLeft);
+            rTitle.enableAutoSizing = true; rTitle.fontSizeMin = 15; rTitle.fontSizeMax = 21;
             rTitle.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
-            var rMinBtn = UI.Btn(rHead, "Minimizar [Tab]", () => SetRightCollapsed(true), Pal.Dim, 14, 30);
+            var rMinBtn = UI.Btn(rHead, "Minimizar [Tab]", () => SetRightCollapsed(true), Pal.Dim, 14, 32);
             var rMinLe = rMinBtn.gameObject.GetComponent<LayoutElement>();
-            rMinLe.minWidth = 148; rMinLe.preferredWidth = 148;
+            rMinLe.minWidth = 140; rMinLe.preferredWidth = 144;
 
-            rightPanel = UI.Scroll(r.transform, new Vector2(0, .148f), new Vector2(1, .932f), new Vector2(6, 0), new Vector2(-6, 0));
+            rightPanel = UI.Scroll(r.transform, new Vector2(0, .168f), new Vector2(1, .922f), new Vector2(8, 0), new Vector2(-8, 0));
             var rpVlg = rightPanel.GetComponent<VerticalLayoutGroup>();
-            if (rpVlg != null) { rpVlg.padding = new RectOffset(8, 12, 4, 8); rpVlg.spacing = 5; }
+            if (rpVlg != null) { rpVlg.padding = new RectOffset(10, 14, 6, 10); rpVlg.spacing = 6; }
             layerBtns = new Button[CaseData.Layers.Length];
             layerInfo = new TextMeshProUGUI[CaseData.Layers.Length];
             for (int i = 0; i < CaseData.Layers.Length; i++)
@@ -258,8 +266,8 @@ namespace Kairos
             irBar = UI.NewBar(rightPanel, Pal.DeckLight, 10);
             dossier = UI.Line(rightPanel, "", 16);
 
-            // Pie fijo: los botones de despliegue y regreso nunca se pierden por debajo de la pantalla
-            var rFoot = UI.VStack(r.transform, 10, 6, Vector2.zero, new Vector2(1, .145f));
+            // Pie fijo con respiro: los botones de despliegue y regreso nunca se cortan ni se aplastan
+            var rFoot = UI.VStack(r.transform, 14, 8, Vector2.zero, new Vector2(1, .164f));
             deploy = UI.Btn(rFoot, "Desplegar lancha: Fase 2", () =>
             {
                 C.ir = selected != null ? IR(selected) : 0;
@@ -268,16 +276,24 @@ namespace Kairos
                     CaseData.DeploymentSummaryFor(C.sector, Game.FormatClock(Game.NextNight(C.hours))),
                 }, "Qué sigue: te acercas en lancha y escaneas el casco para saber dónde están las personas.", "Salir en lancha", () => Game.GoToPhase(2));
             }, Pal.Sealed, 20, 46);
-            UI.Btn(rFoot, "Volver a base", Game.GoToMenu, Pal.Dim, 17, 34);
+            UI.Btn(rFoot, "Volver a base", Game.GoToMenu, Pal.Dim, 17, 36);
 
-            // Pastilla minimizada del panel derecho (permite girar el globo 3D a pantalla completa)
-            var rMini = UI.Panel(canvas.transform, new Vector2(.79f, .882f), new Vector2(.992f, .932f));
+            // Pastilla minimizada del panel derecho (permite girar el globo 3D a pantalla completa sin recortarse)
+            var rMini = UI.Panel(canvas.transform, new Vector2(.745f, .872f), new Vector2(.988f, .930f));
             rightMiniObj = rMini.gameObject;
-            var rmRow = UI.Rect(rMini.transform, "Row", Vector2.zero, Vector2.one, new Vector2(8, 4), new Vector2(-8, -4));
-            UI.Btn(rmRow, "+ Capas y Dossier [Tab]", () => SetRightCollapsed(false), Pal.Sonar, 14, 28);
+            var rmRow = UI.Rect(rMini.transform, "Row", Vector2.zero, Vector2.one, new Vector2(14, 6), new Vector2(-10, -6));
+            var rmH = rmRow.gameObject.AddComponent<HorizontalLayoutGroup>();
+            rmH.spacing = 10; rmH.childControlHeight = true; rmH.childControlWidth = true; rmH.childForceExpandWidth = false;
+            var rmLabel = UI.Line(rmRow, "Capas y Dossier", 15, Pal.Text, true, TextAlignmentOptions.MidlineLeft);
+            rmLabel.enableAutoSizing = true; rmLabel.fontSizeMin = 12; rmLabel.fontSizeMax = 15;
+            rmLabel.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+            var rmBtn = UI.Btn(rmRow, "+ Abrir [Tab]", () => SetRightCollapsed(false), Pal.Sonar, 14, 30);
+            var rmBtnLe = rmBtn.gameObject.GetComponent<LayoutElement>();
+            rmBtnLe.minWidth = 124; rmBtnLe.preferredWidth = 130;
             rightMiniObj.SetActive(false);
 
             toast = UI.Toasts.Create(canvas.transform, new Vector2(.05f, .03f), new Vector2(.65f, .12f));
+            toastRect = (RectTransform)toast.transform;
             UI.SceneIntro(canvas.transform, "FASE 1", "Rastreo satelital", CaseData.SectorIntroSubtitle(C.sector));
         }
 
@@ -293,6 +309,11 @@ namespace Kairos
             rightCollapsed = collapsed;
             if (rightPanelObj != null) rightPanelObj.SetActive(!collapsed);
             if (rightMiniObj != null) rightMiniObj.SetActive(collapsed);
+            if (toastRect != null)
+            {
+                toastRect.anchorMin = new Vector2(collapsed ? .18f : .05f, .03f);
+                toastRect.anchorMax = new Vector2(collapsed ? .82f : .65f, .12f);
+            }
         }
 
         int IR(ShipDef s) => CaseData.ComputeIR(s, C.revealed, C.hours, C.sarDegraded, Decay);

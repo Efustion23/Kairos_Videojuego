@@ -14,40 +14,40 @@ namespace Kairos
             visorTint.raycastTarget = false;
             marksRoot = UI.Rect(canvas.transform, "Marcas", Vector2.zero, Vector2.one);
 
-            // Paneles del HUD a la medida de su texto: sin franjas vacías bajo el objetivo o el estado.
-            var tl = UI.FitPanel(canvas.transform, new Vector2(.012f, .985f), new Vector2(0, 1), 620, 14, 2);
-            objectives = UI.Line(tl, "", 20);
+            // Paneles del HUD con margen seguro respecto a los bordes de pantalla y a la brújula central.
+            var tl = UI.FitPanel(canvas.transform, new Vector2(.018f, .980f), new Vector2(0, 1), 540, 16, 4);
+            objectives = UI.Line(tl, "", 19);
 
-            var tr = UI.FitPanel(canvas.transform, new Vector2(.988f, .985f), new Vector2(1, 1), 380, 12, 5);
+            var tr = UI.FitPanel(canvas.transform, new Vector2(.982f, .980f), new Vector2(1, 1), 370, 14, 6);
             var trs = tr;
-            stateText = UI.Line(trs, "", 21, Pal.Sonar, true);
+            stateText = UI.Line(trs, "", 20, Pal.Sonar, true);
             suspBar = UI.NewBar(trs, Pal.DeckLight, 12);
             envText = UI.Line(trs, "", 16, Pal.Dim);
             breathText = UI.Line(trs, "Aliento", 16, Pal.Dim);
             staminaBar = UI.NewBar(trs, Pal.Sonar, 6);
 
-            // Barra de herramientas que mide lo que su texto (antes ocupaba media pantalla con la mitad vacía).
-            var bl = (RectTransform)UI.Panel(canvas.transform, new Vector2(.012f, .015f), new Vector2(.012f, .015f)).transform;
+            // Barra de herramientas inferior con margen limpio (no choca con la pista tutorial).
+            var bl = (RectTransform)UI.Panel(canvas.transform, new Vector2(.018f, .018f), new Vector2(.018f, .018f)).transform;
             bl.pivot = Vector2.zero;
             var blh = bl.gameObject.AddComponent<HorizontalLayoutGroup>();
             blh.padding = new RectOffset(18, 18, 10, 10); blh.childControlWidth = blh.childControlHeight = true;
             var blFit = bl.gameObject.AddComponent<ContentSizeFitter>();
             blFit.horizontalFit = blFit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            tools = UI.Text(bl, "", 18, Pal.Text, TextAlignmentOptions.MidlineLeft);
+            tools = UI.Text(bl, "", 17, Pal.Text, TextAlignmentOptions.MidlineLeft);
             tools.textWrappingMode = TextWrappingModes.NoWrap;
 
-            compass = UI.Text(UI.Rect(canvas.transform, "Brujula", new Vector2(.4f, .95f), new Vector2(.6f, 1)), "", 22, Pal.Sonar, TextAlignmentOptions.Center);
-            lockText = UI.Text(UI.Rect(canvas.transform, "Lock", new Vector2(.28f, .86f), new Vector2(.72f, .95f)), "", 28, Pal.Danger, TextAlignmentOptions.Center, true);
-            prompt = UI.Text(UI.Rect(canvas.transform, "Prompt", new Vector2(.25f, .17f), new Vector2(.75f, .24f)), "", 25, Pal.Text, TextAlignmentOptions.Center);
+            compass = UI.Text(UI.Rect(canvas.transform, "Brujula", new Vector2(.38f, .945f), new Vector2(.62f, .992f)), "", 22, Pal.Sonar, TextAlignmentOptions.Center);
+            lockText = UI.Text(UI.Rect(canvas.transform, "Lock", new Vector2(.28f, .86f), new Vector2(.72f, .94f)), "", 28, Pal.Danger, TextAlignmentOptions.Center, true);
+            prompt = UI.Text(UI.Rect(canvas.transform, "Prompt", new Vector2(.25f, .195f), new Vector2(.75f, .265f)), "", 24, Pal.Text, TextAlignmentOptions.Center);
 
-            var holdR = UI.Rect(canvas.transform, "Hold", new Vector2(.4f, .14f), new Vector2(.6f, .16f));
+            var holdR = UI.Rect(canvas.transform, "Hold", new Vector2(.4f, .165f), new Vector2(.6f, .185f));
             holdRoot = holdR.gameObject;
             var hs = UI.VStack(holdR, 0, 0);
             holdBar = UI.NewBar(hs, Pal.Sonar, 14);
 
-            var hintP = UI.FitPanel(canvas.transform, new Vector2(.5f, .07f), new Vector2(.5f, 0), 840, 12, 0, new Color(.02f, .16f, .17f, .92f));
+            var hintP = UI.FitPanel(canvas.transform, new Vector2(.5f, .092f), new Vector2(.5f, 0), 780, 14, 0, new Color(.02f, .16f, .17f, .92f));
             hintRoot = hintP.gameObject;
-            hintText = UI.Line(hintP, "", 22, Pal.Sonar, false, TextAlignmentOptions.Center);
+            hintText = UI.Line(hintP, "", 20, Pal.Sonar, false, TextAlignmentOptions.Center);
 
             // Marcador del objetivo
             objMarker = UI.Rect(canvas.transform, "Objetivo", Vector2.zero, Vector2.zero, new Vector2(-70, -30), new Vector2(70, 30));

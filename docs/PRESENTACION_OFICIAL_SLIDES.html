@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KAIROS: Sombras en Altamar — Presentación Académica</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700;800&family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+    :root {
+      --bg-dark: #070e17;
+      --bg-card: rgba(14, 27, 42, 0.92);
+      --sonar-cyan: #3FE0D0;
+      --radar-amber: #FFB703;
+      --danger-red: #E63946;
+      --sealed-green: #2EC4B6;
+      --text-main: #F1FAEE;
+      --text-dim: #A8DADC;
+      --text-muted: #6C7A89;
+      --border-cyan: rgba(63, 224, 208, 0.4);
+      --border-amber: rgba(255, 183, 3, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #04080e;
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      padding: 24px 0;
+    }
+
+    /* Print / PDF settings: Exactly 16:9 landscape */
+    @page {
+      size: 1920px 1080px landscape;
+      margin: 0;
+    }
+
+    @media print {
+      body {
+        background: transparent;
+        padding: 0;
+        gap: 0;
+      }
+      .slide {
+        margin: 0;
+        box-shadow: none !important;
+        page-break-after: always;
+        break-after: page;
+        border-radius: 0 !important;
+        border: none !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+
+    .slide {
+      width: 1920px;
+      height: 1080px;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(circle at 80% 20%, #0d2238 0%, #070e17 65%, #03060a 100%);
+      border: 2px solid rgba(63, 224, 208, 0.25);
+      border-radius: 12px;
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      padding: 55px 75px;
+    }
+
+    /* Scanlines and radar grid overlay */
+    .slide::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: 
+        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%),
+        linear-gradient(90deg, rgba(63, 224, 208, 0.02) 1px, transparent 1px),
+        linear-gradient(rgba(63, 224, 208, 0.02) 1px, transparent 1px);
+      background-size: 100% 4px, 40px 40px, 40px 40px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .slide-content {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header bar */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid var(--border-cyan);
+      padding-bottom: 16px;
+    }
+
+    .slide-title-group {
+      display: flex;
+      align-items: baseline;
+      gap: 18px;
+    }
+
+    .slide-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--radar-amber);
+      background: rgba(255, 183, 3, 0.12);
+      padding: 4px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border-amber);
+    }
+
+    .slide-title {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 2.8rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #FFFFFF;
+      text-shadow: 0 0 20px rgba(63, 224, 208, 0.4);
+    }
+
+    .speaker-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(63, 224, 208, 0.1);
+      border: 1px solid var(--border-cyan);
+      padding: 8px 18px;
+      border-radius: 30px;
+      color: var(--sonar-cyan);
+    }
+
+    .speaker-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--sonar-cyan);
+      box-shadow: 0 0 8px var(--sonar-cyan);
+    }
+
+    /* Footer tag */
+    .slide-footer {
+      position: absolute;
+      bottom: 25px;
+      left: 75px;
+      right: 75px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 10px;
+      z-index: 2;
+    }
+
+    /* Common Card Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+      height: calc(100% - 100px);
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      height: calc(100% - 100px);
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      height: calc(100% - 100px);
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid rgba(63, 224, 208, 0.2);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card.highlight {
+      border-color: var(--radar-amber);
+      box-shadow: 0 0 25px rgba(255, 183, 3, 0.15);
+    }
+
+    .card h3 {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 1.5rem;
+      color: var(--sonar-cyan);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card p, .card li {
+      font-size: 1.1rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .card ul {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card li::before {
+      content: "▹ ";
+      color: var(--radar-amber);
+      font-weight: bold;
+    }
+
+    .img-frame {
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-cyan);
+      position: relative;
+      background: #000;
+    }
+
+    .img-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .img-caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(4, 8, 14, 0.85);
+      backdrop-filter: blur(4px);
+      padding: 8px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--sonar-cyan);
+      border-top: 1px solid var(--border-cyan);
+    }
+
+    .badge-ods {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(46, 196, 182, 0.15);
+      border: 1px solid var(--sealed-green);
+      color: var(--sealed-green);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-family: 'Chakra Petch', sans-serif;
+    }
+
+    /* Navigation toolbar (not printed) */
+    .toolbar {
+      position: fixed;
+      bottom: 20px;
+      background: rgba(14, 27, 42, 0.95);
+      border: 1px solid var(--sonar-cyan);
+      padding: 12px 24px;
+      border-radius: 40px;
+      display: flex;
+      gap: 16px;
+      z-index: 1000;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+
+    .toolbar button {
+      background: var(--sonar-cyan);
+      color: #070e17;
+      border: none;
+      padding: 10px 20px;
+      font-weight: 700;
+      border-radius: 20px;
+      cursor: pointer;
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    .toolbar button:hover {
+      background: #fff;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="toolbar no-print">
+    <button onclick="window.print()">📥 Exportar / Guardar como PDF</button>
+  </div>
+
+  <!-- SLIDE 1: PORTADA -->
+  <section class="slide" id="slide-1">
+    <div class="slide-content" style="justify-content: center; align-items: center; text-align: center;">
+      <div style="margin-bottom: 24px;">
+        <span class="badge-ods" style="font-size: 1.3rem; padding: 10px 24px;">
+          🌊 ODS 14: Vida Submarina &bull; ODS 8: Trabajo Decente &bull; AMERP / FAO
+        </span>
+      </div>
+      <h1 style="font-family: 'Chakra Petch', sans-serif; font-size: 5.5rem; font-weight: 800; letter-spacing: 0.06em; color: #fff; text-shadow: 0 0 35px rgba(63,224,208,0.6); margin-bottom: 12px;">
+        KAIROS: SOMBRAS EN ALTAMAR
+      </h1>
+      <p style="font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; color: var(--sonar-cyan); letter-spacing: 0.15em; margin-bottom: 45px;">
+        INVESTIGACIÓN FORENSE &middot; INFILTRACIÓN TÁCTICA &middot; SIMULACIÓN NAVAL EN UNITY 6
+      </p>
+
+      <div style="display: flex; gap: 32px; background: rgba(14, 27, 42, 0.8); border: 1px solid var(--border-cyan); padding: 22px 50px; border-radius: 16px;">
+        <div style="text-align: left;">
+          <div style="color: var(--sonar-cyan); font-family: 'JetBrains Mono'; font-size: 0.95rem; font-weight: bold;">EXPOSITOR 1 (UI/UX & Narrativa)</div>
+          <div style="font-size: 1.35rem; font-weight: 700; color: #fff;">Alexander Benites</div>
+        </div>
+        <div style="width: 2px; background: rgba(63,224,208,0.2);"></div>
+        <div style="text-align: left;">
+          <div style="color: var(--sonar-cyan); font-family: 'JetBrains Mono'; font-size: 0.95rem; font-weight: bold;">EXPOSITOR 2 (Gameplay & IA)</div>
+          <div style="font-size: 1.35rem; font-weight: 700; color: #fff;">Diego Tornero</div>
+        </div>
+        <div style="width: 2px; background: rgba(63,224,208,0.2);"></div>
+        <div style="text-align: left;">
+          <div style="color: var(--sonar-cyan); font-family: 'JetBrains Mono'; font-size: 0.95rem; font-weight: bold;">EXPOSITOR 3 (Arte 3D & Audio)</div>
+          <div style="font-size: 1.35rem; font-weight: 700; color: #fff;">Christopher Veliz</div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>INVESTIGACIÓN ACADÉMICA &bull; INGENIERÍA Y DISEÑO DE VIDEOJUEGOS</span>
+      <span>DIAPOSITIVA 01 / 12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: CONCEPTO Y REFERENCIAS -->
+  <section class="slide" id="slide-2">
+    <div class="slide-content">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <span class="slide-num">02</span>
+          <h2 class="slide-title">Concepto del Videojuego & Referencias</h2>
+        </div>
+        <div class="speaker-tag">
+          <span class="speaker-dot"></span>
+          <span>Alexander Benites &bull; UI/UX & Game Design</span>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="img-frame" style="height: 280px; margin-bottom: 18px;">
+            <img src="images/concepto-flota.jpeg" alt="Pesca Ilegal">
+            <div class="img-caption">PROBLEMÁTICA: Pesca INDNR & Trabajo Forzoso</div>
+          </div>
+          <h3><span style="color:var(--radar-amber)">01.</span> Problemática Global</h3>
+          <p>La pesca ilegal mueve <strong>$20 mil millones anuales</strong>. Flotas en altamar operan sin transpondedor AIS, violando soberanías y sometiendo tripulaciones a abusos sin fiscalización.</p>
+        </div>
+
+        <div class="card highlight">
+          <div class="img-frame" style="height: 280px; margin-bottom: 18px;">
+            <img src="images/protagonista.jpeg" alt="Inspectora Elena Ruiz">
+            <div class="img-caption">PROTAGONISTA: Inspectora Elena Ruiz (DICAPI)</div>
+          </div>
+          <h3><span style="color:var(--sonar-cyan)">02.</span> Propuesta KAIROS</h3>
+          <p>Simulador táctico-forense no letal. El objetivo no es destruir barcos, sino <strong>reunir pruebas judiciales vinculantes</strong> (pasaportes retenidos, bodegas clandestinas y bitácoras).</p>
+        </div>
+
+        <div class="card">
+          <div class="img-frame" style="height: 280px; margin-bottom: 18px;">
+            <img src="images/concepto-lancha.jpeg" alt="Infiltración Naval">
+            <div class="img-caption">REFERENTES: Return of the Obra Dinn + Metal Gear Solid</div>
+          </div>
+          <h3><span style="color:var(--sealed-green)">03.</span> Fusión de Géneros</h3>
+          <p>Combina la deducción lógica de <em>Obra Dinn</em> con la tensión e infiltración táctica de <em>MGS</em> y la física naval de navegación en tormentas oceánicas.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>KAIROS: SOMBRAS EN ALTAMAR &bull; CONCEPTO DE DISEÑO</span>
+      <span>DIAPOSITIVA 02 / 12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: BUCLE JUGABLE (GAMEPLAY LOOP) -->
+  <section class="slide" id="slide-3">
+    <div class="slide-content">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <span class="slide-num">03</span>
+          <h2 class="slide-title">Bucle Jugable: Las 4 Fases Tácticas</h2>
+        </div>
+        <div class="speaker-tag">
+          <span class="speaker-dot"></span>
+          <span>Alexander Benites &bull; Game Loop</span>
+        </div>
+      </div>
+
+      <div class="grid-4">
+        <div class="card">
+          <div class="img-frame" style="height: 240px; margin-bottom: 16px;">
+            <img src="images/concepto-satelite.jpeg" alt="Fase 1 Satelital">
+            <div class="img-caption">FASE 1: RASTREO SATELITAL</div>
+          </div>
+          <h3>1. Monitoreo AIS</h3>
+          <p>Triangulación en terminal orbital. Detección de buques con transpondedores apagados o banderas de conveniencia.</p>
+        </div>
+
+        <div class="card">
+          <div class="img-frame" style="height: 240px; margin-bottom: 16px;">
+            <img src="images/concepto-sonar.jpeg" alt="Fase 2 Navegación">
+            <div class="img-caption">FASE 2: NAVEGACIÓN & SONAR</div>
+          </div>
+          <h3>2. Búsqueda Acústica</h3>
+          <p>Patrullaje marítimo en oleaje Douglas. Empleo de sonar batimétrico y visor FLIR para confirmar la firma del casco.</p>
+        </div>
+
+        <div class="card">
+          <div class="img-frame" style="height: 240px; margin-bottom: 16px;">
+            <img src="images/avance-infiltracion.png" alt="Fase 3 Infiltración">
+            <div class="img-caption">FASE 3: ABORDAJE & INFILTRACIÓN</div>
+          </div>
+          <h3>3. Evidencia Forense</h3>
+          <p>Infiltración a bordo. Fotografía de bodegas ilegales, apertura de candados y rescate de pasaportes vulnerados.</p>
+        </div>
+
+        <div class="card highlight">
+          <div class="img-frame" style="height: 240px; margin-bottom: 16px;">
+            <img src="images/concepto-juicio.jpeg" alt="Fase 4 Judicial">
+            <div class="img-caption">FASE 4: TRIBUNAL & SANCIÓN</div>
+          </div>
+          <h3>4. Dictamen AMERP</h3>
+          <p>Cotejo en el Maletín Forense. Si las pruebas cumplen el estándar FAO/OIT, se emite Orden de Detención Portuaria.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>KAIROS: SOMBRAS EN ALTAMAR &bull; NÚCLEO MECÁNICO</span>
+      <span>DIAPOSITIVA 03 / 12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: CONTROLES Y SISTEMAS UI DIEGÉTICOS -->
+  <section class="slide" id="slide-4">
+    <div class="slide-content">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <span class="slide-num">04</span>
+          <h2 class="slide-title">Mecánicas de Juego & Maletín Forense</h2>
+        </div>
+        <div class="speaker-tag">
+          <span class="speaker-dot"></span>
+          <span>Alexander Benites &bull; UI/UX</span>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="img-frame" style="height: 380px; margin-bottom: 20px;">
+            <img src="images/concepto-maletin.jpeg" alt="Maletín Forense">
+            <div class="img-caption">SISTEMA DIEGÉTICO: Maletín Forense e Indicadores OIT</div>
+          </div>
+          <h3>Interacción Forense Integrada</h3>
+          <ul>
+            <li><strong>Inspección Física 3D:</strong> Rotación y análisis minucioso de bitácoras, contratos clonados y pasaportes retenidos.</li>
+            <li><strong>Cotejo Judicial en Tiempo Real:</strong> Algoritmo de validación que pondera la solidez de las pruebas para el veredicto.</li>
+            <li><strong>Ausencia de HUD Convencional:</strong> Todo instrumento existe dentro del mundo del juego para inmersión total.</li>
+          </ul>
+        </div>
+
+        <div class="card highlight">
+          <h3>Esquema de Controles e Interacción Táctica</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 20px 0;">
+            <div style="background: rgba(4,8,14,0.6); padding: 16px; border-radius: 8px; border-left: 3px solid var(--sonar-cyan);">
+              <div style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--sonar-cyan); font-size: 1.15rem;">WASD / ARROW KEYS</div>
+              <div style="color: var(--text-dim); font-size: 0.95rem;">Maniobra lancha / Desplazamiento táctico</div>
+            </div>
+            <div style="background: rgba(4,8,14,0.6); padding: 16px; border-radius: 8px; border-left: 3px solid var(--sonar-cyan);">
+              <div style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--sonar-cyan); font-size: 1.15rem;">TECLA [TAB] / [M]</div>
+              <div style="color: var(--text-dim); font-size: 0.95rem;">Despliegue del Maletín Forense & Códice</div>
+            </div>
+            <div style="background: rgba(4,8,14,0.6); padding: 16px; border-radius: 8px; border-left: 3px solid var(--radar-amber);">
+              <div style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--radar-amber); font-size: 1.15rem;">TECLA [E] / CLIC</div>
+              <div style="color: var(--text-dim); font-size: 0.95rem;">Interacción con candados, cables y documentos</div>
+            </div>
+            <div style="background: rgba(4,8,14,0.6); padding: 16px; border-radius: 8px; border-left: 3px solid var(--radar-amber);">
+              <div style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--radar-amber); font-size: 1.15rem;">TECLA [F] / [ESPACIO]</div>
+              <div style="color: var(--text-dim); font-size: 0.95rem;">Visor FLIR Infrarrojo / Sonar de Pulso</div>
+            </div>
+          </div>
+          <p style="font-size: 1.15rem; color: var(--text-dim); border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px;">
+            El diseño premia la <strong>agilidad mental y el rigor pericial</strong>: ingresar a ciegas a una cabina alertará al guardia; hackear el transpondedor primero garantiza la extracción limpia.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>KAIROS: SOMBRAS EN ALTAMAR &bull; CONTROLES E INTERACCIÓN</span>
+      <span>DIAPOSITIVA 04 / 12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: ANTAGONISTAS Y SISTEMA DE IA -->
+  <section class="slide" id="slide-5">
+    <div class="slide-content">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <span class="slide-num">05</span>
+          <h2 class="slide-title">Patrones de Amenaza & Sistema de IA</h2>
+        </div>
+        <div class="speaker-tag">
+          <span class="speaker-dot"></span>
+          <span>Diego Tornero &bull; Programación & IA</span>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="img-frame" style="height: 260px; margin-bottom: 18px;">
+            <img src="images/avance-infiltracion.png" alt="Guardias de Cubierta">
+            <div class="img-caption">ENEMIGO 1: Guardias de Patrulla (Linterna)</div>
+          </div>
+          <h3>Conos de Visión & Escucha</h3>
+          <p>Operan con <strong>conos de visión ajustables</strong> y sensores de ruido. Si el jugador corre sobre superficies de metal húmedo, los guardias acuden al foco de perturbación.</p>
+        </div>
+
+        <div class="card highlight">
+          <div class="img-frame" style="height: 260px; margin-bottom: 18px;">
+            <img src="images/concepto-puente.jpeg" alt="Capitán y Tripulación">
+            <div class="img-caption">ENEMIGO 2: Oficiales de Puente & Cámaras</div>
+          </div>
+          <h3>Máquina de Estados Finitos</h3>
+          <p>Tres estados dinámicos de vigilancia:
+            <br>&bull; <strong style="color:var(--sealed-green)">PATRULLA:</strong> Rutas aleatorias en cubierta.
+            <br>&bull; <strong style="color:var(--radar-amber)">ALERTA:</strong> Inspección con linterna táctica.
+            <br>&bull; <strong style="color:var(--danger-red)">ALARMA GENERAL:</strong> Cierre de bodegas y bloqueo.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="img-frame" style="height: 260px; margin-bottom: 18px;">
+            <img src="images/concepto-bodega.jpeg" alt="Bodega Clandestina">
+            <div class="img-caption">SITUACIÓN: Tripulación Vulnerable</div>
+          </div>
+          <h3>Dilema Moral & Foco ODS 8</h3>
+          <p>La tripulación no es enemiga: son <strong>marineros retenidos bajo coerción</strong>. El jugador debe evitar que los guardias tomen represalias liberando evidencias a tiempo.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>KAIROS: SOMBRAS EN ALTAMAR &bull; COMPORTAMIENTOS DE IA</span>
+      <span>DIAPOSITIVA 05 / 12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: SECTORES OCEANOGRÁFICOS -->
+  <section class="slide" id="slide-6">
+    <div class="slide-content">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <span class="slide-num">06</span>
+          <h2 class="slide-title">Ambientación & Sectores Oceanográficos</h2>
+        </div>
+        <div class="speaker-tag">
+          <span class="speaker-dot"></span>
+          <span>Christopher Veliz &bull; Arte 3D & Entornos</span>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="img-frame" style="height: 270px; margin-bottom: 18px;">
+            <img src="images/concepto-sonar.jpeg" alt="Atlántico Sur">
+            <div class="img-caption">SECTOR 1: Atlántico Sur (Milla 201)</div>
+          </div>
+          <h3>Aguas Glaciares & Tormenta</h3>
+          <p><strong>Desafío:</strong> Olas de 4 a 6 metros (Douglas 6), niebla espesa y visibilidad reducida a menos de 50 metros. Obliga a navegar mediante eco-localización acústica.</p>
+        </div>
+
+        <div class="card">
+          <div class="img-frame" style="height: 270px; margin-bottom: 18px;">
+            <img src="images/concepto-flota.jpeg" alt="Pacífico Ecuatorial">
+            <div class="img-caption">SECTOR 2: Pacífico Ecuatorial (Galápagos)</div>
+          </div>
+          <h3>Límites de Reserva Marina</h3>
+          <p><strong>Desafío:</strong> Flotas nodriza hiperdensas de pesca de pota. Alta interferencia radioeléctrica, vigilancia con reflectores y múltiples barcos de transbordo.</p>
+        </div>
+
+        <div class="card highlight">
+          <div class="img-frame" style="height: 270px; margin-bottom: 18px;">
+            <img src="images/concepto-puente.jpeg" alt="Índico Neutral">
+            <div class="img-caption">SECTOR 3: Índico Neutral (Altamar Sin Ley)</div>
+          </div>
+          <h3>Buques Nodriza Factoría</h3>
+          <p><strong>Desafío:</strong> Embarcaciones gigantescas con redes de arrastre pelágico, puertas con candados biométricos y tripulación multinacional sin registro civil.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>KAIROS: SOMBRAS EN ALTAMAR &bull; WORLD BUILDING</span>
+      <span>DIAPOSITIVA 06 / 12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: INGENIERÍA UNITY & RETOS TÉCNICOS -->
+  <section class="slide" id="slide-7">
+    <div class="slide-content">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <span class="slide-num">07</span>
+          <h2 class="slide-title">Ingeniería en Unity 6 & Depuraciones</h2>
+        </div>
+        <div class="speaker-tag">
+          <span class="speaker-dot"></span>
+          <span>Diego Tornero &bull; Físicas & Optimización</span>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Retos Técnicos Superados</h3>
+          <ul>
+            <li><strong>Física Hidrodinámica Multi-Punto:</strong> Cálculo de sustentación y balanceo en la lancha para evitar vórtices de simulación a altas velocidades con oleaje extremo.</li>
+            <li><strong>Optimización de Vóxeles en Sonar:</strong> Renderizado por GPU de nubes de puntos de eco acústico sin sobrecargar el bus de memoria en mallas navales complejas.</li>
+            <li><strong>NavMesh en Superficies Dinámicas:</strong> Ajuste de los caminos de patrulla de la IA dentro de cubiertas en movimiento oscilante.</li>
+            <li><strong>Modularidad de Escenas:</strong> Sincronización de 7 escenas independientes compartiendo datos persistentes del expediente judicial.</li>
+          </ul>
+        </div>
+
+        <div class="card highlight">
+          <h3>Métricas de Calidad & Pruebas Automatizadas</h3>
+          <div style="background: rgba(4,8,14,0.7); border: 1px solid var(--border-cyan); border-radius: 8px; padding: 20px; margin-bottom: 18px;">
+            <div style="font-family: 'JetBrains Mono'; font-size: 1.1rem; color: var(--sealed-green); margin-bottom: 8px;">
+              ✔ TEST RUNNER: 99 / 99 TESTS EDITMODE EN VERDE
+            </div>
+            <p style="font-size: 0.95rem; color: var(--text-dim);">
+              Validación continua de contención de puntos del sonar dentro del casco, lógica de sellado judicial, persistencia del maletín y transición de estados sin fugas de memoria.
+            </p>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div style="background: rgba(4,8,14,0.6); padding: 14px; border-radius: 6px;">
+              <div style="font-family: 'Chakra Petch'; color: var(--radar-amber); font-size: 1.6rem; font-weight: 700;">60 FPS</div>
+              <div style="font-size: 0.9rem; color: var(--text-dim);">Rendimiento estable en 1080p</div>
+            </div>
+            <div style="background: rgba(4,8,14,0.6); padding: 14px; border-radius: 6px;">
+              <div style="font-family: 'Chakra Petch'; color: var(--sonar-cyan); font-size: 1.6rem; font-weight: 700;">0 ERRORES</div>
+              <div style="font-size: 0.9rem; color: var(--text-dim);">Consola de compilación limpia</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>KAIROS: SOMBRAS EN ALTAMAR &bull; ARQUITECTURA TÉCNICA</span>
+      <span>DIAPOSITIVA 07 / 12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: GDD Y DOCUMENTACIÓN DE DISEÑO -->
+  <section class="slide" id="slide-8">
+    <div class="slide-content">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <span class="slide-num">08</span>
+          <h2 class="slide-title">Game Design Document (GDD) & Metodología</h2>
+        </div>
+        <div class="speaker-tag">
+          <span class="speaker-dot"></span>
+          <span>Alexander Benites &bull; Documentación</span>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="img-frame" style="height: 380px; margin-bottom: 20px;">
+            <img src="images/avance-menu.png" alt="Menú y Documentos KAIROS">
+            <div class="img-caption">SISTEMA DOCUMENTAL: Manual Operativo & GDD Ejecutivo</div>
+          </div>
+          <h3>Estructura del GDD de KAIROS</h3>
+          <p>El proyecto cuenta con un <strong>Game Design Document formal</strong> estructurado en Markdown y Figma, detallando la mecánica central, curvas de tensión, perfiles de tripulación y tablas de evidencias OIT.</p>
+        </div>
+
+        <div class="card highlight">
+          <h3>Pilares de Rigor Documental</h3>
+          <ul>
+            <li><strong>Fundamentación Jurídica Real:</strong> Adaptación de artículos del Acuerdo sobre Medidas del Estado Rector del Puerto (AMERP - FAO) y el Convenio C188 de la OIT.</li>
+            <li><strong>Matriz de Progresión Pericial:</strong> Desglose por sectores (Atlántico, Pacífico, Índico) con requisitos mínimos de evidencia para evitar falsos arrestos.</li>
+            <li><strong>Accesibilidad y Usabilidad:</strong> Ajustes de contraste para visores nocturnos, escalado de fuentes y compatibilidad plena con teclado y mandos.</li>
+            <li><strong>Narrativa No Maniquea:</strong> Exploración del problema sistémico donde el verdadero culpable es la corporación armadora internacional.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>KAIROS: SOMBRAS EN ALTAMAR &bull; GAME DESIGN DOCUMENT</span>
+      <span>DIAPOSITIVA 08 / 12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: GESTIÓN DE PROYECTO & GIT WORKFLOW -->
+  <section class="slide" id="slide-9">
+    <div class="slide-content">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <span class="slide-num">09</span>
+          <h2 class="slide-title">Gestión de Tareas, Commits & GitHub</h2>
+        </div>
+        <div class="speaker-tag">
+          <span class="speaker-dot"></span>
+          <span>Christopher Veliz &bull; Pipeline & DevOps</span>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Estrategia de Ramas & Convención Git</h3>
+          <p style="margin-bottom: 14px;">Flujo basado en <strong>GitFlow estructurado</strong> con ramas de responsabilidad definida para evitar conflictos en escenas de Unity:</p>
+          <div style="background: rgba(4,8,14,0.7); padding: 16px; border-radius: 8px; font-family: 'JetBrains Mono'; font-size: 0.95rem; margin-bottom: 16px;">
+            <div style="color:var(--sonar-cyan);">&bull; feature/alexander-ui-narrativa (UI & Maletín)</div>
+            <div style="color:var(--radar-amber);">&bull; feature/diego-gameplay-ia (Sistemas & Físicas)</div>
+            <div style="color:var(--sealed-green);">&bull; feature/christopher-arte-audio (3D, Shaders & Luces)</div>
+            <div style="color:#FFFFFF;">&bull; main (Versión estable con tests aprobados)</div>
+          </div>
+          <p>Commits bajo estándar <strong>Conventional Commits</strong> (<code>feat</code>, <code>fix</code>, <code>test</code>, <code>chore</code>) sincronizados en GitHub.</p>
+        </div>
+
+        <div class="card highlight">
+          <h3>Historial de Commits & Trazabilidad Real</h3>
+          <div style="font-family: 'JetBrains Mono'; font-size: 0.92rem; background: rgba(4,8,14,0.8); border: 1px solid var(--border-cyan); border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 10px;">
+            <div><span style="color:var(--radar-amber);">8f49127</span> chore(git): ignorar carpeta temporal _Recovery de Unity</div>
+            <div><span style="color:var(--sonar-cyan);">755c1a2</span> feat(escenas): unificar intros y textos por sector en fases 1-4</div>
+            <div><span style="color:var(--sonar-cyan);">48b982f</span> feat(3d): diferenciar tripulacion por sector y detallar pasaportes</div>
+            <div><span style="color:var(--sonar-cyan);">863c7db</span> feat(ui): agregar diagnostico judicial en maletin y dossiers</div>
+            <div><span style="color:var(--sealed-green);">94332b2</span> Merge pull request #38 from feature/diego-gameplay-ia</div>
+            <div><span style="color:var(--danger-red);">d6e9fba</span> test(sonar): pruebas editmode contencion puntos en casco</div>
+          </div>
+          <div style="margin-top: 18px; color: var(--text-dim); font-size: 1rem;">
+            Control de versiones impecable sin archivos residuales ni binarios pesados huérfanos.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>KAIROS: SOMBRAS EN ALTAMAR &bull; DEVOPS Y CONTROL DE VERSIONES</span>
+      <span>DIAPOSITIVA 09 / 12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: VIDEO DEMO / TRAILER CINEMÁTICO -->
+  <section class="slide" id="slide-10">
+    <div class="slide-content">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <span class="slide-num">10</span>
+          <h2 class="slide-title">Video Demo / Trailer Cinemático 1080p</h2>
+        </div>
+        <div class="speaker-tag">
+          <span class="speaker-dot"></span>
+          <span>Christopher Veliz &bull; Demostración</span>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card" style="justify-content: center; align-items: center; border: 2px dashed var(--sonar-cyan); background: rgba(14,27,42,0.5);">
+          <!-- MARCO PARA VIDEO DE YOUTUBE -->
+          <div style="text-align: center; padding: 30px;">
+            <div style="font-size: 4rem; color: var(--danger-red); margin-bottom: 12px;">▶</div>
+            <h3 style="color:#fff; font-size: 1.8rem; margin-bottom: 8px;">ESPACIO PARA VIDEO / DEMO DE YOUTUBE</h3>
+            <p style="color: var(--sonar-cyan); font-family: 'JetBrains Mono'; font-size: 1.1rem; margin-bottom: 16px;">
+              [ Inserción de Enlace o Reproductor Embebido ]
+            </p>
+            <span style="background: rgba(230,57,70,0.2); border: 1px solid var(--danger-red); color: #fff; padding: 6px 18px; border-radius: 20px; font-size: 0.9rem;">
+              Capturado con TrailerCinematicSequencer.cs en Unity 6
+            </span>
+          </div>
+        </div>
+
+        <div class="card highlight">
+          <h3>Estructura del Trailer Cinemático</h3>
+          <ul>
+            <li><strong>0:00 - 0:20 | La Amenaza:</strong> Tomas satelitales en penumbra, barcos nodriza apagando el transpondedor AIS en el límite de las 200 millas.</li>
+            <li><strong>0:20 - 0:45 | Búsqueda Táctica:</strong> Lancha de la inspectora saltando sobre oleaje Douglas con el sonar trazando la silueta submarina.</li>
+            <li><strong>0:45 - 1:15 | Abordaje Silencioso:</strong> Elena sube por la escala de gato, esquiva conos de vigilancia y fotografía la bodega repleta de aletas de tiburón.</li>
+            <li><strong>1:15 - 1:30 | Resolución Judicial:</strong> Sellado del expediente en el Maletín Forense y orden de retención portuaria confirmada.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>KAIROS: SOMBRAS EN ALTAMAR &bull; VIDEO REEL</span>
+      <span>DIAPOSITIVA 10 / 12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: ENLACES DEL PROYECTO -->
+  <section class="slide" id="slide-11">
+    <div class="slide-content">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <span class="slide-num">11</span>
+          <h2 class="slide-title">Enlaces Oficiales & Repositorios</h2>
+        </div>
+        <div class="speaker-tag">
+          <span class="speaker-dot"></span>
+          <span>Equipo KAIROS</span>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Repositorio & Gestión Técnica</h3>
+          <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 10px;">
+            <div style="background: rgba(4,8,14,0.6); padding: 14px 18px; border-radius: 8px; border-left: 3px solid var(--sonar-cyan);">
+              <div style="font-family: 'JetBrains Mono'; color: var(--sonar-cyan); font-weight: bold; font-size: 0.95rem;">GITHUB OFICIAL:</div>
+              <div style="font-size: 1.15rem; color: #fff; word-break: break-all;">https://github.com/Efustion23/Kairos_Videojuego.git</div>
+            </div>
+            <div style="background: rgba(4,8,14,0.6); padding: 14px 18px; border-radius: 8px; border-left: 3px solid var(--radar-amber);">
+              <div style="font-family: 'JetBrains Mono'; color: var(--radar-amber); font-weight: bold; font-size: 0.95rem;">RAMA DE TRABAJO (UI / NARRATIVA):</div>
+              <div style="font-size: 1.15rem; color: #fff; word-break: break-all;">feature/alexander-ui-narrativa</div>
+            </div>
+            <div style="background: rgba(4,8,14,0.6); padding: 14px 18px; border-radius: 8px; border-left: 3px solid var(--sealed-green);">
+              <div style="font-family: 'JetBrains Mono'; color: var(--sealed-green); font-weight: bold; font-size: 0.95rem;">MOTOR Y VERSIÓN:</div>
+              <div style="font-size: 1.15rem; color: #fff;">Unity 6 (6000.3.24f1) &bull; Pipeline Universal RP</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card highlight">
+          <h3>Documentación & Entregables Académicos</h3>
+          <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 10px;">
+            <div style="background: rgba(4,8,14,0.6); padding: 14px 18px; border-radius: 8px; border-left: 3px solid var(--sonar-cyan);">
+              <div style="font-family: 'JetBrains Mono'; color: var(--sonar-cyan); font-weight: bold; font-size: 0.95rem;">GAME DESIGN DOCUMENT (GDD):</div>
+              <div style="font-size: 1.05rem; color: var(--text-dim);">Disponible en docs/GDD_RESUMEN_EJECUTIVO.md</div>
+            </div>
+            <div style="background: rgba(4,8,14,0.6); padding: 14px 18px; border-radius: 8px; border-left: 3px solid var(--radar-amber);">
+              <div style="font-family: 'JetBrains Mono'; color: var(--radar-amber); font-weight: bold; font-size: 0.95rem;">MANUAL OPERATIVO & GUIÓN DE PITCH:</div>
+              <div style="font-size: 1.05rem; color: var(--text-dim);">Disponible en docs/PRESENTACION_KAIROS.html</div>
+            </div>
+            <div style="background: rgba(4,8,14,0.6); padding: 14px 18px; border-radius: 8px; border-left: 3px solid var(--sealed-green);">
+              <div style="font-family: 'JetBrains Mono'; color: var(--sealed-green); font-weight: bold; font-size: 0.95rem;">ESTÁNDAR ODS:</div>
+              <div style="font-size: 1.05rem; color: var(--text-dim);">Alineado con ODS 14 (Vida Submarina) y ODS 8 (Trabajo Decente)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>KAIROS: SOMBRAS EN ALTAMAR &bull; DOCUMENTACIÓN COMPLETA</span>
+      <span>DIAPOSITIVA 11 / 12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 12: CIERRE Y PREGUNTAS -->
+  <section class="slide" id="slide-12">
+    <div class="slide-content" style="justify-content: center; align-items: center; text-align: center;">
+      <div style="margin-bottom: 24px;">
+        <span class="badge-ods" style="font-size: 1.2rem; padding: 8px 24px;">
+          ⚖️ JUSTICIA EN AGUAS INTERNACIONALES
+        </span>
+      </div>
+      <h1 style="font-family: 'Chakra Petch', sans-serif; font-size: 5rem; font-weight: 800; color: #fff; margin-bottom: 16px; text-shadow: 0 0 30px rgba(63,224,208,0.5);">
+        GRACIAS POR SU ATENCIÓN
+      </h1>
+      <p style="font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; color: var(--sonar-cyan); margin-bottom: 50px;">
+        ¿PREGUNTAS DEL JURADO ACADÉMICO?
+      </p>
+
+      <div style="display: flex; gap: 40px; background: rgba(14, 27, 42, 0.85); border: 1px solid var(--border-cyan); padding: 24px 60px; border-radius: 16px;">
+        <div>
+          <div style="color: var(--sonar-cyan); font-family: 'JetBrains Mono'; font-size: 1rem;">ALEXANDER BENITES</div>
+          <div style="font-size: 0.9rem; color: var(--text-dim);">UI/UX & Narrativa Forense</div>
+        </div>
+        <div style="width: 2px; background: rgba(63,224,208,0.2);"></div>
+        <div>
+          <div style="color: var(--sonar-cyan); font-family: 'JetBrains Mono'; font-size: 1rem;">DIEGO TORNERO</div>
+          <div style="font-size: 0.9rem; color: var(--text-dim);">Gameplay, Físicas & IA</div>
+        </div>
+        <div style="width: 2px; background: rgba(63,224,208,0.2);"></div>
+        <div>
+          <div style="color: var(--sonar-cyan); font-family: 'JetBrains Mono'; font-size: 1rem;">CHRISTOPHER VELIZ</div>
+          <div style="font-size: 0.9rem; color: var(--text-dim);">Arte 3D, Iluminación & Audio</div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>KAIROS: SOMBRAS EN ALTAMAR &bull; INVESTIGACIÓN ACADÉMICA 2026</span>
+      <span>DIAPOSITIVA 12 / 12</span>
+    </div>
+  </section>
+
+</body>
+</html>
