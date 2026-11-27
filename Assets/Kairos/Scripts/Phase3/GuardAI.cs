@@ -21,6 +21,7 @@ namespace Kairos
         // Velocidades que casan con los clips de Mixamo a 1,80 m (caminar 1,3 · trote · carrera).
         const float PatrolSpeed = 1.35f, InvestigateSpeed = 1.1f, SearchSpeed = 2.6f, ChaseSpeed = 3.8f;
         const float ShoutRadius = 14f;
+        static readonly Color CalmFan = new Color(1f, .93f, .72f);
 
         NavMeshAgent agent;
         VisionFan fan;
@@ -216,7 +217,8 @@ namespace Kairos
             }
 
             TurnBeforeWalking();
-            fan.SetColor(state == GuardState.Tranquilo ? Pal.Sonar : state == GuardState.Sospecha ? Pal.DeckLight : Pal.Danger);
+            // En calma, el tono de su linterna (el cian es el de la ruta y se confundían); naranja si sospecha, rojo en alerta.
+            fan.SetColor(state == GuardState.Tranquilo ? CalmFan : state == GuardState.Sospecha ? Pal.DeckLight : Pal.Danger);
             bool alert = state == GuardState.Alerta || state == GuardState.Busqueda;
             SendMessage("SetAlert", alert, SendMessageOptions.DontRequireReceiver);
         }

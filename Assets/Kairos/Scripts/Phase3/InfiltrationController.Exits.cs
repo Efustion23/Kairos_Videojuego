@@ -26,6 +26,7 @@ namespace Kairos
 
         public void CloseOverlay()
         {
+            if (player.motion != null) player.motion.lookTarget = null;
             PlaceToast(false);
             UI.Clear(overlay);
             overlay.gameObject.SetActive(false);

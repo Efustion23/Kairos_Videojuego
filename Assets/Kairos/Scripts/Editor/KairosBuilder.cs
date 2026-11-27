@@ -431,7 +431,7 @@ namespace Kairos.EditorTools
             guards.Add(bodega);
 
             var habilitacion = G("Guardia de habilitación", darkMetal, new[] {
-                new Vector3(0, 6, -18), new Vector3(0, 6, -2), new Vector3(3.2f, 6, -8), new Vector3(1.6f, 6, 4), new Vector3(5.8f, 6, 3), new Vector3(0, 6, -22), new Vector3(0, 6, -10) });
+                new Vector3(0, 6, -18), new Vector3(0, 6, -2), new Vector3(3.2f, 6, -8), new Vector3(1.6f, 6, 4), new Vector3(4.3f, 6, 3.6f), new Vector3(0, 6, -22), new Vector3(0, 6, -10) });
             habilitacion.minWaitTime = 1.6f; habilitacion.maxWaitTime = 3.0f;
             guards.Add(habilitacion);
 

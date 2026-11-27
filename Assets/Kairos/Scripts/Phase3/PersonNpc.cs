@@ -47,15 +47,24 @@ namespace Kairos
             }
         }
 
+        int trailIdx = -1; // por qué punto de tu rastro va
+        Vector3 lastDest = Vector3.positiveInfinity;
+        public void ShiftTrail(int n) { if (trailIdx >= 0) trailIdx = Mathf.Max(0, trailIdx - n); }
+        public void ResetTrail() => trailIdx = -1;
+
         void Update()
         {
             var I = InfiltrationController.I;
-            if (motion != null) motion.talking = I != null && I.mode == InfiltrationController.Mode.Dialog && I.DialogWith == this;
-            if (I == null || agent == null || !agent.isOnNavMesh) return;
+            bool talking = I != null && I.mode == InfiltrationController.Mode.Dialog && I.DialogWith == this;
             if (motion != null)
             {
-                motion.downed = Captive; // al abrirse la celda se pone de pie
+                motion.talking = talking;
+                // Si sigue encerrado, al hablar se pone de pie y luego vuelve a sentarse.
+                motion.downed = Captive && !talking;
+                motion.lookTarget = talking && I != null ? Head(I.player.transform, I.player.Crouching) : (Vector3?)null;
             }
+            if (talking && I.player.motion != null) I.player.motion.lookTarget = Head(transform, motion != null && motion.downed);
+            if (I == null || agent == null || !agent.isOnNavMesh) return;
             if (State.following)
             {
                 var player = I.player;
@@ -63,17 +72,62 @@ namespace Kairos
                 bool hide = player.Crouching || GuardAlertNear(10f);
                 if (motion != null) motion.stealthCrouch = hide;
                 agent.speed = hide ? 1.6f : Game.Has(2, 3) ? 4.4f : 3.1f;
-                // Cada uno a su distancia: en fila detrás de ti, no amontonados encima.
-                int idx = Mathf.Max(0, I.Followers.IndexOf(this));
-                agent.stoppingDistance = 1.8f + idx * 1.1f;
-                agent.SetDestination(player.transform.position);
-                if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + .1f) FaceTowards(player.transform.position);
+                FollowTrail(I, player);
             }
             else
             {
+                trailIdx = -1;
                 if (motion != null) motion.stealthCrouch = false;
                 if (agent.hasPath) agent.ResetPath();
             }
+        }
+
+        static Vector3 Head(Transform t, bool low) => t.position + Vector3.up * (low ? 1.05f : 1.62f);
+
+        /// Va por tu rastro, punto a punto y en fila: cada uno se queda a su distancia detrás de ti.
+        /// Si aún está lejos del rastro (recién liberado), primero se acerca por el camino más corto.
+        void FollowTrail(InfiltrationController I, PlayerAgent player)
+        {
+            var trail = I.Trail;
+            int idx = Mathf.Max(0, I.Followers.IndexOf(this));
+            float keep = 1.8f + idx * 1.1f;
+            agent.stoppingDistance = .3f;
+            if (trail.Count == 0) { Go(player.transform.position, keep); return; }
+
+            // Último punto del rastro que queda al menos 'keep' metros por detrás de ti.
+            int limit = trail.Count - 1; float behind = Vector3.Distance(player.transform.position, trail[limit]);
+            while (limit > 0 && behind < keep) { behind += Vector3.Distance(trail[limit], trail[limit - 1]); limit--; }
+
+            if (trailIdx < 0)
+            {
+                // Engancharse al punto del rastro más cercano (de los recientes); si no hay ninguno cerca, ir directo.
+                float best = 36f;
+                for (int i = Mathf.Max(0, trail.Count - 150); i < trail.Count; i++)
+                {
+                    float d = (trail[i] - transform.position).sqrMagnitude;
+                    if (d < best) { best = d; trailIdx = i; }
+                }
+                if (trailIdx < 0) { Go(player.transform.position, keep); return; }
+            }
+            while (trailIdx < limit && (trail[trailIdx] - transform.position).sqrMagnitude < 1.4f) trailIdx++;
+            if (trailIdx > limit) trailIdx = limit;
+
+            bool arrived = trailIdx == limit && (trail[limit] - transform.position).sqrMagnitude < .5f;
+            if (arrived) { if (agent.hasPath) agent.ResetPath(); lastDest = Vector3.positiveInfinity; FaceTowards(player.transform.position); }
+            else Go(trail[trailIdx], 0);
+        }
+
+        void Go(Vector3 dest, float stop)
+        {
+            if (stop > 0 && (dest - transform.position).sqrMagnitude < stop * stop)
+            {
+                if (agent.hasPath) agent.ResetPath();
+                FaceTowards(dest);
+                return;
+            }
+            if ((dest - lastDest).sqrMagnitude < .01f && agent.hasPath) return; // no recalcular la ruta cada frame
+            lastDest = dest;
+            agent.SetDestination(dest);
         }
 
         bool GuardAlertNear(float radius)

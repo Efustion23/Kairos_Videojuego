@@ -9,24 +9,29 @@ namespace Kairos
         bool Pending(string id) { var e = Prop(id); return e != null && e.gameObject.activeSelf && !Game.HasEvidence(id); }
 
         /// El camino mínimo para llegar al tribunal con la cadena completa y, al menos, una Orden de Retención.
+        /// Primero las pruebas (facturas, manifiesto, compartimento) y después el rescate: así no recorres
+        /// la habilitación con toda la tripulación detrás, y la salida por popa queda como último paso.
         void UpdateObjective()
         {
             objTarget = exitZone;
             objective = "Vuelve a popa y baja a la lancha con quienes te siguen";
+            // 1. Pruebas documentales
             if (Pending("e_facturas"))
             {
                 if (DoorFirst("maquinas", "Abre la reja de la sala de máquinas, en el pasillo inferior")) return;
                 objective = "Fotografía las facturas en la sala de máquinas"; objTarget = Prop("e_facturas").transform; return;
             }
-            if (DoorFirst("babor", "Abre la escotilla de babor, en el pasillo inferior")) return;
-            if (Pending("e_celda")) { objective = "Fotografía el compartimento oculto"; objTarget = Prop("e_celda").transform; return; }
-            foreach (var n in people)
-                if (n.personId != "rodel" && !n.State.rescued && !n.State.following) { objective = $"Habla con {n.Def.name} y ofrécele salir contigo"; objTarget = n.transform; return; }
             if (Pending("e_manifiesto"))
             {
                 if (DoorFirst("oficial", "Abre la puerta del camarote del oficial, en la habilitación")) return;
                 objective = "Fotografía el manifiesto en el camarote del oficial"; objTarget = Prop("e_manifiesto").transform; return;
             }
+            // 2. El compartimento oculto: la prueba de dónde los tienen
+            if (DoorFirst("babor", "Abre la escotilla de babor, en el pasillo inferior")) return;
+            if (Pending("e_celda")) { objective = "Fotografía el compartimento oculto"; objTarget = Prop("e_celda").transform; return; }
+            // 3. Rescate: cada persona decide si sale contigo; luego, quien queda en el comedor
+            foreach (var n in people)
+                if (n.personId != "rodel" && !n.State.rescued && !n.State.following) { objective = $"Habla con {n.Def.name} y ofrécele salir contigo"; objTarget = n.transform; return; }
             var rodel = System.Array.Find(people, n => n.personId == "rodel");
             if (rodel != null && !rodel.State.rescued && !rodel.State.following) { objective = $"Habla con {rodel.Def.name}, en el comedor"; objTarget = rodel.transform; }
         }
