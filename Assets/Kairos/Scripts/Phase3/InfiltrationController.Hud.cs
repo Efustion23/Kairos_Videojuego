@@ -150,7 +150,7 @@ namespace Kairos
             Offer("hold", "Mantén pulsado E para usar lo que tienes delante.", near != null && near.Hold > 0);
             Offer("talk", "Pulsa E para hablar. Cada persona decide por sí misma.", near is PersonNpc);
             Offer("tool", "Guardia al alcance: pulsa Q para aturdirlo. Solo una vez, y sin heridas.", nearestGuard < 3f && !C.stunUsed);
-            Offer("cone", "Las zonas de color son lo que ve cada guardia. Evítalas: si no te ven, no pasa nada.", nearestGuard < 14f);
+            Offer("cone", "La zona clara del suelo es lo que ve ese guardia (naranja: sospecha · rojo: te busca). Rodéala y no te verá.", nearestGuard < 14f);
             Offer("crouch", "Pulsa C o Ctrl para agacharte: reduces tu ruido y visibilidad ante los guardias.", nearestGuard < 16f);
             Offer("visor", "Pulsa F: el visor muestra guardias, personas y pruebas a través de las paredes.");
             Offer("run", "Mantén Shift para correr. Es más rápido, pero hace ruido.");
