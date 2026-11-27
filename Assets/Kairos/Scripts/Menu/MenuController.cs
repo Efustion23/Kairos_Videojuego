@@ -224,7 +224,9 @@ namespace Kairos
 
         static string PhaseTipFor(int phase, int sector) => phase == 4
             ? $"Objetivo ahora: conecta las pruebas en el grafo hasta {CaseData.NodesFor(sector)[5].name} y ejecuta la sentencia."
-            : PhaseTips[Mathf.Clamp(phase, 1, 6)];
+            : phase == 3 && Game.C.boarded // la partida sigue a bordo: no hay que volver a abordar
+                ? "Objetivo ahora: sigues a bordo. Reúne al menos 1 prueba A y saca a la tripulación por popa."
+                : PhaseTips[Mathf.Clamp(phase, 1, 6)];
 
         static readonly string[] SectorArtKeys = { "UI/sector_atlantico", "UI/sector_guinea", "UI/sector_indico" };
 
@@ -284,7 +286,8 @@ namespace Kairos
             if (c.phase >= 6)
                 UI.Btn(actions, "REPETIR CASO (conservas mejoras)", () => { Game.StartCase(c.sector); Game.GoToPhase(1); }, Pal.Sonar, 20, 60);
             else
-                UI.Btn(actions, "DESPLEGAR  ·  " + PhaseNames[c.phase].ToUpperInvariant(), () => Game.GoToPhase(c.phase), Pal.Sealed, 20, 60);
+                // Sin el "Fase N:" el botón cabe en una línea; si sigues a bordo, vuelves al buque.
+                UI.Btn(actions, c.phase == 3 && c.boarded ? "VOLVER A BORDO" : "DESPLEGAR  ·  " + PhaseNames[c.phase].Substring(PhaseNames[c.phase].IndexOf(':') + 1).Trim().ToUpperInvariant(), () => Game.GoToPhase(c.phase), Pal.Sealed, 20, 60);
             var guideBtn = UI.Btn(actions, "Guía y controles", () => OpenTab(1), Pal.Sonar, 18, 60);
             guideBtn.gameObject.GetComponent<LayoutElement>().preferredWidth = 240;
 
