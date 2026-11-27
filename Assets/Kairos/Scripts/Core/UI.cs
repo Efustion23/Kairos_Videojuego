@@ -295,6 +295,7 @@ namespace Kairos
             var t = Text(r, label, size, textCol, TextAlignmentOptions.Center, true);
             t.margin = new Vector4(12, 2, 12, 2);
             t.textWrappingMode = TextWrappingModes.Normal;
+            r.gameObject.AddComponent<DimWhenDisabled>().button = b;
             var le = r.gameObject.AddComponent<LayoutElement>();
             le.minHeight = height; le.preferredHeight = height;
             return b;
@@ -390,6 +391,16 @@ namespace Kairos
         }
 
         /// Mensaje breve que se desvanece.
+        /// El tinte de Unity solo oscurece el fondo: borde y texto seguían brillando y un botón desactivado
+        /// parecía que no respondía. Así se apaga entero.
+        public class DimWhenDisabled : MonoBehaviour
+        {
+            public Button button;
+            CanvasGroup group;
+            void Awake() => group = gameObject.AddComponent<CanvasGroup>();
+            void LateUpdate() { if (button != null) group.alpha = button.interactable ? 1f : .4f; }
+        }
+
         public class Toasts : MonoBehaviour
         {
             TextMeshProUGUI text; float until;

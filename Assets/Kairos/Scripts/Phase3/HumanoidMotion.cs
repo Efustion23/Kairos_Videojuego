@@ -8,6 +8,9 @@ namespace Kairos
     {
         public Animator animator;
         [System.NonSerialized] public bool busy, aiming, typing, talking, stealthCrouch;
+        /// En el suelo: se arrodilla y queda agachado (guardia aturdido, persona retenida en su celda).
+        /// Al quitarlo se levanta. 'downedQuick' salta el arrodillarse (al cargar la escena ya están así).
+        [System.NonSerialized] public bool downed, downedQuick;
         /// Cuenta las pisadas: PlayerAgent hace sonar y oír cada paso cuando el pie toca el suelo.
         public int Steps { get; private set; }
 
@@ -17,8 +20,8 @@ namespace Kairos
 
         Transform body, footL, footR;
         Vector3 last;
-        float lastYaw, speed, torsoWeight, aimWeight, stunT, kneelT, pelvis, crouchDrop;
-        bool leftAhead, kneeling, crouched;
+        float lastYaw, speed, torsoWeight, aimWeight, stunT, kneelT, pelvis, crouchDrop, downT;
+        bool leftAhead, kneeling, crouched, wasDowned, downCrouched;
         string torsoState, turnState;
 
         void Awake()
@@ -61,10 +64,28 @@ namespace Kairos
             float yawRate = Mathf.DeltaAngle(lastYaw, body.eulerAngles.y) / dt;
             lastYaw = body.eulerAngles.y;
 
+            UpdateDowned(dt);
             UpdateKneel(dt);
-            if (!kneeling) UpdateTurn(yawRate);
+            if (!kneeling && !downed) UpdateTurn(yawRate);
             UpdateTorso(dt);
             aimWeight = Mathf.MoveTowards(aimWeight, aiming ? 1 : 0, dt * 6f);
+        }
+
+        void UpdateDowned(float dt)
+        {
+            if (downed != wasDowned)
+            {
+                wasDowned = downed;
+                downCrouched = false; turnState = null;
+                if (downed && downedQuick) { downCrouched = true; animator.CrossFadeInFixedTime("Crouch", .05f, 0); }
+                else if (downed) { downT = 1.4f; animator.CrossFadeInFixedTime("Kneel", .3f, 0); }
+                else animator.CrossFadeInFixedTime("Locomotion", .6f, 0); // se levanta despacio
+                downedQuick = false;
+                return;
+            }
+            if (!downed || downCrouched) return;
+            downT -= dt;
+            if (downT <= 0) { downCrouched = true; animator.CrossFadeInFixedTime("Crouch", .4f, 0); }
         }
 
         void UpdateKneel(float dt)
@@ -99,7 +120,8 @@ namespace Kairos
         {
             stunT = Mathf.Max(0, stunT - dt);
             // El aturdidor es un dispositivo: se acciona con la mano, sin golpear a nadie.
-            string want = kneeling ? null : stunT > 0 ? "Use" : talking ? "Talk" : busy ? (typing ? "Type" : "Use") : null;
+            // En el suelo solo habla (el clip de hablar es sentado); nada de pulsar botones.
+            string want = kneeling ? null : downed ? (talking ? "Talk" : null) : stunT > 0 ? "Use" : talking ? "Talk" : busy ? (typing ? "Type" : "Use") : null;
             if (want != torsoState)
             {
                 torsoState = want;
@@ -127,7 +149,7 @@ namespace Kairos
             // Los clips asumen suelo plano a la altura del personaje: se corrige en rampas y bordes.
             float dl = FootOffset(AvatarIKGoal.LeftFoot), dr = FootOffset(AvatarIKGoal.RightFoot);
             pelvis = Mathf.Lerp(pelvis, Mathf.Min(0, Mathf.Min(dl, dr)), .2f);
-            crouchDrop = Mathf.Lerp(crouchDrop, (stealthCrouch && !kneeling) ? -.26f : 0f, .18f);
+            crouchDrop = Mathf.Lerp(crouchDrop, (stealthCrouch && !kneeling && !downed) ? -.26f : 0f, .18f);
             animator.bodyPosition += Vector3.up * (pelvis + crouchDrop);
             Plant(AvatarIKGoal.LeftFoot, dl);
             Plant(AvatarIKGoal.RightFoot, dr);
