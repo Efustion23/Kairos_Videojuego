@@ -58,22 +58,71 @@ namespace Kairos.EditorTools
             return m;
         }
 
+        /// Escaleras interiores de la habilitación (x0, x1, z0, z1), con la parte alta a proa (z1):
+        /// babor baja del comedor al pañol y estribor del camarote de literas a la bodega A.
+        /// Dentro hay sitio para 1 m de ancho sin estrechar los pasos exteriores de babor y estribor.
+        static readonly (float x0, float x1, float z0, float z1)[] InteriorStairs = { (-4.9f, -3.9f, -11.8f, -7.6f), (1.4f, 2.4f, -11.8f, -7.6f) };
+
         static Mesh DeckMesh()
         {
             var acc = new MeshAcc();
             var st = Stations();
             for (int i = 0; i < st.Length - 1; i++)
             {
-                float z0 = st[i], z1 = st[i + 1], b0 = Beam(z0), b1 = Beam(z1);
-                bool hole = (z0 >= -36 && z1 <= -30) || (z0 >= 21 && z1 <= 27);
-                float c0 = Mathf.Min(1.25f, b0), c1 = Mathf.Min(1.25f, b1);
-                void Strip(float xa0, float xb0, float xa1, float xb1) =>
-                    acc.Quad(new Vector3(xa0, 6, z0), new Vector3(xb0, 6, z0), new Vector3(xb1, 6, z1), new Vector3(xa1, 6, z1), Vector3.up);
-                Strip(-b0, -c0, -b1, -c1);
-                if (!hole) Strip(-c0, c0, -c1, c1);
-                Strip(c0, b0, c1, b1);
+                // Cada tramo entre estaciones se parte en los bordes de las escaleras que caigan dentro.
+                var zs = new List<float> { st[i], st[i + 1] };
+                foreach (var h in InteriorStairs)
+                    foreach (var zc in new[] { h.z0, h.z1 })
+                        if (zc > st[i] && zc < st[i + 1]) zs.Add(zc);
+                zs.Sort();
+                for (int k = 0; k < zs.Count - 1; k++)
+                {
+                    float z0 = zs[k], z1 = zs[k + 1], b0 = Beam(z0), b1 = Beam(z1);
+                    bool hole = (z0 >= -36 && z1 <= -30) || (z0 >= 21 && z1 <= 27);
+                    float c0 = Mathf.Min(1.25f, b0), c1 = Mathf.Min(1.25f, b1);
+                    void Strip(float xa0, float xb0, float xa1, float xb1) =>
+                        acc.Quad(new Vector3(xa0, 6, z0), new Vector3(xb0, 6, z0), new Vector3(xb1, 6, z1), new Vector3(xa1, 6, z1), Vector3.up);
+                    // Banda lateral, con el hueco de la escalera si cae aquí (en esa zona la manga es constante: 7 m).
+                    void Side(float xa0, float xb0, float xa1, float xb1)
+                    {
+                        foreach (var h in InteriorStairs)
+                            if (z0 >= h.z0 - .001f && z1 <= h.z1 + .001f && h.x0 >= Mathf.Min(xa0, xb0) && h.x1 <= Mathf.Max(xa0, xb0))
+                            {
+                                Strip(xa0, h.x0, xa1, h.x0);
+                                Strip(h.x1, xb0, h.x1, xb1);
+                                return;
+                            }
+                        Strip(xa0, xb0, xa1, xb1);
+                    }
+                    Side(-b0, -c0, -b1, -c1);
+                    if (!hole) Strip(-c0, c0, -c1, c1);
+                    Side(c0, b0, c1, b1);
+                }
             }
             return acc.ToMesh("HaiFeng_Deck");
+        }
+
+        /// Losa horizontal partida en cajas para dejar libres los huecos (el techo de la cubierta inferior).
+        static void SlabWithHoles(ShipBuild b, Material m, float y, float h, float x0, float x1, float z0, float z1, (float x0, float x1, float z0, float z1)[] holes)
+        {
+            var zs = new List<float> { z0, z1 };
+            foreach (var o in holes) { zs.Add(Mathf.Clamp(o.z0, z0, z1)); zs.Add(Mathf.Clamp(o.z1, z0, z1)); }
+            zs.Sort();
+            for (int i = 0; i < zs.Count - 1; i++)
+            {
+                float za = zs[i], zb = zs[i + 1];
+                if (zb - za < .01f) continue;
+                float cur = x0;
+                var cuts = new List<(float, float)>();
+                foreach (var o in holes) if (za >= o.z0 && zb <= o.z1) cuts.Add((o.x0, o.x1));
+                cuts.Sort((p, q) => p.Item1.CompareTo(q.Item1));
+                foreach (var (cx0, cx1) in cuts)
+                {
+                    if (cx0 > cur) b.Box(m, new Vector3((cur + cx0) / 2, y, (za + zb) / 2), new Vector3(cx0 - cur, h, zb - za));
+                    cur = Mathf.Max(cur, cx1);
+                }
+                if (x1 > cur) b.Box(m, new Vector3((cur + x1) / 2, y, (za + zb) / 2), new Vector3(x1 - cur, h, zb - za));
+            }
         }
 
         // ---------- Constructor del buque ----------
@@ -256,15 +305,19 @@ namespace Kairos.EditorTools
             // --- Cubierta inferior ---
             float y0 = 3f, y1 = 5.95f;
             b.Box(floor, new Vector3(0, 2.9f, -4.5f), new Vector3(13.8f, .2f, 51f));
-            b.Box(darkMetal, new Vector3(0, 5.97f, -4.5f), new Vector3(13.8f, .06f, 51f));
+            SlabWithHoles(b, darkMetal, 5.97f, .06f, -6.9f, 6.9f, -30f, 21f, InteriorStairs);
 
             // Pasillo central y mamparos
             b.WallZ(steel, 1.25f, -30, 21, y0, y1, -21, -6, 12);
             b.WallZ(steel, -1.25f, -30, 21, y0, y1, -20, -10, 2, 16);
             b.WallZ(steel, 6.8f, -30, 21, y0, y1);
             b.WallZ(steel, -6.8f, -30, 21, y0, y1);
-            foreach (var z in new[] { -28f, -14f, 4f, 21f }) b.WallX(steel, z, 1.25f, 6.8f, y0, y1);
-            foreach (var z in new[] { -28f, -14f, 10f, 21f }) b.WallX(steel, z, -6.8f, -1.25f, y0, y1);
+            // Puertas laterales (bodega A <-> B a estribor, rancho <-> pañol a babor): rutas paralelas al pasillo
+            // central. Ninguna da a máquinas ni a K4, que siguen cerradas con llave.
+            foreach (var z in new[] { -28f, -14f, 21f }) b.WallX(steel, z, 1.25f, 6.8f, y0, y1);
+            b.WallX(steel, 4f, 1.25f, 6.8f, y0, y1, 2.6f);
+            foreach (var z in new[] { -28f, 10f, 21f }) b.WallX(steel, z, -6.8f, -1.25f, y0, y1);
+            b.WallX(steel, -14f, -6.8f, -1.25f, y0, y1, -2.2f);
             b.WallX(steel, -6f, -6.8f, -1.25f, y0, y1, -4f); // puerta de servicio K4 <-> pañol
             b.WallX(steel, -30f, 1.25f, 6.8f, y0, y1);
             b.WallX(steel, -30f, -6.8f, -1.25f, y0, y1);
@@ -276,6 +329,24 @@ namespace Kairos.EditorTools
             foreach (var zc in new[] { -33f, 24f })
                 foreach (var x in new[] { -1.3f, 1.3f })
                     b.Box(steel, new Vector3(x, 5.0f, zc), new Vector3(.15f, 3.9f, 6f));
+
+            // Escaleras interiores (comedor -> pañol, literas -> bodega A): otra forma de bajar sin usar
+            // las rampas de proa y popa. Arriba a proa (z1), bajan hacia popa; 35° y 1 m de ancho.
+            foreach (var s in InteriorStairs)
+            {
+                float run = s.z1 - s.z0, ang = Mathf.Atan2(3f, run) * Mathf.Rad2Deg, len = Mathf.Sqrt(9f + run * run);
+                float cx = (s.x0 + s.x1) / 2, cz = (s.z0 + s.z1) / 2, wid = s.x1 - s.x0;
+                b.Box(floor, new Vector3(cx, 4.5f, cz), new Vector3(wid, .18f, len), new Vector3(-ang, 0, 0));
+                for (float k = .45f; k < run; k += .45f) // peldaños antideslizantes
+                    b.Box(darkMetal, new Vector3(cx, 6 - k * 3f / run + .1f, s.z1 - k), new Vector3(wid, .03f, .06f), null, false);
+                // Barandilla a los dos lados y en el extremo bajo; se entra por la parte alta (proa).
+                foreach (var rx in new[] { s.x0 - .03f, s.x1 + .03f })
+                {
+                    b.Box(steel, new Vector3(rx, 6.5f, (s.z0 + s.z1 - .3f) / 2), new Vector3(.06f, 1f, run - .3f));
+                    b.Pipe(darkMetal, new Vector3(rx, 7.02f, s.z0), new Vector3(rx, 7.02f, s.z1 - .3f), .04f, 6);
+                }
+                b.Box(steel, new Vector3(cx, 6.5f, s.z0), new Vector3(wid + .06f, 1f, .06f));
+            }
 
             // Máquinas: K1, compresores, zona segura para la cortadora
             b.Box(darkMetal, new Vector3(4.3f, 4.1f, -24.5f), new Vector3(3f, 2.2f, 3.5f));
@@ -293,6 +364,10 @@ namespace Kairos.EditorTools
                         float cx = x + doorSide * (row == 0 ? 1.7f : .0f);
                         float h = 1.2f + ((int)(z * 7 + row * 3) % 3) * .6f;
                         if (row == 1 && Mathf.Abs(z - (zMin + zMax) / 2) < 2f) continue;
+                        bool onStairs = false; // la escalera de estribor llega a la bodega A: ahí no hay carga
+                        foreach (var s in InteriorStairs)
+                            if (cx + .85f > s.x0 - .1f && cx - .85f < s.x1 + .1f && z + 1f > s.z0 - .6f && z - 1f < s.z1 + .6f) onStairs = true;
+                        if (onStairs) continue;
                         b.Box(frozen, new Vector3(cx, y0 + h / 2, z), new Vector3(1.7f, h, 2f));
                     }
             }
@@ -313,7 +388,7 @@ namespace Kairos.EditorTools
             b.Lamp("Luz K4", new Vector3(-3.8f, 5.7f, 2), new Color(1f, .75f, .45f), 9, 1.6f);
 
             // Pañol y rancho inferior
-            b.Box(crate, new Vector3(-5.4f, 3.5f, -11f), new Vector3(2f, 1f, 3.5f));
+            b.Box(crate, new Vector3(-5.9f, 3.5f, -8f), new Vector3(1.6f, 1f, 2.4f)); // palés, fuera de la escalera del comedor
             b.Box(crate, new Vector3(-5.4f, 3.7f, -21f), new Vector3(2f, 1.4f, 5f));
             b.Lamp("Luz Rancho", new Vector3(-3.5f, 5.7f, -21), new Color(.9f, .85f, .7f), 9, 2f);
             b.Lamp("Luz Pasillo 1", new Vector3(0, 5.7f, -18), new Color(.95f, .85f, .65f), 9, 2f);
@@ -346,8 +421,9 @@ namespace Kairos.EditorTools
             b.Solid(new Vector3(-3.9f, 6.3f, -12.6f), new Vector3(2f, .6f, .9f));
             b.Solid(new Vector3(3.5f, 6.45f, -18.8f), new Vector3(2.4f, .9f, 1f));         // camarote oficial
             b.PropFit("metal_office_desk", new Vector3(3.5f, 6, -18.8f), 0, new Vector3(2.4f, .9f, 1f));
-            b.Solid(new Vector3(-3.4f, 6.4f, -5f), new Vector3(1.6f, .8f, 5f));            // comedor: deja paso junto a la puerta
-            foreach (var z in new[] { -6.25f, -3.75f }) b.PropFit("dining_table", new Vector3(-3.4f, 6, z), 90, new Vector3(2.5f, .8f, 1.6f));
+            // Comedor: deja paso junto a la puerta y delante de la escalera (empieza en z -7.6).
+            b.Solid(new Vector3(-3.4f, 6.4f, -3.8f), new Vector3(1.6f, .8f, 5f));
+            foreach (var z in new[] { -5.05f, -2.55f }) b.PropFit("dining_table", new Vector3(-3.4f, 6, z), 90, new Vector3(2.5f, .8f, 1.6f));
             foreach (var z in new[] { -10f, -6.5f, -3f, .5f }) b.Box(darkMetal, new Vector3(4.2f, 6.9f, z), new Vector3(1.3f, 1.8f, 2.2f)); // literas
             b.Lamp("Luz Hab 1", new Vector3(0, 8.8f, -15), new Color(.95f, .85f, .65f), 9, 2.2f);
             b.Lamp("Luz Hab 2", new Vector3(0, 8.8f, -4), new Color(.95f, .85f, .65f), 9, 2.2f);
@@ -356,16 +432,18 @@ namespace Kairos.EditorTools
             b.Lamp("Luz Comedor", new Vector3(-3, 8.8f, -5), new Color(1f, .8f, .55f), 8, 1.8f);
             b.Lamp("Luz Literas", new Vector3(3, 8.8f, -5), new Color(1f, .8f, .55f), 8, 1.4f);
 
-            // Rampa exterior al puente, por estribor
+            // Rampa exterior al puente: sube desde la proa (z 8) hasta el rellano (z 2), por delante de la habilitación.
+            // Antes ocupaba la banda de estribor y no se podía rodear la habilitación por ese lado.
             float bridgeRamp = Mathf.Atan2(3f, 6f) * Mathf.Rad2Deg;
-            b.Box(floor, new Vector3(6f, 7.5f, -11f), new Vector3(1.9f, .18f, rampLen), new Vector3(-bridgeRamp, 0, 0));
-            b.Solid(new Vector3(6f, 7f, -7.5f), new Vector3(2f, 2f, 1f));
-            b.Box(super, new Vector3(1, 9.6f, 2.05f), new Vector3(12.2f, 1f, .15f));
+            b.Box(floor, new Vector3(6f, 7.5f, 5f), new Vector3(1.9f, .18f, rampLen), new Vector3(bridgeRamp, 0, 0));
+            b.Solid(new Vector3(6f, 6.85f, 3.1f), new Vector3(1.9f, 1.7f, 2.2f)); // nadie se mete bajo la parte alta (sin asomar por la rampa)
+            b.Box(super, new Vector3(-.025f, 9.6f, 2.05f), new Vector3(10.15f, 1f, .15f)); // hueco para la rampa en x 5-7
+            b.Box(super, new Vector3(6.05f, 9.6f, -8.05f), new Vector3(2.1f, 1f, .15f));  // cierra el rellano por popa
             b.Box(super, new Vector3(0, 9.6f, -20.05f), new Vector3(10.2f, 1f, .15f));
             b.Box(super, new Vector3(-5.05f, 9.6f, -9), new Vector3(.15f, 1f, 22.2f));
             b.Box(super, new Vector3(7.05f, 9.6f, -3f), new Vector3(.15f, 1f, 10f));
             b.Box(super, new Vector3(5.05f, 9.6f, -14f), new Vector3(.15f, 1f, 12f));   // separa la rampa del techo
-            b.Box(super, new Vector3(7.05f, 8.3f, -11f), new Vector3(.15f, 3.8f, 6.2f)); // barandilla de la rampa
+            b.Box(super, new Vector3(7.05f, 8.3f, 5f), new Vector3(.15f, 3.8f, 6.2f)); // barandilla de la rampa
 
             // --- Puente (y 9-12) ---
             float by0 = 9.1f, by1 = 12f;
@@ -411,7 +489,7 @@ namespace Kairos.EditorTools
             b.Box(rust, new Vector3(-3.6f, 6.45f, 10), new Vector3(3.6f, .9f, 6));
             b.Box(rust, new Vector3(3.6f, 6.45f, 16), new Vector3(3.6f, .9f, 6));
             b.Box(crate, new Vector3(-3.8f, 6.7f, 19), new Vector3(2.2f, 1.4f, 2.4f));
-            b.Box(crate, new Vector3(3.8f, 6.7f, 6.5f), new Vector3(2.2f, 1.4f, 2.4f));
+            b.Box(crate, new Vector3(2.6f, 6.7f, 6.5f), new Vector3(2.2f, 1.4f, 2.4f)); // deja paso junto a la rampa del puente
             b.Box(crate, new Vector3(3f, 6.6f, 31), new Vector3(2.2f, 1.2f, 2.2f));
             b.Box(crate, new Vector3(-2.5f, 6.6f, 34), new Vector3(2f, 1.2f, 2f));
             if (kind == 0) PoteroGear(b);
@@ -478,9 +556,9 @@ namespace Kairos.EditorTools
         /// Palangrero (Sector 3): halador de línea a estribor, mesas de carnada, cajas de anzuelos y boyas de palangre.
         static void LonglinerGear(ShipBuild b)
         {
-            b.Box(darkMetal, new Vector3(6.1f, 6.9f, 9f), new Vector3(.9f, 1.8f, 1f));                       // halador (fuera de las rondas)
-            b.Pipe(steel, new Vector3(6.1f, 7.9f, 8.5f), new Vector3(6.1f, 7.9f, 9.5f), .38f, 12);               // rodillo
-            b.Pipe(rope, new Vector3(6.4f, 7.9f, 9f), new Vector3(7.2f, 5f, 9f), .03f, 4);                // línea al agua
+            b.Box(darkMetal, new Vector3(6.1f, 6.9f, 12f), new Vector3(.9f, 1.8f, 1f));                      // halador (fuera de las rondas y del pie de la rampa)
+            b.Pipe(steel, new Vector3(6.1f, 7.9f, 11.5f), new Vector3(6.1f, 7.9f, 12.5f), .38f, 12);             // rodillo
+            b.Pipe(rope, new Vector3(6.4f, 7.9f, 12f), new Vector3(7.2f, 5f, 12f), .03f, 4);              // línea al agua
             foreach (var z in new[] { 22f, 26.5f })
             {
                 b.Box(steel, new Vector3(-5.1f, 7f, z), new Vector3(1.1f, .08f, 3f), null, false);             // mesa de carnada
@@ -489,7 +567,7 @@ namespace Kairos.EditorTools
             }
             for (float z = -12; z <= -2; z += 2.5f)
                 b.Box(yellow, new Vector3(-6.05f, 6.3f, z), new Vector3(.7f, .6f, 1f), null, false);           // cajas de anzuelos
-            for (float z = 8; z <= 30; z += 5.5f)
+            for (float z = 13.5f; z <= 30; z += 5.5f)
             {
                 b.Ellipsoid(orange, new Vector3(5.9f, 7.2f, z), new Vector3(.32f, .32f, .32f));                // boyas de palangre
                 b.Box(darkMetal, new Vector3(5.9f, 8.2f, z), new Vector3(.04f, 1.6f, .04f), null, false);       // banderolas
@@ -522,6 +600,7 @@ namespace Kairos.EditorTools
                     foreach (var side in new[] { -1f, 1f })
                     {
                         if (z > -21 && z < 3) continue; // junto a la habilitación no caben
+                        if (side > 0 && z < 9.5f) continue; // ni donde sube la rampa del puente
                         float x = side * (Beam(z) - .05f);
                         b.Box(darkMetal, new Vector3(x, 7.45f, z), new Vector3(.3f, .32f, .5f), null, false);
                         b.Pipe(steel, new Vector3(x, 7.52f, z - .42f), new Vector3(x, 7.52f, z + .42f), .11f, 10);
@@ -563,8 +642,8 @@ namespace Kairos.EditorTools
                 b.Pipe(super, new Vector3(x, 12.1f, -13.4f), new Vector3(x, 12.4f, -13.4f), .16f, 8);
                 b.Ellipsoid(super, new Vector3(x, 12.4f + r * .9f, -13.4f), new Vector3(r, r * .95f, r));
             }
-            b.Box(super, new Vector3(6.05f, 9.35f, 9), new Vector3(1.8f, .1f, 4.6f), null, false);
-            foreach (var z in new[] { 6.9f, 11.1f })
+            b.Box(super, new Vector3(6.05f, 9.35f, 12), new Vector3(1.8f, .1f, 4.6f), null, false);
+            foreach (var z in new[] { 9.9f, 14.1f })
             {
                 b.Pipe(darkMetal, new Vector3(6.75f, 6, z), new Vector3(6.75f, 9.3f, z), .06f, 6);
                 b.Solid(new Vector3(6.75f, 7.6f, z), new Vector3(.15f, 3.2f, .15f));

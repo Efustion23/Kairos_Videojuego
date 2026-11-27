@@ -33,6 +33,8 @@ namespace Kairos
 
         static CaseState C => Game.C;
         public readonly List<PersonNpc> Followers = new List<PersonNpc>();
+        /// Rastro de tus pasos sobre la navmesh: quien te sigue va por donde tú pasaste, no por el atajo más corto.
+        public readonly List<Vector3> Trail = new List<Vector3>();
         float seaBase = 4f, jamT, distractT, creakT, heelT, nextHeel = 22f, nextCreak = 12f, lockT, burnT, patrolT = -1, visorT, visorCd, pathT, hintT;
         string hintId;
         Transform exitZone, objTarget;
@@ -220,6 +222,14 @@ namespace Kairos
         }
 
         /// Te atrapan: vuelves al último punto seguro con todo lo que llevas.
+        void RecordTrail()
+        {
+            if (!NavMesh.SamplePosition(player.transform.position, out var hit, 1f, NavMesh.AllAreas)) return;
+            if (Trail.Count > 0 && (Trail[Trail.Count - 1] - hit.position).sqrMagnitude < .64f) return;
+            Trail.Add(hit.position);
+            if (Trail.Count > 400) { Trail.RemoveRange(0, 100); foreach (var p in people) p.ShiftTrail(100); }
+        }
+
         public void Caught()
         {
             if (mode != Mode.Play) return;
@@ -227,6 +237,7 @@ namespace Kairos
             Sfx.Play(Sfx.Alarm, .6f);
             player.Teleport(cp);
             foreach (var g in guards) g.Regroup(cp);
+            Trail.Clear(); foreach (var p in people) p.ResetTrail(); // tras el repliegue, el rastro empieza de nuevo
             for (int i = 0; i < Followers.Count; i++)
             {
                 var a = Followers[i].GetComponent<NavMeshAgent>();
@@ -269,6 +280,7 @@ namespace Kairos
 
             UpdateObjective();
             UpdateRoute();
+            RecordTrail();
 
             // Bajo cubierta no llueve.
             bool outside = OnWetDeck(player.transform.position);

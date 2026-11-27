@@ -509,6 +509,7 @@ namespace Kairos.EditorTools
             foreach (var z in new[] { -21f, -6f, 12f }) DoorFrameZ(b, 1.25f, z, 3);
             foreach (var z in new[] { -20f, -10f, 2f, 16f }) DoorFrameZ(b, -1.25f, z, 3);
             foreach (var z in new[] { -16f, -7f }) { DoorFrameZ(b, 1.25f, z, 6); DoorFrameZ(b, -1.25f, z, 6); }
+            DoorFrameX(b, 4f, 2.6f, 3); DoorFrameX(b, -14f, -2.2f, 3); // pasos laterales nuevos de la cubierta inferior
 
             // Máquinas: tuberías, volantes y manómetros de los compresores.
             foreach (var z in new[] { -24.5f, -17.5f })
@@ -537,7 +538,7 @@ namespace Kairos.EditorTools
             b.Prop("trashbag", new Vector3(-1.9f, 3, 4.4f), 120, .5f); // fuera del paso de la escotilla
 
             // Pañol: cajas de cartón sobre los palés.
-            foreach (var (x, z, lvl) in new[] { (-5.8f, -11.8f, 0), (-5.0f, -10.4f, 0), (-5.6f, -11.2f, 1) })
+            foreach (var (x, z, lvl) in new[] { (-6.2f, -8.6f, 0), (-5.6f, -7.4f, 0), (-5.9f, -8.0f, 1) })
                 b.Prop("cardboard_box_01", new Vector3(x, 4f + lvl * .36f, z), lvl * 25f, .55f);
 
             // Máquinas: arcón de herramientas y latas de aceite junto a los compresores.
@@ -548,12 +549,12 @@ namespace Kairos.EditorTools
 
             // Habilitación: literas con colchón, banquetas, carteles y lámparas.
             foreach (var z in new[] { -10f, -6.5f, -3f, .5f }) b.Box(mattress, new Vector3(4.2f, 7.84f, z), new Vector3(1.2f, .08f, 2f), null, false);
-            foreach (var z in new[] { -6.2f, -5f, -3.2f })
+            foreach (var z in new[] { -5.0f, -3.8f, -2.0f }) // junto a las mesas, adelantadas para despejar la escalera
             {
                 b.Prop("metal_stool_02", new Vector3(-2.15f, 6, z), z * 40, .5f);
                 b.Solid(new Vector3(-2.15f, 6.25f, z), new Vector3(.42f, .5f, .42f));
             }
-            b.Prop("medical_box", new Vector3(-3.6f, 6.8f, -3.2f), 200, .42f);
+            b.Prop("medical_box", new Vector3(-3.6f, 6.8f, -2.0f), 200, .42f);
             b.Prop("propane_tank", new Vector3(-4.45f, 6, .9f), 0, .9f);
             b.Solid(new Vector3(-4.45f, 6.45f, .9f), new Vector3(.45f, .9f, .45f));
             b.Box(yellow, new Vector3(1.14f, 7.5f, -11f), new Vector3(.02f, .5f, .36f), null, false);

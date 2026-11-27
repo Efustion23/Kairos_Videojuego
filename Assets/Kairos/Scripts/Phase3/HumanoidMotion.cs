@@ -11,6 +11,8 @@ namespace Kairos
         /// En el suelo: se arrodilla y queda agachado (guardia aturdido, persona retenida en su celda).
         /// Al quitarlo se levanta. 'downedQuick' salta el arrodillarse (al cargar la escena ya están así).
         [System.NonSerialized] public bool downed, downedQuick;
+        /// Durante una conversación, a quién mira (cabeza y algo de torso). Solo se usa mientras habla.
+        [System.NonSerialized] public Vector3? lookTarget;
         /// Cuenta las pisadas: PlayerAgent hace sonar y oír cada paso cuando el pie toca el suelo.
         public int Steps { get; private set; }
 
@@ -20,7 +22,8 @@ namespace Kairos
 
         Transform body, footL, footR;
         Vector3 last;
-        float lastYaw, speed, torsoWeight, aimWeight, stunT, kneelT, pelvis, crouchDrop, downT;
+        float lastYaw, speed, torsoWeight, aimWeight, stunT, kneelT, pelvis, crouchDrop, downT, lookWeight;
+        Vector3 lookAt;
         bool leftAhead, kneeling, crouched, wasDowned, downCrouched;
         string torsoState, turnState;
 
@@ -156,6 +159,13 @@ namespace Kairos
 
             HandToCamera(AvatarIKGoal.LeftHand, -.09f);
             HandToCamera(AvatarIKGoal.RightHand, .09f);
+
+            // Mira a quien le habla: sin esto cada uno miraba al frente mientras conversaban.
+            bool look = talking && lookTarget.HasValue;
+            if (look) lookAt = lookTarget.Value;
+            lookWeight = Mathf.MoveTowards(lookWeight, look ? 1f : 0f, Time.unscaledDeltaTime * 3f);
+            animator.SetLookAtWeight(lookWeight, .25f, .85f, 1f, .6f);
+            if (lookWeight > 0) animator.SetLookAtPosition(lookAt);
         }
 
         float FootOffset(AvatarIKGoal foot)
